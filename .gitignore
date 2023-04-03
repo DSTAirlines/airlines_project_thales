@@ -1,0 +1,3 @@
+# Ignorer le répertoire datas (json & csv générés)
+*.json
+*.csv
