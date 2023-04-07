@@ -2,7 +2,7 @@
 ROOT_URL = 'https://opensky-network.org/api'
 
 # FILENAME
-data_filename = 'datas/opensky.json'
+data_filename = 'datas/opensky_flights.json'
 
 # SURFACE WITH LONGITUDE & LATITUDE (SQUARE)
 la_min = 41.164462815797485
