@@ -19,8 +19,8 @@ ref_endpoints = [
 ]
 
 # Credentials
-CLIENT_ID = os.environ.get("CLIENT_ID")
-CLIENT_SECRET = os.environ.get("CLIENT_SECRET")
+CLIENT_ID = os.environ.get("CLIENT_ID_LUFTHANSA")
+CLIENT_SECRET = os.environ.get("CLIENT_SECRET_LUFTHANSA")
 
 
 def get_token():
