@@ -21,5 +21,6 @@ def get_connection():
         )
         print(f"\nConnexion à la database {DB_NAME} correctement réalisée.\n")
         return engine
+
     except Exception as ex:
         print(f"\nErreur de connexion : \n{ex}\n")
