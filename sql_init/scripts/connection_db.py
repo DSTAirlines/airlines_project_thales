@@ -5,11 +5,11 @@ import os
 load_dotenv()
 
 # Credentials Database SQL
-DB_HOST=os.environ.get("DB_HOST")
-DB_PORT=os.environ.get("DB_PORT")
-DB_NAME=os.environ.get("DB_NAME")
-DB_USER=os.environ.get("DB_USER")
-DB_PASS=os.environ.get("DB_PASS")
+DB_HOST=os.environ.get("SQL_HOST")
+DB_PORT=os.environ.get("SQL_PORT")
+DB_NAME=os.environ.get("SQL_DB_NAME")
+DB_USER=os.environ.get("SQL_USER")
+DB_PASS=os.environ.get("SQL_PASS")
 
 # Retourne l'objet sqlalchemy engine 
 def get_connection():
