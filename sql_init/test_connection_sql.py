@@ -1,4 +1,4 @@
-from scripts.connection_db import get_connection
+from scripts.connection_sql import get_connection
 from sqlalchemy import text
 
 engine = get_connection()
