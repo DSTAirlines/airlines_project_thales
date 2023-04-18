@@ -17,9 +17,7 @@ with engine.connect() as conn:
 
     # Pour chaque table, on affiche les 5 premiers enregistrements
     for tables in result:
-        print("\n################################")
-        print(f"#  Table {tables[0]} :")
-        print("################################")
+        print(f"\n#  Table {tables[0]} :")
         req = f"SELECT * FROM {tables[0]} LIMIT 5"
         stmt = text(req)
         result = conn.execute(stmt)
