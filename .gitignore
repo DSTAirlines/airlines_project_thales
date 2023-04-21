@@ -6,5 +6,6 @@ __pycache__
 # Ignorer le dossier venv
 venv/*
 
-# Ignorer les sous-dossiers de lufthansa_api_src
+# Ignorer les sous-dossiers data
 lufthansa_api/src/*/
+sql_init/data_csv_init/*
