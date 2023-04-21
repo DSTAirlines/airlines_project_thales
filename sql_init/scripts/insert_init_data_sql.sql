@@ -6,7 +6,9 @@ TRUNCATE TABLE cities;
 TRUNCATE TABLE airlines;
 TRUNCATE TABLE aircrafts;
 TRUNCATE TABLE airports;
-SET FOREIGN_KEY_CHECKS = 1;
+TRUNCATE TABLE routes;
+TRUNCATE TABLE stopovers;
+
 
 LOAD DATA INFILE '/var/lib/mysql-files/data_csv_init/countries.csv'
 INTO TABLE countries
@@ -50,5 +52,24 @@ INTO TABLE airports
 FIELDS TERMINATED BY ',' ENCLOSED BY '"'
 LINES TERMINATED BY '\n'
 IGNORE 1 ROWS
-(airport_iata_code, airport_icao_code, fk_city_iata, fk_country_iso2, airport_name, airport_utc_offset_str, airport_utc_offset_min, airport_timezone_id, airport_latitude, airport_longitude, @airport_wiki_link)
+(airport_iata, airport_icao, fk_city_iata, fk_country_iso2, airport_name, airport_utc_offset_str, airport_utc_offset_min, airport_timezone_id, airport_latitude, airport_longitude, @airport_wiki_link)
 SET airport_wiki_link = IF(CHAR_LENGTH(@airport_wiki_link) > 254, NULL, TRIM(TRAILING '\r' FROM @airport_wiki_link));
+
+LOAD DATA INFILE '/var/lib/mysql-files/data_csv_init/routes.csv'
+INTO TABLE routes
+FIELDS TERMINATED BY ',' ENCLOSED BY '"'
+LINES TERMINATED BY '\n'
+IGNORE 1 ROWS
+(callsign, fk_airline_iata, fk_airport_from_iata, airport_from_time, fk_airport_to_iata, airport_to_time, @hasStopover)
+SET hasStopover = TRIM(TRAILING '\r' FROM @hasStopover);
+show warnings;
+
+LOAD DATA INFILE '/var/lib/mysql-files/data_csv_init/stopovers.csv'
+INTO TABLE stopovers
+FIELDS TERMINATED BY ',' ENCLOSED BY '"'
+LINES TERMINATED BY '\n'
+IGNORE 1 ROWS
+(fk_route_callsign, fk_airport_iata, escale_total_number, @escale_order_number)
+SET escale_order_number = TRIM(TRAILING '\r' FROM @escale_order_number);
+
+SET FOREIGN_KEY_CHECKS = 1;
