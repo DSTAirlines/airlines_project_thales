@@ -36,12 +36,10 @@ def query_airlabs_api():
     airlabs_data = result['response']
 
     for state in airlabs_data:
-        state['fly_id'] = None
         state['time'] = time_now
         state['datatime'] = datetime.utcfromtimestamp(time_now).strftime('%Y-%m-%d %H:%M:%S')
-        if 'flight_icao' in state.keys() and 'hex' in state.keys():
-            if state['flight_icao'] is not None and state['hex'] is not None:
-                state['fly_id'] = f"{state['flight_icao']}-{state['hex']}"
+        if 'flight_icao' not in state.keys(): 
+            state['flight_icao'] = None
 
     return airlabs_data
 
@@ -55,13 +53,16 @@ def lauch_script():
     # Insérer les documents airlabs_data dans la collection airlabs
     collection_airlabs.insert_many(airlabs_data)
 
-    # Trouver les correspondances entre les collections opensky et airlabs et mettre à jour les documents opensky
-    for airlabs_doc in airlabs_data:
-        fly_id = airlabs_doc["fly_id"]
-        match = collection_opensky.find_one({"fly_id": fly_id, "airlabs_id": None})
-        if match:
+    # Trouver les documents opensky qui ont un "airlabs_id" nul ou vide
+    opensky_no_airlabs_id = collection_opensky.find({"airlabs_id": {"$in": [None, ""]}})
+
+    # Vérifier la correspondance entre les documents opensky et airlabs_data, puis mettre à jour les documents opensky
+    for opensky_doc in opensky_no_airlabs_id:
+        callsign = opensky_doc["callsign"]
+        airlabs_match = next((doc for doc in airlabs_data if doc["flight_icao"] == callsign), None)
+        if airlabs_match:
             # Mettre à jour les documents opensky avec l'airlabs_id correspondant
-            collection_opensky.update_many({"fly_id": fly_id}, {"$set": {"airlabs_id": airlabs_doc["_id"]}})
+            collection_opensky.update_one({"_id": opensky_doc["_id"]}, {"$set": {"airlabs_id": airlabs_match["_id"]}})
 
     # Supprimer les documents opensky sans correspondance (airlabs_id nul ou vide)
     collection_opensky.delete_many({"airlabs_id": {"$in": [None, ""]}})
