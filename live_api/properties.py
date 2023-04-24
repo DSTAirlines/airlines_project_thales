@@ -1,5 +1,6 @@
 # API URLs
-ROOT_URL = 'https://opensky-network.org/api'
+ROOT_OPENSKY_URL = 'https://opensky-network.org/api'
+ROOT_AIRLABS_URL = 'http://airlabs.co/api/v9/flights'
 
 # SURFACE WITH LONGITUDE & LATITUDE (SQUARE)
 la_min = 35.93302587741835
