@@ -24,12 +24,6 @@ MONGO_COL_OPENSKY = os.environ.get("MONGO_COL_OPENSKY")
 MONGO_COL_AIRLABS = os.environ.get("MONGO_COL_AIRLABS")
 
 
-def get_fly_id(state):
-    if state.icao24 and state.callsign:
-        return f"{state.callsign.strip().upper()}-{state.icao24.strip().upper()}"
-    return None
-
-
 def query_opensky_api():
     opensky_data = []
     open_sky_api = OpenSkyApi(username=USER_OPENSKY_API, password=PASS_OPENSKY_API)
@@ -41,7 +35,6 @@ def query_opensky_api():
     opensky_data = [{
         "time": time_unix,
         "datatime": datetime.utcfromtimestamp(time_unix).strftime('%Y-%m-%d %H:%M:%S') if time_unix else None,
-        "fly_id": get_fly_id(state),
         "airlabs_id": None,
         "icao_24": state.icao24.strip().upper() if state.icao24 else None,
         "callsign": state.callsign.strip().upper() if state.callsign else None,
@@ -60,6 +53,7 @@ def query_opensky_api():
 
     return opensky_data
 
+
 def lauch_script():
     opensky_data = query_opensky_api()
     client = get_connection()
@@ -69,11 +63,10 @@ def lauch_script():
     nb_docs_airlabs = collection_airlabs.count_documents({})
 
     if nb_docs_airlabs > 0:
-
         # Vérifier si le fly_id est déjà présent dans la collection opensky
         for opensky_doc in opensky_data:
-            fly_id = opensky_doc["fly_id"]
-            match = collection_opensky.find_one({"fly_id": fly_id})
+            callsign = opensky_doc["callsign"]
+            match = collection_opensky.find_one({"callsign": callsign})
             # si oui, on récupère la valeur de airlabs_id
             if match and "airlabs_id" in match:
                 opensky_doc["airlabs_id"] = match["airlabs_id"]
@@ -84,4 +77,3 @@ def lauch_script():
     client.close()
 
 lauch_script()
-
