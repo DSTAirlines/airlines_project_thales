@@ -65,8 +65,8 @@ def create_db(db_name):
     airlabs_collection = db[MONGO_COL_AIRLABS]
 
     # Créer un index "fly_id" pour chaque collection
-    opensky_collection.create_index("fly_id")
-    airlabs_collection.create_index("fly_id")
+    opensky_collection.create_index("callsign")
+    airlabs_collection.create_index("flight_icao")
 
     for collection in [MONGO_COL_OPENSKY, MONGO_COL_AIRLABS]:
         print(f"\nTest CRUD sur la collection {collection}")
