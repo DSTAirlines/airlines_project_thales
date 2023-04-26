@@ -1,0 +1,30 @@
+.leaflet-div-icon {
+    background: transparent !important;
+    border: none !important;
+}
+
+.wrapper-tooltip{
+    white-space: pre-line;
+    min-width: 300px;
+}
+
+.title-tooltip {
+    font-size: .9rem;
+    color: teal;
+    min-width: max-content;
+    text-decoration: underline;
+}
+
+.left-side, .right-side {
+    display: inline-block;
+    width: 50%;
+}
+
+.left-side {
+    font-weight: 700;
+}
+
+.margin-y-2 {
+    margin-top: .5rem;
+    margin-bottom: .5rem;
+}
