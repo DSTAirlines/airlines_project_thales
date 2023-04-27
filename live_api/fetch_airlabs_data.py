@@ -1,9 +1,8 @@
 #!/usr/bin/python3
-import os
-import requests
-import time
+from opensky_api import OpenSkyApi
+import properties as pr
 from pymongo import MongoClient
-import json
+from datetime import datetime
 import sys
 from pathlib import Path
 from dotenv import load_dotenv
@@ -17,58 +16,63 @@ sys.path.append(f"{parent_dir}/connect_database")
 from connection_mongodb import get_connection
 
 # CREDENTIALS
-KEY_AIRLABS_API = os.environ.get("KEY_AIRLABS_API")
+USER_OPENSKY_API = os.environ.get("USER_OPENSKY_API")
+PASS_OPENSKY_API = os.environ.get("PASS_OPENSKY_API")
 MONGO_DB_NAME = os.environ.get("MONGO_DB_NAME")
 MONGO_COL_OPENSKY = os.environ.get("MONGO_COL_OPENSKY")
 MONGO_COL_AIRLABS = os.environ.get("MONGO_COL_AIRLABS")
 
-def query_airlabs_api():
 
-    time_now = int(time.time())
-    params = {
-        'api_key' : KEY_AIRLABS_API,
-        'bbox': (pr.la_min, pr.lon_min, pr.la_max, pr.lon_max)
-    }
-    url = pr.ROOT_AIRLABS_URL
+def query_opensky_api():
+    opensky_data = []
+    open_sky_api = OpenSkyApi(username=USER_OPENSKY_API, password=PASS_OPENSKY_API)
 
-    response = requests.get(url, params)
-    result = response.json()
-    airlabs_data = result['response']
+    response = open_sky_api.get_states(bbox=(pr.la_min, pr.la_max, pr.lon_min, pr.lon_max))
+    time_unix = response.time
+    states = response.states
 
-    for state in airlabs_data:
-        state['time'] = time_now
-        state['datatime'] = datetime.utcfromtimestamp(time_now).strftime('%Y-%m-%d %H:%M:%S')
-        if 'flight_icao' not in state.keys(): 
-            state['flight_icao'] = None
+    opensky_data = [{
+        "time": time_unix,
+        "datatime": datetime.utcfromtimestamp(time_unix).strftime('%Y-%m-%d %H:%M:%S') if time_unix else None,
+        "airlabs_id": None,
+        "icao_24": state.icao24.strip().upper() if state.icao24 else None,
+        "callsign": state.callsign.strip().upper() if state.callsign else None,
+        "origin_country": state.origin_country.strip() if state.origin_country else None,
+        "time_position": state.time_position,
+        "last_contact": state.last_contact,
+        "longitude": state.longitude,
+        "latitude": state.latitude,
+        "baro_altitude": state.baro_altitude,
+        "geo_altitude": state.geo_altitude,
+        "velocity": state.velocity,
+        "cap": state.true_track,
+        "vertical_rate": state.vertical_rate,
+        "on_ground": state.on_ground,
+    } for state in states]
 
-    return airlabs_data
+    return opensky_data
+
 
 def lauch_script():
-    airlabs_data = query_airlabs_api()
+    opensky_data = query_opensky_api()
     client = get_connection()
     db = client[MONGO_DB_NAME]
     collection_opensky = db[MONGO_COL_OPENSKY]
     collection_airlabs = db[MONGO_COL_AIRLABS]
+    nb_docs_airlabs = collection_airlabs.count_documents({})
 
-    # Insérer les documents airlabs_data dans la collection airlabs
-    collection_airlabs.insert_many(airlabs_data)
+    if nb_docs_airlabs > 0:
+        # Vérifier si le fly_id est déjà présent dans la collection opensky
+        for opensky_doc in opensky_data:
+            callsign = opensky_doc["callsign"]
+            match = collection_opensky.find_one({"callsign": callsign})
+            # si oui, on récupère la valeur de airlabs_id
+            if match and "airlabs_id" in match:
+                opensky_doc["airlabs_id"] = match["airlabs_id"]
 
-    # Trouver les documents opensky qui ont un "airlabs_id" nul ou vide
-    opensky_no_airlabs_id = collection_opensky.find({"airlabs_id": {"$in": [None, ""]}})
+    collection_opensky.insert_many(opensky_data)
 
-    # Vérifier la correspondance entre les documents opensky et airlabs_data, puis mettre à jour les documents opensky
-    for opensky_doc in opensky_no_airlabs_id:
-        callsign = opensky_doc["callsign"]
-        airlabs_match = next((doc for doc in airlabs_data if doc["flight_icao"] == callsign), None)
-        if airlabs_match:
-            # Mettre à jour les documents opensky avec l'airlabs_id correspondant
-            collection_opensky.update_one({"_id": opensky_doc["_id"]}, {"$set": {"airlabs_id": airlabs_match["_id"]}})
-
-    # Supprimer les documents opensky sans correspondance (airlabs_id nul ou vide)
-    collection_opensky.delete_many({"airlabs_id": {"$in": [None, ""]}})
-
-    # on ferme la connexion
+    # On ferme la connexion
     client.close()
 
 lauch_script()
-
