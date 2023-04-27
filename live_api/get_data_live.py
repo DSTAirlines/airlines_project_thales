@@ -25,26 +25,20 @@ MONGO_COL_OPENSKY = os.environ.get("MONGO_COL_OPENSKY")
 MONGO_COL_AIRLABS = os.environ.get("MONGO_COL_AIRLABS")
 
 
-def get_last_opensky(from_api=False, data_old=None):
-
-    if from_api:
-        print(f"from_api: {len(data_old)}")
-        print(f"data_old :", data_old[5])
+def get_last_opensky(call_api=False, old_data=None):
+    
+    # Quand refresh de la page map Dash, appel à l'API OpenSky
+    # on ne va garder que les old_data dont le callsign est présent dans le nouvel appel API
+    if call_api:
+        print("call_api")
         opensky_data = query_opensky_api()
-        if data_old:
-            new_data=[]
-            all_callsigns = list(op['identification']['callsign'] for op in data_old)
-            for data in opensky_data:
-                if data['callsign'] in all_callsigns:
-                    data_old_flight = [dic for dic in data_old if dic['identification']['callsign'] == data['callsign']]
-                    dic = {}
-                    dic['airlabs_doc'] = data_old_flight[0]['static_data']
-                    for k,v in data.items():
-                        dic[k] = v
-                    new_data.append(dic)
-            print(new_data[:2])
-            return new_data
+        if old_data:
+            old_callsigns = {d["identification"]["callsign"]: d for d in old_data}
+            filtered_opensky_data = [data for data in opensky_data if data['callsign'] in old_callsigns]
+            return [{'airlabs_doc': old_callsigns[data['callsign']]['static_data'], **data} for data in filtered_opensky_data]
 
+    # A l'ouverture de la page de la map Dash
+    # Permet de récupérer les données qui matchent entre data Airlabs et dernier enregistrement OpenSky
     else:
         client = get_connection()
         db = client[MONGO_DB_NAME]
@@ -64,8 +58,22 @@ def get_last_opensky(from_api=False, data_old=None):
                 "as": "airlabs_doc"
             }},
             {"$unwind": "$airlabs_doc"},
+            # Forcer l'affichage de tous les champs (pour avoir tous les enregistrements pour la map)
+            {"$addFields": {
+                "airlabs_doc.aircraft_icao": {"$ifNull": ["$airlabs_doc.aircraft_icao", None]},
+                "airlabs_doc.reg_number": {"$ifNull": ["$airlabs_doc.reg_number", None]},
+                "airlabs_doc.flag": {"$ifNull": ["$airlabs_doc.flag", None]},
+                "airlabs_doc.airline_iata": {"$ifNull": ["$airlabs_doc.airline_iata", None]},
+                "airlabs_doc.airline_icao": {"$ifNull": ["$airlabs_doc.airline_icao", None]},
+                "airlabs_doc.dep_iata": {"$ifNull": ["$airlabs_doc.dep_iata", None]},
+                "airlabs_doc.dep_icao": {"$ifNull": ["$airlabs_doc.dep_icao", None]},
+                "airlabs_doc.arr_iata": {"$ifNull": ["$airlabs_doc.arr_iata", None]},
+                "airlabs_doc.arr_icao": {"$ifNull": ["$airlabs_doc.arr_icao", None]},
+                "airlabs_doc.flight_iata": {"$ifNull": ["$airlabs_doc.flight_iata", None]},
+                "airlabs_doc.flight_icao": {"$ifNull": ["$airlabs_doc.flight_icao", None]},
+                "airlabs_doc.flight_number": {"$ifNull": ["$airlabs_doc.flight_number", None]},
+            }},
         ]
 
-        result = list(opensky_collection.aggregate(pipeline))
-
-        return result
+        results = list(opensky_collection.aggregate(pipeline))
+        return results
