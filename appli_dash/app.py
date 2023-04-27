@@ -13,6 +13,8 @@ from tabulate import tabulate
 from pprint import pprint
 import dash_extensions as de
 import json
+from datetime import datetime
+import os
 
 # Ajout du path du projet
 parent_dir = str(Path(__file__).resolve().parent.parent)
@@ -26,90 +28,139 @@ from fetch_airlabs_data import lauch_script as airlabs_api
 from get_data_live import get_last_opensky
 
 
-def get_data_live(data=None):
+
+def get_data_live(airlabs=False, data=None):
     """
     Retourne les données des vols actuels 
         (data dernier appel OpenSky + data dernier appel Airlabs)
     Args:
-        airlabs (bool, optional) Appel à API Airlabs (Default: True)
+        airlabs (bool, optional) Appel à API Airlabs (Default: False)
+            (ne sera appelé que la première fois)
+        data (array) Array des dict actuellement affichés (Default: None)
+            (pas de data pour le premier appel de la fonction)
     Returns:
         Array: Array de dictionnaires de tous les avions en vols
     """
-    # print(airlabs)
-    # if airlabs:
-    #     print("airlabs_api")
-    #     # Appel API AirLabs
-    #     airlabs_api()
 
-    # Récupération data du dernier appel OpenSky
-    if data is None:
-        results = get_last_opensky()
-    else:
-        results = data
+    if airlabs:
+        # Appel API AirLabs
+        airlabs_api()
 
-    all_dic = []
-    for result in results:
-        try:
-            dic = {
-                'identification': {
-                    'callsign': result['callsign'],
-                    'icao24':   result['icao_24'],
-                    'time':     result['time'],
-                    'datatime': result['datatime']
-                },
-                'static_data': {
-                    'aircraft_icao':        result['airlabs_doc']['aircraft_icao'],
-                    'aircraft_reg_number':  result['airlabs_doc']['reg_number'],
-                    'aircraft_flag':        result['airlabs_doc']['flag'],
-                    'airline_iata':         result['airlabs_doc']['airline_iata'],
-                    'airline_icao':         result['airlabs_doc']['airline_icao'],
-                    'airport_from_iata':    result['airlabs_doc']['dep_iata'],
-                    'airport_from_icao':    result['airlabs_doc']['dep_icao'],
-                    'airport_arr_iata':     result['airlabs_doc']['arr_iata'],
-                    'airport_arr_icao':     result['airlabs_doc']['arr_icao'],
-                    'flight_iata':          result['airlabs_doc']['flight_iata'],
-                    'flight_icao':          result['airlabs_doc']['flight_icao'],
-                    'flight_number':        result['airlabs_doc']['flight_number']
-                },
-                'dynamic_data': {
-                    'baro_altitude':    result['baro_altitude'],
-                    'cap':              result['cap'],
-                    'geo_altitude':     result['geo_altitude'],
-                    'latitude':         result['latitude'],
-                    'longitude':        result['longitude'],
-                    'status':           "Au Sol" if result['on_ground'] else "En Vol",
-                    'velocity':         result['velocity'],
-                    'vertical_rate':    result['vertical_rate']
+    # Si refresh de la page
+    if data:
+        dataUpdated = []
+        for result in data:
+            try:
+                flight = {
+                    "identification": {
+                        "callsign": result["callsign"],
+                        "icao24":   result["icao_24"],
+                        "time":     result["time"],
+                        "datatime": result["datatime"]
+                    },
+                    "static_data": {
+                        "aircraft_icao":        result["airlabs_doc"]["aircraft_icao"],
+                        "aircraft_reg_number":  result["airlabs_doc"]["aircraft_reg_number"],
+                        "aircraft_flag":        result["airlabs_doc"]["aircraft_flag"],
+                        "airline_iata":         result["airlabs_doc"]["airline_iata"],
+                        "airline_icao":         result["airlabs_doc"]["airline_icao"],
+                        "airport_from_iata":    result["airlabs_doc"]["airport_from_iata"],
+                        "airport_from_icao":    result["airlabs_doc"]["airport_from_icao"],
+                        "airport_arr_iata":     result["airlabs_doc"]["airport_arr_iata"],
+                        "airport_arr_icao":     result["airlabs_doc"]["airport_arr_icao"],
+                        "flight_iata":          result["airlabs_doc"]["flight_iata"],
+                        "flight_icao":          result["airlabs_doc"]["flight_icao"],
+                        "flight_number":        result["airlabs_doc"]["flight_number"]
+                    },
+                    "dynamic_data": {
+                        "baro_altitude":        result["baro_altitude"],
+                        "cap":                  result["cap"],
+                        "geo_altitude":         result["geo_altitude"],
+                        "latitude":             result["latitude"],
+                        "longitude":            result["longitude"],
+                        "status":               "Au Sol" if result["on_ground"] else "En Vol",
+                        "velocity":             result["velocity"],
+                        "vertical_rate":        result["vertical_rate"]
+                    }
                 }
-            }
-        except Exception as ex:
-            # print(ex)
-            continue
-        all_dic.append(dic)
+                dataUpdated.append(flight)
 
-    with open("data/live_flights.json", "w", encoding="utf-8") as f:
-        json.dump(all_dic, f, indent=2)
-    print(len(all_dic))
-    return all_dic
+            except Exception as ex:
+                # print(ex)
+                continue
 
-data = get_data_live()
+        return dataUpdated
 
-def get_data():
-    return data
+    # Si 1er appel
+    else:
+        dataInitial = []
+        # Récupération data du dernier appel OpenSky
+        results = get_last_opensky()
+        for result in results:
+            try:
+                flight = {
+                    'identification': {
+                        'callsign': result['callsign'],
+                        'icao24':   result['icao_24'],
+                        'time':     result['time'],
+                        'datatime': result['datatime']
+                    },
+                    'static_data': {
+                        'aircraft_icao':        result['airlabs_doc']['aircraft_icao'],
+                        'aircraft_reg_number':  result['airlabs_doc']['reg_number'],
+                        'aircraft_flag':        result['airlabs_doc']['flag'],
+                        'airline_iata':         result['airlabs_doc']['airline_iata'],
+                        'airline_icao':         result['airlabs_doc']['airline_icao'],
+                        'airport_from_iata':    result['airlabs_doc']['dep_iata'],
+                        'airport_from_icao':    result['airlabs_doc']['dep_icao'],
+                        'airport_arr_iata':     result['airlabs_doc']['arr_iata'],
+                        'airport_arr_icao':     result['airlabs_doc']['arr_icao'],
+                        'flight_iata':          result['airlabs_doc']['flight_iata'],
+                        'flight_icao':          result['airlabs_doc']['flight_icao'],
+                        'flight_number':        result['airlabs_doc']['flight_number']
+                    },
+                    'dynamic_data': {
+                        'baro_altitude':        result['baro_altitude'],
+                        'cap':                  result['cap'],
+                        'geo_altitude':         result['geo_altitude'],
+                        'latitude':             result['latitude'],
+                        'longitude':            result['longitude'],
+                        'status':               "Au Sol" if result['on_ground'] else "En Vol",
+                        'velocity':             result['velocity'],
+                        'vertical_rate':        result['vertical_rate']
+                    }
+                }
+                dataInitial.append(flight)
+            except Exception as ex:
+                # print(ex)
+                continue
+
+        return dataInitial
+
+
 
 # Retourne le nom des clés (avec espaces et majuscules)
 def get_key_name(key):
     return ' '.join(x.capitalize() for x in key.split('_'))
 
-# Callsigns
-# def get_all_callsigns(all_callsigns=all_callsigns):
-#     try:
-#         with open('appli_dash/data/live_flights.json', 'r', encoding='utf-8') as f:
-#             data = json.load(f)
-#         print(f"Data in get_all_callsigns: {len(data)}") 
-#         return list(flight['identification']['callsign'] for flight in data)
-#     except:
-#         return all_callsigns
+
+# Afficher le datetime du dernier refresh
+def datetime_refresh():
+    now = datetime.now()
+    refresh_time = now.strftime("%d-%m-%Y à %H:%M:%S")
+    return html.Div(
+        children=f"Last update : {refresh_time}",
+        style={
+            "position": "absolute",
+            "bottom": "12px",
+            "left": "15px",
+            "backgroundColor": "whitesmoke",
+            "padding": "5px",
+            "borderRadius": "5px",
+            "zIndex": "1000",
+        },
+        id="datetimeRefresh",
+    )
 
 
 def tooltip_content(flight):
@@ -156,13 +207,6 @@ def tooltip_content(flight):
 # def generate_detailed_info(flight):
 #     return flight["static_data"]["flight_icao"]
 
-# Récupérer les data en json des vols actuels
-def get_data_json():
-    try:
-        with open('data/live_flights.json', 'r', encoding='utf-8') as f:
-            return json.load(f)
-    except:
-        return []
 
 def create_markers_tooltips(flights):
     """
@@ -173,8 +217,6 @@ def create_markers_tooltips(flights):
         Array: Tous les dl.DivMarker des avions en vol
     """
     markers = []
-    print(f"Flights data in create_markers_tooltips: {len(flights)}")
-    # print("Flights data in create_markers_tooltips:", flights)
     for flight in flights:
         latitude = flight["dynamic_data"]["latitude"]
         longitude = flight["dynamic_data"]["longitude"]
@@ -209,15 +251,29 @@ def create_markers_tooltips(flights):
     return markers
 
 
-def display_map(markers_tooltips):
+def display_map(markers_tooltips, current_data):
+    """
+    Afficher la map, les markers et les tooltips
+    Args:
+        markers_tooltips (array):return de create_markers_tooltips()
+        current_data (array): Array des dict des data actuels
+    Returns:
+        Affichage de la map complète
+    """
     return html.Div(
         children=[
+            dcc.Store(id="current_data", data=current_data),
+            html.Div([
+                # Espace pour les filtres de la map
+            ],
+            style = {'width': '100%', 'height': '20vh', 'marginBottom': "auto", "marginTop": "0", "display": "block"}),
             dl.Map(
                 id="mapLive",
-                style={'width': '100%', 'height': '80vh', 'marginBottom': "auto", "marginTop": "0", "display": "block"},
-                center=(48.197577, 16.343698),
-                zoom=5,
+                style={'width': '100%', 'height': '80vh', 'marginBottom': "0", "marginTop": "auto", "display": "block"},
+                center=(46.067314, 4.098643),
+                zoom=6,
                 children=[
+                    datetime_refresh(),
                     dl.TileLayer(),
                     *markers_tooltips,
                 ],
@@ -225,17 +281,21 @@ def display_map(markers_tooltips):
             dcc.Interval(
                 id='refreshData',
                 interval=30*1000,
-                n_intervals=0
-            ),
-            # html.Div(id='clickdata')
+                n_intervals=1
+            )
         ]
     )
 
+
+# Variable globale contenant les data
+# (à définir avant app)
+global_data = None
 
 # Création de l'application Dash et de la carte Leaflet
 app = dash.Dash(__name__, 
                 external_stylesheets=[dbc.themes.BOOTSTRAP],
                 suppress_callback_exceptions=True)
+
 
 # Layout de base de l'application
 app.layout = html.Div([
@@ -245,15 +305,23 @@ app.layout = html.Div([
     html.Div(id='page-content')
 ])
 
+
 # Page d'accueil
 index_page = html.Div([
-    html.H1("DST Airlines", className="mx-auto text-info mb-4"),
     html.Div([
-        dcc.Link("Live Map", href="/live-map", className="mb-3"),
-        html.Br(),
-        dcc.Link("Search Page", href="/search-page")
-    ]),
-])
+        html.H1("DST Airlines", className="text-info mb-4 titre-general"),
+    ], style={"paddingTop": "5vh"}),
+
+    html.Div([
+        dcc.Link("Live Map", href="/live-map", className="mx-3"),
+        dcc.Link("Search Page", href="/search-page", className="mx-3"),
+        dcc.Link("Statistiques", href="/stats-page", className="mx-3")
+    ], className="page-links"),
+
+    html.Div([
+        html.H3("Promotion Thales DE Mars 2023", className="h3-index-bottom")
+    ], className="container-index-bottom")
+], className="main-container index-page")
 
 
 # Page de recherche dashboard
@@ -261,24 +329,39 @@ search_page = html.Div([
     "Search Page"
 ])
 
-# # Callback de refresh des data
+
+# Page de Statistiques
+search_page = html.Div([
+    "Search Page"
+])
+
+
+# Callback de refresh des data
 @app.callback(
-    Output("mapLive", "children"),
-    [Input("refreshData", "n_intervals")]
+    [Output("mapLive", "children"), Output('current_data', 'data')],
+    [Input("refreshData", "n_intervals"),
+     Input('current_data', 'data')]
 )
-def update_map(n_intervals):
-    # print("Displayed callsigns:", displayed_callsigns)
-    data = get_data()
-    data_temp = get_last_opensky(from_api=True, data_old=data)
-    print(f"data_temp: {len(data_temp)}")
-    pprint(data_temp[:2])
-    data = get_data_live(data=data_temp)
-    print(f"data: {len(data)}")
-    markers_tooltips = create_markers_tooltips(data)
-    return [
-        dl.TileLayer(),
-        *markers_tooltips,
-    ]
+def update_map(n_intervals, data):
+    global global_data
+    if n_intervals > 1:
+        data_new_temp = get_last_opensky(call_api=True, old_data=data)
+        data_new = get_data_live(airlabs=False, data=data_new_temp)
+        markers_tooltips = create_markers_tooltips(data_new)
+        return [
+            datetime_refresh(),
+            dl.TileLayer(),
+            *markers_tooltips,
+        ], data_new
+    
+    else:
+        markers_tooltips = create_markers_tooltips(global_data)
+        return [
+            datetime_refresh(),
+            dl.TileLayer(),
+            *markers_tooltips,
+        ], global_data
+
 
 # Callback get marker_id
 # @app.callback(Output("clickdata", "children"),
@@ -288,18 +371,21 @@ def update_map(n_intervals):
 #     return "Test ID {}".format(marker_id)
 
 
-
-
+# Callback affichage des pages
 @app.callback(Output("page-content", "children"), [Input("url", "pathname")])
 def display_page(pathname):
+    global global_data
     if pathname == "/live-map":
-        markers_tooltips = create_markers_tooltips(data)
-        return display_map(markers_tooltips)
+        if global_data is None:
+            global_data = get_data_live(airlabs=True, data=False)
+        markers_tooltips = create_markers_tooltips(global_data)
+        return display_map(markers_tooltips, global_data)
+
     elif pathname == "/search-page":
         return search_page
+
     else:
         return index_page
-
 
 if __name__ == "__main__":
     app.run_server(debug=True, host="0.0.0.0")
