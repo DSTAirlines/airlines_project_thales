@@ -1,3 +1,68 @@
+.index-page {
+    background-image: url('img/back-index.jpg'); 
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+.titre-general {
+    padding-left: 5rem;
+    font-size: 3.5rem;
+}
+
+.main-container {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    justify-content: space-between;
+}
+
+.container-index-bottom {
+    width: 100%;
+    color: white;
+    font-size: 1.5rem;
+    background-color: rgba(11, 2, 2, 0.8);
+}
+
+.h3-index-bottom {
+    color: white;
+    margin: 1rem 1.5rem;
+    text-align: end;
+    padding-right: 5%;
+    font-size: 1.5rem;
+    font-family: Roboto,"Helvetica Neue","Noto Sans","Liberation Sans", sans-serif;
+}
+
+.page-links {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    background-color: rgba(255, 255, 255, 0.6); 
+    padding: 15px 5px;
+    border-radius: 5px;
+    width: 50%;
+    margin: 2% auto auto 4%;
+}
+
+.page-links a {
+    text-decoration: none;
+    color: #102544;
+    padding: .25rem .75rem;
+}
+
+.page-links a:hover {
+    transition: .2;
+    border-radius: 5px;
+    background-color: #102544;
+    text-decoration: none;
+    color: white;
+
+}
+
+.page-links a {
+    text-decoration: none;
+}
+
 .leaflet-div-icon {
     background: transparent !important;
     border: none !important;
