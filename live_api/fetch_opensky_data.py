@@ -3,7 +3,7 @@ import os
 from opensky_api import OpenSkyApi
 import properties as pr
 from pymongo import MongoClient
-import json
+from datetime import datetime
 import sys
 from pathlib import Path
 from dotenv import load_dotenv
@@ -77,3 +77,4 @@ def lauch_script():
     client.close()
 
 lauch_script()
+
