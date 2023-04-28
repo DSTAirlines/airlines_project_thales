@@ -3,7 +3,7 @@ USE Airlines_Static;
 -- ---------------------------------
 -- CREATE VIEW AIRPORT
 -- ---------------------------------
-CREATE OR REPLACE ALGORITHM = UNDEFINED DEFINER = `airlines-sql-global`@`%` SQL SECURITY DEFINER VIEW `Airlines_Static`.`view_airport` AS SELECT DISTINCT
+CREATE OR REPLACE ALGORITHM = UNDEFINED DEFINER = `airlines-sql-global`@`%` SQL SECURITY DEFINER VIEW `Airlines_Static`.`view_airports` AS SELECT DISTINCT
 	`airports`.`airport_iata` AS `airport_iata`,
 	`airports`.`airport_icao` AS `airport_icao`,
 	`airports`.`fk_city_iata` AS `fk_city_iata`,
