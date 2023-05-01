@@ -80,7 +80,7 @@
     text-decoration: underline;
 }
 
-.left-side, .right-side {
+.left-side, .right-side, .left-side-company {
     display: inline-block;
     width: 50%;
 }
