@@ -86,10 +86,35 @@
 }
 
 .left-side {
+    vertical-align: inherit;
+    font-weight: 700;
+}
+
+.left-side-company {
+    vertical-align: top;
     font-weight: 700;
 }
 
 .margin-y-2 {
+    margin-top: .25rem;
+    margin-bottom: .25rem;
+}
+
+.margin-y-3 {
     margin-top: .5rem;
     margin-bottom: .5rem;
+}
+
+.tooltip-flag-display {
+    display: flex;
+    align-items: center;
+}
+
+.tooltip-flag {
+    max-height: 8px;
+    width: auto;
+}
+
+.img-border {
+    border: 1px solid rgb(211, 211, 211);
 }
