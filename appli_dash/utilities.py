@@ -57,8 +57,12 @@ def get_static_table(keys_api, key_sql, table, dataStatic):
         list_api = list(set(lists[0] + lists[1]))
 
     engine = get_connection()
-    query = f"SELECT * FROM {table}"
-    df = pd.read_sql(query, con=engine)
+    sql = f'''
+    SELECT * FROM {table};
+    '''
+    with engine.connect() as conn:
+        query = conn.execute(text(sql))
+    df = pd.DataFrame(query.fetchall())
     df = df[df[key_sql].isin(list_api)]
     df = df.reset_index(drop=True)
     df = df.dropna(subset=[key_sql]).drop_duplicates(subset=[key_sql]).reset_index(drop=True)
