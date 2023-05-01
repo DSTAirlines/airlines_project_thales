@@ -6,6 +6,7 @@ from pymongo import MongoClient
 from datetime import datetime
 import sys
 from pathlib import Path
+from utilities_live_api import convert_time_unix_utc_to_datetime_fr
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -27,14 +28,16 @@ MONGO_COL_AIRLABS = os.environ.get("MONGO_COL_AIRLABS")
 def query_opensky_api():
     opensky_data = []
     open_sky_api = OpenSkyApi(username=USER_OPENSKY_API, password=PASS_OPENSKY_API)
-
     response = open_sky_api.get_states(bbox=(pr.la_min, pr.la_max, pr.lon_min, pr.lon_max))
-    time_unix = response.time
     states = response.states
 
+    time_now = int(time.time())
+    datetime_fr = convert_time_unix_utc_to_datetime_fr(time_now)
+
+
     opensky_data = [{
-        "time": time_unix,
-        "datatime": datetime.utcfromtimestamp(time_unix).strftime('%Y-%m-%d %H:%M:%S') if time_unix else None,
+        "time": time_now,
+        "datatime": datetime_fr if time_now else None,
         "airlabs_id": None,
         "icao_24": state.icao24.strip().upper() if state.icao24 else None,
         "callsign": state.callsign.strip().upper() if state.callsign else None,
@@ -54,15 +57,13 @@ def query_opensky_api():
     return opensky_data
 
 
-def lauch_script():
+def lauch_script(init=False):
     opensky_data = query_opensky_api()
     client = get_connection()
     db = client[MONGO_DB_NAME]
     collection_opensky = db[MONGO_COL_OPENSKY]
-    collection_airlabs = db[MONGO_COL_AIRLABS]
-    nb_docs_airlabs = collection_airlabs.count_documents({})
 
-    if nb_docs_airlabs > 0:
+    if init is not True:
         # Vérifier si le fly_id est déjà présent dans la collection opensky
         for opensky_doc in opensky_data:
             callsign = opensky_doc["callsign"]
@@ -77,4 +78,3 @@ def lauch_script():
     client.close()
 
 lauch_script()
-
