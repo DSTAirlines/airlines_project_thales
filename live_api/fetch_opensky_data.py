@@ -5,6 +5,7 @@ import properties as pr
 from pymongo import MongoClient
 from datetime import datetime
 import sys
+import time
 from pathlib import Path
 from utilities_live_api import convert_time_unix_utc_to_datetime_fr
 from dotenv import load_dotenv
