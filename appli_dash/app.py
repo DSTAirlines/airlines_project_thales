@@ -219,7 +219,7 @@ def filters(from_airport, arr_airport, company, state, flight_number):
 )
 def filter_button(click, static_data, dynamic_data, filters, date_time):
     """
-    Filtres les vols sur la Map suivant la valeurs des filtres
+    Filtre les vols sur la Map suivant la valeur des filtres
     Args:
         click: event click sur le bouton 'FILTRER'
         filters (dict): dictionnaire des filtres choisis par l'utilisateur
@@ -232,41 +232,10 @@ def filter_button(click, static_data, dynamic_data, filters, date_time):
     
     else:
         filtered_static_flights, filtered_dynamic_flights = get_filtered_flights(filters, static_data, dynamic_data)
-        # filtered_flights_dynamic = get_filtered_dynamic_flights(filters, filtered_flights_stat, dynamic_data)
         filtered_markers_tooltips = create_markers_tooltips(filtered_static_flights, filtered_dynamic_flights)
         date_time = date_time.strip('Last update : ')
         
         return [datetime_refresh(date_time), dl.TileLayer(), *filtered_markers_tooltips]
-
-def get_filtered_flights(filters, static_flights, dynamic_flights):
-
-    filtered_dynamic_flights = []
-    test_flight_by_filter = lambda flight_value, filter_value: flight_value == filter_value if filter_value is not None else flight_value
-
-    if any(filter is not None for filter in filters.values()):
-
-        filtered_static_flights = [flight for flight in static_flights if
-            (test_flight_by_filter(flight[next(iter(flight))]['airport_from_iata'], filters['from_airport']))
-             and
-            (test_flight_by_filter(flight[next(iter(flight))]['airport_arr_iata'], filters['arr_airport']))
-             and
-            (test_flight_by_filter(flight[next(iter(flight))]['airline_iata'], filters['company']))
-            and
-            (test_flight_by_filter(flight[next(iter(flight))]['aircraft_flag'], filters['state']))
-            and
-            (next(iter(flight)) == filters['flight_number'] if filters['flight_number'] not in (None, '') else next(iter(flight)))]
-
-        for dynamic_flight in dynamic_flights:
-            if next(iter(dynamic_flight)) in [next(iter(f_flight)) for f_flight in filtered_static_flights]:
-                filtered_dynamic_flights.append(dynamic_flight)
-    
-        print('static_flights : ', len(filtered_static_flights), 'dynamic_flights : ', len(filtered_dynamic_flights))
-
-    else:
-        filtered_static_flights = static_flights
-        filtered_dynamic_flights = dynamic_flights
-    
-    return filtered_static_flights, filtered_dynamic_flights
 
 # Callback affichage des pages
 @app.callback(
