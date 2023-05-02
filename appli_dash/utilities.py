@@ -6,6 +6,8 @@ from dash import html
 import dash_leaflet as dl
 from dash import html
 from get_data import *
+from sqlalchemy import text
+import json
 
 # Ajout du path du projet
 parent_dir = str(Path(__file__).resolve().parent.parent)
@@ -29,11 +31,11 @@ def get_key_name(key):
 
 
 # Afficher le datetime du dernier refresh
-def datetime_refresh():
+def datetime_refresh(date_time=''):
     now = datetime.now()
     refresh_time = now.strftime("%d-%m-%Y à %H:%M:%S")
     return html.Div(
-        children=f"Last update : {refresh_time}",
+        children=f"Last update : {date_time if date_time else refresh_time}",
         style={
             "position": "absolute",
             "bottom": "12px",
@@ -185,6 +187,7 @@ def get_data_live(data):
         try:
             flight_dynamic = {
                 callsign: {
+                    'callsign':             callsign,
                     'time':                 result.get('time'),
                     'datatime':             result.get('datatime'),
                     'baro_altitude':        result.get('baro_altitude'),
@@ -372,3 +375,39 @@ def create_markers_tooltips(static_data, dynamic_data):
         )
 
     return markers
+
+def get_airports():
+    """
+    Méthode qui renvoie un dictionnaire des aéroports pour les dropdown
+    Args: 
+        None
+    Return:
+        Liste des dictionnaires des aéroports
+    """
+    with open('static_datas/airports.json') as file:
+        airports = json.load(file)
+        return [{'label': airport['NameOK'], 'value': airport['AirportCode']} for airport in airports]
+    
+def get_countries():
+    """
+    Méthode qui renvoie un dictionnaire des pays pour les dropdown
+    Args: 
+        None
+    Return:
+        Liste des dictionnaires pays
+    """
+    with open('static_datas/countries.json') as file:
+        countries = json.load(file)
+        return [{'label': country['NameOK'], 'value': country['CountryCode']} for country in countries]
+    
+def get_airlines():
+    """
+    Méthode qui renvoie un dictionnaire des compagnies aériennes pour les dropdown
+    Args: 
+        None
+    Return:
+        Liste des dictionnaires des compagnies aériennes
+    """
+    with open('static_datas/airlines.json') as file:
+        airlines = json.load(file)
+        return [{'label': airline['NameOK'], 'value': airline['AirlineID']} for airline in airlines]
