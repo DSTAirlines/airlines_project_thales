@@ -161,11 +161,11 @@ def update_map(n_intervals, data_dyn, data_stat, filters):
         else:
             global_data_dynamic = get_data_live(data_dyn)
 
-        data_stat = get_filtered_static_flights(filters, data_stat)
-        data_dyn = get_filtered_dynamic_flights(filters, data_stat, global_data_dynamic)
+        static_datas, dynamic_datas = get_filtered_flights(filters, data_stat, global_data_dynamic)
+        # data_dyn = get_filtered_dynamic_flights(filters, data_stat, global_data_dynamic)
 
         # data_new = get_data_live(data_new_temp)
-        markers_tooltips = create_markers_tooltips(data_stat, data_dyn)
+        markers_tooltips = create_markers_tooltips(static_datas, dynamic_datas)
         return [
             datetime_refresh(),
             dl.TileLayer(),
@@ -201,7 +201,7 @@ def filters(from_airport, arr_airport, company, state, flight_number):
         'arr_airport': arr_airport,
         'company': company,
         'state': state,
-        'flight_number': flight_number,
+        'flight_number': flight_number.upper() if flight_number is not None else flight_number if flight_number != '' else None,
     }
 
     return filters
@@ -231,20 +231,21 @@ def filter_button(click, static_data, dynamic_data, filters, date_time):
         raise PreventUpdate
     
     else:
-        filtered_flights_stat = get_filtered_static_flights(filters, static_data)
-        filtered_flights_dynamic = get_filtered_dynamic_flights(filters, filtered_flights_stat, dynamic_data)
-        filtered_markers_tooltips = create_markers_tooltips(filtered_flights_stat, filtered_flights_dynamic)
+        filtered_static_flights, filtered_dynamic_flights = get_filtered_flights(filters, static_data, dynamic_data)
+        # filtered_flights_dynamic = get_filtered_dynamic_flights(filters, filtered_flights_stat, dynamic_data)
+        filtered_markers_tooltips = create_markers_tooltips(filtered_static_flights, filtered_dynamic_flights)
         date_time = date_time.strip('Last update : ')
         
         return [datetime_refresh(date_time), dl.TileLayer(), *filtered_markers_tooltips]
 
-def get_filtered_static_flights(filters, flights):
+def get_filtered_flights(filters, static_flights, dynamic_flights):
 
+    filtered_dynamic_flights = []
     test_flight_by_filter = lambda flight_value, filter_value: flight_value == filter_value if filter_value is not None else flight_value
 
     if any(filter is not None for filter in filters.values()):
 
-        filtered_flights = [flight for flight in flights if
+        filtered_static_flights = [flight for flight in static_flights if
             (test_flight_by_filter(flight[next(iter(flight))]['airport_from_iata'], filters['from_airport']))
              and
             (test_flight_by_filter(flight[next(iter(flight))]['airport_arr_iata'], filters['arr_airport']))
@@ -254,31 +255,18 @@ def get_filtered_static_flights(filters, flights):
             (test_flight_by_filter(flight[next(iter(flight))]['aircraft_flag'], filters['state']))
             and
             (next(iter(flight)) == filters['flight_number'] if filters['flight_number'] not in (None, '') else next(iter(flight)))]
-            # (flight[next(iter(flight))]['flight_number'] == filters['flight_number'] if filters['flight_number'] not in (None, '') else flight[next(iter(flight))]['flight_number'])]
 
-        print(len(filtered_flights))
-    else:
-        filtered_flights = flights
-    
-    return filtered_flights
-
-def get_filtered_dynamic_flights(filters, filtered_flights, dynamic_flights):
-
-    filtered_dynamic_flights = []
-    if any(filter is not None for filter in filters.values()):
         for dynamic_flight in dynamic_flights:
-            for filtered_flight in filtered_flights:
-                if next(iter(dynamic_flight)) == next(iter(filtered_flight)):
-                    filtered_dynamic_flights.append(dynamic_flight)
+            if next(iter(dynamic_flight)) in [next(iter(f_flight)) for f_flight in filtered_static_flights]:
+                filtered_dynamic_flights.append(dynamic_flight)
     
-        print(len(filtered_dynamic_flights))
+        print('static_flights : ', len(filtered_static_flights), 'dynamic_flights : ', len(filtered_dynamic_flights))
 
     else:
+        filtered_static_flights = static_flights
         filtered_dynamic_flights = dynamic_flights
     
-    return filtered_dynamic_flights
-
-
+    return filtered_static_flights, filtered_dynamic_flights
 
 # Callback affichage des pages
 @app.callback(
