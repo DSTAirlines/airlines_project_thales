@@ -30,25 +30,25 @@ def display_map(markers_tooltips):
             dcc.Store(id="staticData", storage_type="session"),
             html.Div([
                 html.Div(style = {'width': '100%', 'height': '20vh', 'marginBottom': "auto", "marginTop": "0", 
-                              "display": "flex", 'justify-content':'center', 'align-items':'center', 'backgroundColor':'#ECEFF1'}, 
+                              "display": "flex", 'justifyContent':'center', 'alignItems':'center', 'backgroundColor':'#ECEFF1'}, 
                      children=[
                 dcc.Store(id='filters', storage_type='memory'),
                 dcc.Store(id='filtered_flights', storage_type='memory'),
                 html.Div(className="mx-3", style={'display': 'inline-block', 'width': '15%'}, children=[
                     dbc.Label('Aéroport de départ:', html_for='departure_airport'),
-                    dcc.Dropdown(id='departure_airport', options = get_airports(), value=None)
+                    dcc.Dropdown(id='departure_airport', options = get_from_airports(global_data_static), value=None)
                 ]),
                 html.Div(className="mx-3", style={'display': 'inline-block', 'width': '15%'}, children=[
                     dbc.Label("Aéroport d'arrivé :", html_for='arrival_airport'),
-                    dcc.Dropdown(id='arrival_airport', options = get_airports(), value=None)
+                    dcc.Dropdown(id='arrival_airport', options = get_arr_airports(global_data_static), value=None)
                 ]),
                 html.Div(className="mx-3", style={'display': 'inline-block', 'width': '15%'}, children=[
                     dbc.Label("Compagnie aérienne :", html_for='airline_company'),
-                    dcc.Dropdown(id='airline_company', options = get_airlines(), value=None)
+                    dcc.Dropdown(id='airline_company', options = get_airlines(global_data_static), value=None)
                 ]),
                 html.Div(className="mx-3", style={'display': 'inline-block', 'width': '15%'}, children=[
-                    dbc.Label("Pays d'origine :", html_for='state_registration'),
-                    dcc.Dropdown(id='state_registration', options = get_countries(), value=None)
+                    dbc.Label("Pays de départ :", html_for='state_registration'),
+                    dcc.Dropdown(id='state_registration', options = get_countries(global_data_static), value=None)
                 ]),
                 html.Div(className="mx-3", style={'display': 'inline-block'}, children=[
                     dbc.Label('Numéro de vol :'),
@@ -162,7 +162,6 @@ def update_map(n_intervals, data_dyn, data_stat, filters):
             global_data_dynamic = get_data_live(data_dyn)
 
         static_datas, dynamic_datas = get_filtered_flights(filters, data_stat, global_data_dynamic)
-        # data_dyn = get_filtered_dynamic_flights(filters, data_stat, global_data_dynamic)
 
         # data_new = get_data_live(data_new_temp)
         markers_tooltips = create_markers_tooltips(static_datas, dynamic_datas)

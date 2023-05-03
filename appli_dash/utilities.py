@@ -376,41 +376,65 @@ def create_markers_tooltips(static_data, dynamic_data):
 
     return markers
 
-def get_airports():
+def get_from_airports(global_data_static):
     """
-    Méthode qui renvoie un dictionnaire des aéroports pour les dropdown
+    Méthode qui renvoie une liste de dictionnaire des aéroports de départ
     Args: 
-        None
+        global_data_static: (list) liste de toutes les données statiques des vols sur la Map
     Return:
-        Liste des dictionnaires des aéroports
+        Liste des dictionnaires des aéroports de départ
     """
-    with open('static_datas/airports.json') as file:
-        airports = json.load(file)
-        return [{'label': airport['NameOK'], 'value': airport['AirportCode']} for airport in airports]
+    airports = [{'label': airport[next(iter(airport))]['airport_dep_sql']['airport_name'], 
+             'value' : airport[next(iter(airport))]['airport_dep_sql']['airport_name']} for airport in global_data_static]
     
-def get_countries():
+    airports = list({airport['label']: airport for airport in airports}.values())
+    airports = sorted(airports, key=lambda x: x['label'])
+    return airports
+
+def get_arr_airports(global_data_static):
     """
-    Méthode qui renvoie un dictionnaire des pays pour les dropdown
+    Méthode qui renvoie une liste de dictionnaire des aéroports d'arrivé 
     Args: 
-        None
+        global_data_static: (list) liste de toutes les données statiques des vols sur la Map
     Return:
-        Liste des dictionnaires pays
+        Liste des dictionnaires des aéroports d'arrivé
     """
-    with open('static_datas/countries.json') as file:
-        countries = json.load(file)
-        return [{'label': country['NameOK'], 'value': country['CountryCode']} for country in countries]
+    airports = [{'label': airport[next(iter(airport))]['airport_arr_sql']['airport_name'], 
+                 'value' : airport[next(iter(airport))]['airport_arr_sql']['airport_name']} for airport in global_data_static]
     
-def get_airlines():
+    airports = list({airport['label']: airport for airport in airports}.values())
+    airports = sorted(airports, key=lambda x: x['label'])
+    return airports
+    
+def get_countries(global_data_static):
     """
-    Méthode qui renvoie un dictionnaire des compagnies aériennes pour les dropdown
+    Méthode qui renvoie une liste de dictionnaire des pays de départ 
     Args: 
-        None
+        global_data_static: (list) liste de toutes les données statiques des vols sur la Map
+    Return:
+        Liste des dictionnaires des pays de départ des vols
+    """
+    countries = [{'label': country[next(iter(country))]['airport_dep_sql']['country_name'], 
+                  'value' : country[next(iter(country))]['airport_dep_sql']['country_name']} for country in global_data_static]
+    
+    countries = list({country['label']: country for country in countries}.values())
+    countries = sorted(countries, key=lambda x: x['label'])
+    return countries
+    
+def get_airlines(global_data_static):
+    """
+    Méthode qui renvoie un dictionnaire des compagnies aériennes 
+    Args: 
+        global_data_static: (list) liste de toutes les données statiques des vols sur la Map
     Return:
         Liste des dictionnaires des compagnies aériennes
     """
-    with open('static_datas/airlines.json') as file:
-        airlines = json.load(file)
-        return [{'label': airline['NameOK'], 'value': airline['AirlineID']} for airline in airlines]
+    airlines = [{'label': airline[next(iter(airline))]['airline_sql']['airline_name'], 
+                 'value' : airline[next(iter(airline))]['airline_sql']['airline_name']} for airline in global_data_static]
+
+    airlines = list({airline['label']: airline for airline in airlines}.values())
+    airlines = sorted(airlines, key=lambda x: x['label'])
+    return airlines 
     
     
 def get_filtered_flights(filters, static_flights, dynamic_flights):
@@ -432,13 +456,13 @@ def get_filtered_flights(filters, static_flights, dynamic_flights):
     if any(filter is not None for filter in filters.values()):
 
         filtered_static_flights = [flight for flight in static_flights if
-            (test_flight_by_filter(flight[next(iter(flight))]['airport_from_iata'], filters['from_airport']))
+            (test_flight_by_filter(flight[next(iter(flight))]['airport_dep_sql']['airport_name'], filters['from_airport']))
             and
-            (test_flight_by_filter(flight[next(iter(flight))]['airport_arr_iata'], filters['arr_airport']))
+            (test_flight_by_filter(flight[next(iter(flight))]['airport_arr_sql']['airport_name'], filters['arr_airport']))
             and
-            (test_flight_by_filter(flight[next(iter(flight))]['airline_iata'], filters['company']))
+            (test_flight_by_filter(flight[next(iter(flight))]['airline_sql']['airline_name'], filters['company']))
             and
-            (test_flight_by_filter(flight[next(iter(flight))]['aircraft_flag'], filters['state']))
+            (test_flight_by_filter(flight[next(iter(flight))]['airport_dep_sql']['country_name'], filters['state']))
             and
             (next(iter(flight)) == filters['flight_number'] if filters['flight_number'] not in (None, '') else next(iter(flight)))]
 
