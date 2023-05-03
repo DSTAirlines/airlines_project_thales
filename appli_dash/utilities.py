@@ -31,11 +31,17 @@ def get_key_name(key):
 
 
 # Afficher le datetime du dernier refresh
-def datetime_refresh(date_time=''):
+def datetime_refresh(nb_planes, n_intervals=False, date_time=''):
     now = datetime.now()
-    refresh_time = now.strftime("%d-%m-%Y à %H:%M:%S")
+    refresh_time = date_time if date_time else now.strftime("%d-%m-%Y à %H:%M:%S")
+
+    if n_intervals:
+        txt_refresh = "Nb de refresh autorisé dépassé"
+    else:
+        txt_refresh = f"Last update : {refresh_time} ({nb_planes} vols)"
+
     return html.Div(
-        children=f"Last update : {date_time if date_time else refresh_time}",
+        children=f"{txt_refresh}",
         style={
             "position": "absolute",
             "bottom": "12px",
