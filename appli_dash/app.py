@@ -15,7 +15,7 @@ from get_data import *
 from dash.exceptions import PreventUpdate
 
 
-def display_map(markers_tooltips):
+def display_map(markers_tooltips, nb_planes):
     """
     Afficher la map, les markers et les tooltips
     Args:
@@ -52,7 +52,8 @@ def display_map(markers_tooltips):
                 ]),
                 html.Div(className="mx-3", style={'display': 'inline-block'}, children=[
                     dbc.Label('Numéro de vol :'),
-                    dbc.Input(id="flight_number", placeholder="Entrer un numéro de vol...", type="text")
+                    dbc.Input(id="flight_number", placeholder="Entrer un numéro de vol...", type="text",
+                              style={'textTransform': 'uppercase'}, value=None)
                 ]),
                 html.Div(style={'marginTop':'32px'}, children=[
                     dbc.Button('FILTRER', id='filter_button')])
@@ -64,7 +65,7 @@ def display_map(markers_tooltips):
                 center=(46.067314, 4.098643),
                 zoom=6,
                 children=[
-                    datetime_refresh(),
+                    datetime_refresh(nb_planes),
                     dl.TileLayer(),
                     *markers_tooltips,
                 ]
@@ -106,8 +107,7 @@ index_page = html.Div([
     ], style={"paddingTop": "5vh"}),
 
     html.Div([
-        dcc.Link("Live Map", href="/live-map", className="mx-3"),
-        dcc.Link("Search Page", href="/search-page", className="mx-3"),
+        dcc.Link("Interactive Live Map", href="/live-map", className="mx-3"),
         dcc.Link("Statistiques", href="/stats-page", className="mx-3")
     ], className="page-links"),
 
@@ -153,7 +153,7 @@ def update_map(n_intervals, data_dyn, data_stat, filters):
     global global_data_dynamic
 
     # Ajout d'une sécutité en cas d'oubli de fermeture du script
-    if n_intervals <= 20:
+    if n_intervals <= 15:
 
         # Script d'update
         if data_dyn is None:
@@ -163,13 +163,22 @@ def update_map(n_intervals, data_dyn, data_stat, filters):
 
         static_datas, dynamic_datas = get_filtered_flights(filters, data_stat, global_data_dynamic)
 
-        # data_new = get_data_live(data_new_temp)
         markers_tooltips = create_markers_tooltips(static_datas, dynamic_datas)
+        nb_planes = len(global_data_dynamic)
         return [
-            datetime_refresh(),
+            datetime_refresh(nb_planes),
             dl.TileLayer(),
             *markers_tooltips,
         ], global_data_dynamic
+
+    else:
+        markers_tooltips = create_markers_tooltips(data_stat, data_dyn)
+        nb_planes = len(data_dyn)
+        return [
+            datetime_refresh(nb_planes, n_intervals=True),
+            dl.TileLayer(),
+            *markers_tooltips,
+        ], data_dyn
 
 
 # Callback des filtres
@@ -233,8 +242,10 @@ def filter_button(click, static_data, dynamic_data, filters, date_time):
         filtered_static_flights, filtered_dynamic_flights = get_filtered_flights(filters, static_data, dynamic_data)
         filtered_markers_tooltips = create_markers_tooltips(filtered_static_flights, filtered_dynamic_flights)
         date_time = date_time.strip('Last update : ')
+        print(date_time)
+        nb_planes = len(filtered_dynamic_flights)
         
-        return [datetime_refresh(date_time), dl.TileLayer(), *filtered_markers_tooltips]
+        return [datetime_refresh(nb_planes, date_time), dl.TileLayer(), *filtered_markers_tooltips]
 
 # Callback affichage des pages
 @app.callback(
@@ -248,7 +259,8 @@ def display_page(pathname):
         if global_data_static is None:
             global_data_static, global_data_dynamic = initialize_data()
         markers_tooltips = create_markers_tooltips(global_data_static, global_data_dynamic)
-        return display_map(markers_tooltips)
+        nb_planes = len(global_data_dynamic)
+        return display_map(markers_tooltips, nb_planes)
 
     elif pathname == "/search-page":
         return search_page
