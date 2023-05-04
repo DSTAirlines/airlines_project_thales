@@ -1,6 +1,8 @@
 import sys
 import os
 from pathlib import Path
+from pymongo import ASCENDING as asc
+from pymongo import DESCENDING as desc
 from dotenv import load_dotenv
 load_dotenv()
 
