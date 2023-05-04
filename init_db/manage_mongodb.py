@@ -81,8 +81,8 @@ def create_db(db_name):
         test_crud_collection(collection)
 
     # Faire d'abord un appel à opensky
-    opensky_api(init=True)
-    airlabs_api()
+    opensky_api(init=True, cron=False)
+    airlabs_api(cron=False)
 
     # fermer la connection
     client.close()
@@ -101,4 +101,5 @@ def drop_db(db_name):
         print(f"\nErreur de connexion à la database MongoDB : \n{ex}\n")
     client.close()
 
-# create_db(MONGO_DB_NAME)
+# drop_db(MONGO_DB_NAME)
+#create_db(MONGO_DB_NAME)
