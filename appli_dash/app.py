@@ -36,11 +36,11 @@ def display_map(markers_tooltips, nb_planes):
                 dcc.Store(id='filtered_flights', storage_type='memory'),
                 html.Div(className="mx-3", style={'display': 'inline-block', 'width': '15%'}, children=[
                     dbc.Label('Aéroport de départ:', html_for='departure_airport'),
-                    dcc.Dropdown(id='departure_airport', options = get_from_airports(global_data_static), value=None)
+                    dcc.Dropdown(id='departure_airport', options = get_from_airports(global_data_static), value=None, style={'fontSize': '12px'}, className="py-2")
                 ]),
                 html.Div(className="mx-3", style={'display': 'inline-block', 'width': '15%'}, children=[
                     dbc.Label("Aéroport d'arrivé :", html_for='arrival_airport'),
-                    dcc.Dropdown(id='arrival_airport', options = get_arr_airports(global_data_static), value=None)
+                    dcc.Dropdown(id='arrival_airport', options = get_arr_airports(global_data_static), value=None, style={'fontSize': '12px'}, className="py-2")
                 ]),
                 html.Div(className="mx-3", style={'display': 'inline-block', 'width': '15%'}, children=[
                     dbc.Label("Compagnie aérienne :", html_for='airline_company'),
