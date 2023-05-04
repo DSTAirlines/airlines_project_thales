@@ -112,7 +112,7 @@ def lauch_script(cron=True):
         collection_opensky.update_one({"_id": opensky_doc["_id"]}, {"$set": {"airlabs_id": airlabs_id}})
 
     # On supprime les documents opensky sans airlabs_id
-    collection_opensky.delete_many({"airlabs_id": {"$in": [None, ""]}, "time": max_time_opensky})
+    collection_opensky.delete_many({"airlabs_id": {"$in": [None, ""]}})
 
     # on ferme la connexion
     client.close()
