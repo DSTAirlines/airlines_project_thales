@@ -24,7 +24,7 @@ MONGO_DB_NAME = os.environ.get("MONGO_DB_NAME")
 MONGO_COL_OPENSKY = os.environ.get("MONGO_COL_OPENSKY")
 MONGO_COL_AIRLABS = os.environ.get("MONGO_COL_AIRLABS")
 
-def query_airlabs_api(cron=True):
+def query_airlabs_api(cron=False):
     """
     AppelAPI Airlabs
     Args:
@@ -67,7 +67,7 @@ def query_airlabs_api(cron=True):
     return airlabs_data
 
 
-def lauch_script(cron=True):
+def lauch_script(cron=False):
     """
     Script de traitement et d'enregistrement des résultats de l'API
         Principe: Vérifier dans collection Opensky si correspondance avec callsign
@@ -117,4 +117,4 @@ def lauch_script(cron=True):
     # on ferme la connexion
     client.close()
 
-lauch_script()
+# lauch_script()

@@ -113,7 +113,7 @@ def initialize_data():
     """
     
     # Appel API AirLabs
-    airlabs_api(cron=False)
+    airlabs_api()
 
     dataDynamic = []
     dataStatic = []

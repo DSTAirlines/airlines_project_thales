@@ -26,7 +26,7 @@ MONGO_COL_OPENSKY = os.environ.get("MONGO_COL_OPENSKY")
 MONGO_COL_AIRLABS = os.environ.get("MONGO_COL_AIRLABS")
 
 
-def query_opensky_api(cron=True):
+def query_opensky_api(cron=False):
     """
     Appel API OpenSky
     Args:
@@ -69,7 +69,7 @@ def query_opensky_api(cron=True):
     return opensky_data
 
 
-def lauch_script(init=False, cron=True):
+def lauch_script(init=False, cron=False):
     """
     Script de traitement et d'enregistrement des résultats de l'API
         Principe: Vérifier dans l'enregistrement précédent la présence d'une 
@@ -112,4 +112,4 @@ def lauch_script(init=False, cron=True):
     # On ferme la connexion
     client.close()
 
-lauch_script()
+# lauch_script()
