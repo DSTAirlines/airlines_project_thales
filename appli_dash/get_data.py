@@ -67,6 +67,6 @@ def get_data_dynamic_updated(old_data):
         Array: Array d'update des data dynamiques des avions en vols
     """
 
-    opensky_data = query_opensky_api()
+    opensky_data = query_opensky_api(cron=False)
     old_callsigns = [list(d.keys())[0] for d in old_data]
     return [data for data in opensky_data if data['callsign'] in old_callsigns]
