@@ -21,14 +21,18 @@ from fetch_opensky_data import query_opensky_api
 MONGO_DB_NAME = os.environ.get("MONGO_DB_NAME")
 MONGO_COL_OPENSKY = os.environ.get("MONGO_COL_OPENSKY")
 MONGO_COL_AIRLABS = os.environ.get("MONGO_COL_AIRLABS")
-CLIENT_ID_LUFTHANSA = os.environ.get("CLIENT_ID_LUFTHANSA")
-CLIENT_SECRET_LUFTHANSA = os.environ.get("CLIENT_SECRET_LUFTHANSA")
 
 
 def get_data_initial():
-    # A l'ouverture de la page de la map Dash
-    # Permet de récupérer les données qui matchent entre data Airlabs et dernier enregistrement OpenSky
+    """
+    S'effectue lors de l'ouverture de la page de la map Dash
+    Récupère les données initiales depuis MongoDB pour la page de la map Dash
+        -> les donnéees qui matchent entre data Airlabs et dernier enregistrement OpenSky
+    Returns:
+        Array: Liste de dict des données initiales
+    """
 
+    # Connexion à MongoDB
     client = get_connection()
     db = client[MONGO_DB_NAME]
     opensky_collection = db[MONGO_COL_OPENSKY]
@@ -54,32 +58,15 @@ def get_data_initial():
 
 
 def get_data_dynamic_updated(old_data):
-    
-    # Quand refresh de la page map Dash, appel à l'API OpenSky
-    # on ne va garder que les old_data dont le callsign est présent dans le nouvel appel API
+    """
+    Quand refresh de la page map Dash, appel à l'API OpenSky
+    On ne va garder que les old_data dont le callsign est présent dans le nouvel appel API
+    Args:
+        old_data (Array): Array des dict des data dynamiques actuellement affichés
+    Returns:
+        Array: Array d'update des data dynamiques des avions en vols
+    """
+
     opensky_data = query_opensky_api()
     old_callsigns = [list(d.keys())[0] for d in old_data]
     return [data for data in opensky_data if data['callsign'] in old_callsigns]
-
-
-
-# def get_info_flight_number(callsign):
-
-#     now = datetime.now()
-#     refresh_time = now.strftime("%Y-%m-%d")
-
-#     auth_url = "https://api.lufthansa.com/v1/oauth/token"
-#     auth_payload = {
-#         "client_id": CLIENT_ID_LUFTHANSA,
-#         "client_secret": CLIENT_SECRET_LUFTHANSA,
-#         "grant_type": "client_credentials"
-#     }
-#     auth_response = requests.post(auth_url, data=auth_payload)
-#     auth_data = auth_response.json()
-
-#     token = auth_data["access_token"]
-#     headers = {"Authorization": f"Bearer {token}"}
-#     params = {"limit": limit, "offset": offset}
-
-#     url = BASE_URL_REFERENCES + endpoint
-#     r = requests.get(url, headers=headers, params=params)
