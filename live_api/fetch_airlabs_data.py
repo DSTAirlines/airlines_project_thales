@@ -19,15 +19,24 @@ from connection_mongodb import get_connection
 
 # CREDENTIALS
 KEY_AIRLABS_API = os.environ.get("KEY_AIRLABS_API")
+KEY_AIRLABS_API_CRONJOB = os.environ.get("KEY_AIRLABS_API_CRONJOB")
 MONGO_DB_NAME = os.environ.get("MONGO_DB_NAME")
 MONGO_COL_OPENSKY = os.environ.get("MONGO_COL_OPENSKY")
 MONGO_COL_AIRLABS = os.environ.get("MONGO_COL_AIRLABS")
 
-def query_airlabs_api():
-    
+def query_airlabs_api(cron=True):
+    """
+    AppelAPI Airlabs
+    Args:
+        cron (bool, optional): Utilisation d'un compte API différent pour 
+            le cronjob (True par défaut).
+    Returns:
+        Array: Array de dict des résultats de l'appel API
+    """
+
     time_now = int(time.time())
     params = {
-        'api_key' : KEY_AIRLABS_API,
+        'api_key' : KEY_AIRLABS_API_CRONJOB if cron is True else KEY_AIRLABS_API,
         'bbox': (pr.la_min, pr.lon_min, pr.la_max, pr.lon_max)
     }
     url = pr.ROOT_AIRLABS_URL
@@ -58,20 +67,34 @@ def query_airlabs_api():
     return airlabs_data
 
 
-def lauch_script():
-    airlabs_data = query_airlabs_api()
+def lauch_script(cron=True):
+    """
+    Script de traitement et d'enregistrement des résultats de l'API
+        Principe: Vérifier dans collection Opensky si correspondance avec callsign
+            - si oui: mise à jour document OpenSky avec identifiant Airlabs et
+              enregistrement du document Airlabs
+            - si non: suppression du document de la collection OpenSky
+    Args:
+        cron (bool, optional): Utilisation d'un compte API différent pour 
+            le cronjob (True par défaut).
+    """
 
+    # Récupération data API
+    airlabs_data = query_airlabs_api(cron=cron)
+
+    # Connexion MongoDB
     client = get_connection()
     db = client[MONGO_DB_NAME]
     collection_opensky = db[MONGO_COL_OPENSKY]
     collection_airlabs = db[MONGO_COL_AIRLABS]
 
-    # Récupérer le dernier time de opensky
+    # Récupération du time du dernier appel API Opensky 
     max_time_opensky_result = collection_opensky.find().sort("time", -1).limit(1)
     max_time_opensky = max_time_opensky_result[0]["time"]
 
-    # Créer un dictionnaire basé sur 'flight_icao' pour accélérer la recherche de correspondances
+    # Création d'un dictionnaire basé sur 'flight_icao' pour accélérer la recherche de correspondances
     airlabs_dict = {airlab["flight_icao"]: airlab for airlab in airlabs_data}
+
     # Filtrer les documents opensky avec des 'callsign' correspondant aux 'flight_icao' de 'airlabs_data'
     opensky_matching_callsigns = collection_opensky.find({
         "airlabs_id": None,
@@ -79,6 +102,7 @@ def lauch_script():
         "callsign": {"$in": list(airlabs_dict.keys())}
     }).sort("callsign")
 
+    # Parmi les documents qui matchent :
     for opensky_doc in opensky_matching_callsigns:
         match = airlabs_dict[opensky_doc["callsign"]]
         match_copy = match.copy()
