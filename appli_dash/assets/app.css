@@ -144,3 +144,8 @@
     opacity: .5;
     text-transform: none;
 }
+
+.Select-placeholder{
+    opacity: .5 !important;
+    font-size: 14px;
+}
