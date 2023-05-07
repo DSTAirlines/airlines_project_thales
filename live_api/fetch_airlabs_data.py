@@ -89,8 +89,12 @@ def lauch_script(cron=False):
     collection_airlabs = db[MONGO_COL_AIRLABS]
 
     # Récupération du time du dernier appel API Opensky 
-    max_time_opensky_result = collection_opensky.find().sort("time", -1).limit(1)
-    max_time_opensky = max_time_opensky_result[0]["time"]
+    max_time_airlabs_result = collection_airlabs.find().sort("time", -1).limit(1)
+    max_time_airlabs = max_time_airlabs_result[0]["time"]
+
+    # # Récupération du time du dernier appel API Opensky 
+    # max_time_opensky_result = collection_opensky.find().sort("time", -1).limit(1)
+    # max_time_opensky = max_time_opensky_result[0]["time"]
 
     # Création d'un dictionnaire basé sur 'flight_icao' pour accélérer la recherche de correspondances
     airlabs_dict = {airlab["flight_icao"]: airlab for airlab in airlabs_data}
@@ -98,7 +102,7 @@ def lauch_script(cron=False):
     # Filtrer les documents opensky avec des 'callsign' correspondant aux 'flight_icao' de 'airlabs_data'
     opensky_matching_callsigns = collection_opensky.find({
         "airlabs_id": None,
-        "time": max_time_opensky,
+        "time": {"$gte": max_time_airlabs},
         "callsign": {"$in": list(airlabs_dict.keys())}
     }).sort("callsign")
 
@@ -117,4 +121,3 @@ def lauch_script(cron=False):
     # on ferme la connexion
     client.close()
 
-# lauch_script()
