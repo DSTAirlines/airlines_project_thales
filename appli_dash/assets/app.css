@@ -120,32 +120,105 @@
 }
 
 ::-webkit-input-placeholder { /* WebKit, Blink, Edge */
-    opacity: .5;
+    opacity: .7;
     text-transform: none;
 }
 :-moz-placeholder { /* Mozilla Firefox 4 to 18 */
-    opacity: .5;
+    opacity: .7;
     text-transform: none;
 }
 ::-moz-placeholder { /* Mozilla Firefox 19+ */
-    opacity: .5;
+    opacity: .7;
     text-transform: none;
 }
 :-ms-input-placeholder { /* Internet Explorer 10-11 */
-    opacity: .5;
+    opacity: .7;
     text-transform: none;
 }
 ::-ms-input-placeholder { /* Microsoft Edge */
-    opacity: .5;
+    opacity: .7;
     text-transform: none;
 }
 
 ::placeholder { /* Most modern browsers support this now. */
-    opacity: .5;
+    opacity: .7;
     text-transform: none;
 }
 
 .Select-placeholder{
-    opacity: .5 !important;
+    opacity: .8 !important;
     font-size: 14px;
+}
+
+.dropdown-toggle {
+    margin-top: 15% !important;
+    padding-left: 25px !important; 
+    padding-right: 25px !important;
+    padding-top: 2px !important;
+    padding-bottom: 4px !important;
+    background-color: #1c576e !important;
+    border-color:#296d88 !important;
+    color: whitesmoke !important;
+}
+
+.dropdown-toggle:hover {
+    background-color: #1c576ea9!important;
+    border-color:#1c576ea9!important;
+    color: whitesmoke!important;
+}
+
+.dropdown-absolute {
+    position: absolute !important;
+    width: auto !important;
+    padding-left: 3rem !important;
+}
+
+.marges-navbar-map{
+    margin-left: 0 !important;
+    margin-right: 2rem!important;
+}
+
+
+#resultDropdown table tbody tr > td {
+    padding-left: .5rem !important;
+    padding-top: .25rem !important;
+    padding-bottom:.25rem!important;
+    width: 50% !important;
+    color: whitesmoke !important;
+}
+
+.complement-dropdown {
+    margin-top: .75rem;
+    font-size: small;
+    font-style: italic;
+    opacity: .5;
+}
+/* .left-side1-style{
+    width: 100% !important;
+    height: 45vh !important;
+    padding-left: .5rem !important;
+} */
+ 
+#dropdown-airline .Select-control, 
+#dropdown-dep-airport .Select-control, 
+#dropdown-arr-airport .Select-control, 
+#dropdown-aircraft .Select-control {
+    border-color: transparent !important;
+    background-color: rgb(25, 25, 25) !important;
+    color:white;
+}
+
+#dropdown-airline .Select-menu-outer, 
+#dropdown-dep-airport .Select-menu-outer, 
+#dropdown-arr-airport .Select-menu-outer, 
+#dropdown-aircraft .Select-menu-outer {
+    background-color: rgb(25, 25, 25);
+    color: white;
+}
+
+#dropdown-airline .Select-value-label, 
+#dropdown-dep-airport .Select-value-label, 
+#dropdown-arr-airport .Select-value-label, 
+#dropdown-aircraft .Select-value-label {
+    color: white !important;
 }
