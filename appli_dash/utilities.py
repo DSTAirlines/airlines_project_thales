@@ -483,3 +483,6 @@ def get_filtered_flights(filters, static_flights, dynamic_flights):
         filtered_dynamic_flights = dynamic_flights
     
     return filtered_static_flights, filtered_dynamic_flights
+
+
+
