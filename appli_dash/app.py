@@ -15,6 +15,31 @@ from get_data import *
 from dash.exceptions import PreventUpdate
 
 
+def nav(classes=""):
+    """
+    Afficher la barre de navigation
+    Args:
+        class (str):classe de la barre de navigation
+    Returns:
+        Affichage de la barre de navigation
+    """
+
+    return dbc.DropdownMenu(
+        label="Menu",
+        color="info",
+        children=[
+            dbc.DropdownMenuItem("Index", href="/"),
+            dbc.DropdownMenuItem("Map Live", href="/live-map"),
+            dbc.DropdownMenuItem("Statistics Data", href="stats-page"),
+            dbc.DropdownMenuItem("Statistics Map", href="stats-map-page"),
+        ],
+        nav=True,
+        in_navbar=True,
+        id="menuDropdown",
+        className=classes
+    ) 
+
+
 def display_map(markers_tooltips, nb_planes):
     """
     Afficher la map, les markers et les tooltips
@@ -29,25 +54,26 @@ def display_map(markers_tooltips, nb_planes):
             dcc.Store(id="dynamicData", storage_type="memory"),
             dcc.Store(id="staticData", storage_type="session"),
             html.Div([
-                html.Div(style = {'width': '100%', 'height': '20vh', 'marginBottom': "auto", "marginTop": "0", 
+                html.Div(style = {'width': '100%', 'height': '12vh', 'marginBottom': "auto", "marginTop": "0", 
                               "display": "flex", 'justifyContent':'center', 'alignItems':'center', 'backgroundColor':'#ECEFF1'}, 
                      children=[
                 dcc.Store(id='filters', storage_type='memory'),
                 dcc.Store(id='filtered_flights', storage_type='memory'),
-                html.Div(className="mx-3", style={'display': 'inline-block', 'width': '15%'}, children=[
+                html.Div(nav(), className="marges-navbar-map", style={'display': 'inline-block', 'width': '10%'}),
+                html.Div(className="mx-3, py-2", style={'display': 'inline-block', 'width': '15%'}, children=[
                     dbc.Label('Aéroport de départ:', html_for='departure_airport'),
-                    dcc.Dropdown(id='departure_airport', options = get_from_airports(global_data_static), value=None, style={'fontSize': '12px'}, className="py-2")
+                    dcc.Dropdown(id='departure_airport', options = get_from_airports(global_data_static), value=None, style={'fontSize': '12px'})
                 ]),
                 html.Div(className="mx-3", style={'display': 'inline-block', 'width': '15%'}, children=[
                     dbc.Label("Aéroport d'arrivé :", html_for='arrival_airport'),
-                    dcc.Dropdown(id='arrival_airport', options = get_arr_airports(global_data_static), value=None, style={'fontSize': '12px'}, className="py-2")
+                    dcc.Dropdown(id='arrival_airport', options = get_arr_airports(global_data_static), value=None, style={'fontSize': '12px'})
                 ]),
                 html.Div(className="mx-3", style={'display': 'inline-block', 'width': '15%'}, children=[
                     dbc.Label("Compagnie aérienne :", html_for='airline_company'),
                     dcc.Dropdown(id='airline_company', options = get_airlines(global_data_static), value=None)
                 ]),
                 html.Div(className="mx-3", style={'display': 'inline-block', 'width': '15%'}, children=[
-                    dbc.Label("Pays de départ :", html_for='state_registration'),
+                    dbc.Label("Pays d'immatriculation :", html_for='state_registration'),
                     dcc.Dropdown(id='state_registration', options = get_countries(global_data_static), value=None)
                 ]),
                 html.Div(className="mx-3", style={'display': 'inline-block'}, children=[
@@ -61,7 +87,7 @@ def display_map(markers_tooltips, nb_planes):
             ]),
             dl.Map(
                 id="mapLive",
-                style={'width': '100%', 'height': '80vh', 'marginBottom': "0", "marginTop": "auto", "display": "block"},
+                style={'width': '100%', 'height': '88vh', 'marginBottom': "0", "marginTop": "auto", "display": "block"},
                 center=(46.067314, 4.098643),
                 zoom=6,
                 children=[
@@ -79,11 +105,174 @@ def display_map(markers_tooltips, nb_planes):
     )
 
 
+def display_stats_page(df):
+    """
+    Afficher la page de statistiques
+    Args:
+        df (dataframe): dataframe des données
+    Returns:
+        Affichage de la page de statistiques
+    """
+
+    # Récupération des données
+    stats_by_day =  get_global_stats(df)
+    dic_airlines = get_drop_dic_individual_stats('airline_iata', 'airline_name', df)
+    dic_dep_airports = get_drop_dic_individual_stats('dep_iata', 'dep_airport_name', df)
+    dic_arr_airports = get_drop_dic_individual_stats('arr_iata', 'arr_airport_name', df)
+    dic_aircrafts = get_drop_dic_individual_stats('aircraft_icao', 'aircraft_name', df)
+
+    # SideBar avec dropdowns
+    sidebar = html.Div([
+        dbc.Row(
+            [
+                dbc.Col(nav('dropdown-absolute'), width=11),
+            ],
+            style={"height": "5vh"}
+        ),
+        dbc.Row(
+            [
+                html.P('Choix des paramètres', style={'marginTop': '2rem', 'textTransform': 'underline', 'fontSize': '1.2rem', 'fontWeight': 'bold'}),
+
+                html.P('Compagnies',
+                           style={'marginTop': '8px', 'marginBottom': '4px'},
+                           className='font-weight-bold'),
+                dcc.Dropdown(id='dropdown-airline', multi=False, value=None,
+                    options=[{'label': dic_airlines[x], 'value': x} for x in list(dic_airlines.keys())],
+                    style={'width': '100%'}
+                ),
+
+                html.P('Aéroports de départ',
+                           style={'marginTop': '8px', 'marginBottom': '4px'},
+                           className='font-weight-bold'),
+                dcc.Dropdown(id='dropdown-dep-airport', multi=False, value=None,
+                    options=[{'label': dic_dep_airports[x], 'value': x} for x in list(dic_dep_airports.keys())],
+                    style={'width': '100%', 'fontSize': '12px'}
+                ),
+
+                html.P('Aéroports d\'arrivée',
+                           style={'marginTop': '8px', 'marginBottom': '4px'},
+                           className='font-weight-bold'),
+                dcc.Dropdown(id='dropdown-arr-airport', multi=False, value=None,
+                    options=[{'label': dic_arr_airports[x], 'value': x} for x in list(dic_arr_airports.keys())],
+                    style={'width': '100%', 'fontSize': '12px'}
+                ),
+
+                html.P('Type d\'avion',
+                           style={'marginTop': '8px', 'marginBottom': '4px'},
+                           className='font-weight-bold'),
+                dcc.Dropdown(id='dropdown-aircraft', multi=False, value=None,
+                    options=[{'label': dic_aircrafts[x], 'value': x} for x in list(dic_aircrafts.keys())],
+                    style={'width': '100%', 'fontSize': '12px'}
+                ),
+            ],
+            className='d-block color-dark',
+            style={"height": "45vh"}
+        ),
+        dbc.Row(
+            [
+                html.P('Callsigns')
+            ],
+            className='d-block',
+            style={"height": "50vh"}
+        )],
+        className='bg-secondary text-white px-3'
+    )
+
+    # Content avec 3 parties différentes
+    content = html.Div([
+        dbc.Row(
+            [
+                # Partie 1: Affichage du graphique des statistiques journalières agrégées
+                dbc.Col(
+                    [
+                        html.Div([
+                            dcc.Graph(
+                                id='example-graph',
+                                figure={
+                                    'data': [
+                                        go.Scatter(x=stats_by_day.index, y=stats_by_day['callsign'], 
+                                            name='Vols', yaxis='y1', mode='lines+markers', marker=dict(color='blue')),
+                                        go.Scatter(x=stats_by_day.index, y=stats_by_day['airline_iata'], 
+                                            name='Compagnies', yaxis='y2', mode='lines+markers', marker=dict(color='green')),
+                                        go.Scatter(x=stats_by_day.index, y=stats_by_day['dep_iata'], 
+                                            name='Aéroports de départ', yaxis='y2', mode='lines+markers', marker=dict(color='red')),
+                                        go.Scatter(x=stats_by_day.index, y=stats_by_day['arr_iata'], 
+                                            name='Aéroports d\'arrivée', yaxis='y2', mode='lines+markers', marker=dict(color='purple'))
+                                    ],
+                                    'layout': go.Layout(
+                                        margin={'l': 40, 'b': 100, 't': 80, 'r': 40},
+                                        title={
+                                            'text': 'Statistiques par jour',
+                                            'font': {'size': 16, 'color': 'teal'},
+                                            'x': 0.065,
+                                            'y': 0.96,
+                                            'xanchor': 'left'
+                                        },
+                                        xaxis={'gridcolor': 'lightgrey', 'tickformat': '%d-%m-%Y', 'nticks': len(stats_by_day.index)},
+                                        yaxis={'title': 'Vols', 'side': 'left', 'gridcolor': 'lightgrey', 'titlefont': {'color': 'blue'}, 'tickfont': {'color': 'blue'}},
+                                        yaxis2={'title': 'Autres variables', 'overlaying': 'y', 'side': 'right', 'gridcolor': 'lightgrey', 'titlefont': {'color': 'green'}, 'tickfont': {'color': 'green'}},
+                                        legend={'x': 0.2, 'y': 1.1, 'orientation': 'h', 'bgcolor': 'rgba(255, 255, 255, 0.5)', 'font': {'size': 12}},
+                                        # legend={'x': 1.2, 'y': 1, 'bgcolor': 'rgba(255, 255, 255, 0.5)', 'bordercolor': 'black', 'borderwidth': 1, 'font': {'size': 10}},
+                                        plot_bgcolor='rgba(237, 248, 251, 0.9)',
+                                        paper_bgcolor='rgba(255, 255, 255, 0.1)'
+                                    )
+                                }
+                            )
+                        ])
+                    ],
+                    className='bg-light'
+                ),
+
+                # Partie 2: Affichage du tableau des statistiques individuelles (choix par dropdowns)
+                dbc.Col([
+                    dcc.Store(id="dic-countries", storage_type="memory"),
+                    html.Div([
+                        html.Div([
+                            html.Span('Détails d\'un élément ', style={'marginTop': '1rem', 'color': '#72ffff'}),
+                            html.Span(id='titre-detail-complement', style={'marginTop': '1rem', 'color': '#72ffff'}),
+                        ],
+                        style={'display': 'flex'}
+                        ),
+                        html.Div(id='complement-dropdown', className='complement-dropdown'),
+                    ]),
+                    html.Div(id='resultDropdown', style={'marginTop': '1.5rem'}),
+                ],
+                className='bg-dark text-white pl-3'
+                )
+            ],
+            style={"height": "48vh"}),
+
+        # Partie 3: Affichage du tableau des vols (durée, details pour un callsign particulier)
+        dbc.Row([
+                dbc.Col(
+                    [
+                        html.P('Table CallSign')
+                    ],
+                    className='bg-light'
+                    )
+            ],
+            style={"height": "48vh"}
+            )
+        ]
+    )
+
+    # Ensemble de la page
+    return dbc.Container([
+        dbc.Row([
+                dbc.Col(sidebar, width=2, className='bg-light px-0'),
+                dbc.Col(content, width=10)
+            ],
+            style={"height": "100vh", "width": "100%"}
+        )],
+    fluid=True
+    )
+
 # Variable globale contenant les data
 # (à définir avant app)
 global_data_dynamic = None
 global_data_static = None
 global_launch_flag = True
+global_statistics_df = None
 
 # Création de l'application Dash et de la carte Leaflet
 app = dash.Dash(__name__, 
@@ -108,7 +297,8 @@ index_page = html.Div([
 
     html.Div([
         dcc.Link("Interactive Live Map", href="/live-map", className="mx-3"),
-        dcc.Link("Statistiques", href="/stats-page", className="mx-3")
+        dcc.Link("Data Stats", href="/stats-page", className="mx-3"),
+        dcc.Link("Map Stats", href="/stats-map-page", className="mx-3"),
     ], className="page-links"),
 
     html.Div([
@@ -117,27 +307,36 @@ index_page = html.Div([
 ], className="main-container index-page")
 
 
-# Page de recherche dashboard
-search_page = html.Div([
-    "Search Page"
-])
 
+# Callback load des pages
+# -----------------------
 
-# Page de Statistiques
-search_page = html.Div([
-    "Search Page"
-])
-
-
-# Callback load de la page
+# Load page "live-map"
 @app.callback(
     Output('staticData', 'data'),
-    Input('staticData', 'data')
+    [Input("url", "pathname"),
+    Input('staticData', 'data')]
 )
-def init_static(static_data):
+def init_static(pathname, static_data):
     global global_data_static
-    if static_data is None:
-        return global_data_static
+    if pathname == "/live-map":
+        if static_data is None:
+            return global_data_static
+    else:
+        static_data = None
+    return static_data
+
+# Load page "stats-page"
+@app.callback(
+    Output('dic-countries', 'data'),
+    [Input("url", "pathname"),
+    Input('dic-countries', 'data')]
+)
+def init_statistics(pathname, countries):
+    if pathname == "/stats-page":
+        if countries is None:
+            countries = get_dic_countries()
+    return countries
 
 
 # Callback de refresh des data
@@ -163,25 +362,29 @@ def update_map(n_intervals, data_dyn, data_stat, filters):
 
         static_datas, dynamic_datas = get_filtered_flights(filters, data_stat, global_data_dynamic)
 
-        markers_tooltips = create_markers_tooltips(static_datas, dynamic_datas)
-        nb_planes = len(global_data_dynamic)
-        return [
-            datetime_refresh(nb_planes),
-            dl.TileLayer(),
-            *markers_tooltips,
-        ], global_data_dynamic
+        if static_datas is not None and dynamic_datas is not None:
+            markers_tooltips = create_markers_tooltips(static_datas, dynamic_datas)
+            nb_planes = len(global_data_dynamic)
+            return [
+                datetime_refresh(nb_planes),
+                dl.TileLayer(),
+                *markers_tooltips,
+            ], global_data_dynamic
 
     else:
-        markers_tooltips = create_markers_tooltips(data_stat, data_dyn)
-        nb_planes = len(data_dyn)
-        return [
-            datetime_refresh(nb_planes, n_intervals=True),
-            dl.TileLayer(),
-            *markers_tooltips,
-        ], data_dyn
+        if data_dyn is not None:
+            markers_tooltips = create_markers_tooltips(data_stat, data_dyn)
+            nb_planes = len(data_dyn)
+            return [
+                datetime_refresh(nb_planes, n_intervals=True),
+                dl.TileLayer(),
+                *markers_tooltips,
+            ], data_dyn
+
+    return [], None
 
 
-# Callback des filtres
+# Callback des filtres Map-Live
 @app.callback(
         Output('filters', 'data'),
         [Input('departure_airport', 'value'),
@@ -214,7 +417,7 @@ def filters(from_airport, arr_airport, company, state, flight_number):
 
     return filters
 
-# Callback du bouton de filtre
+# Callback du bouton de filtre Map-Live
 @app.callback(
         Output("mapLive", "children", allow_duplicate=True),
         [Input('filter_button', 'n_clicks'),
@@ -247,6 +450,96 @@ def filter_button(click, static_data, dynamic_data, filters, date_time):
         
         return [datetime_refresh(nb_planes, date_time), dl.TileLayer(), *filtered_markers_tooltips]
 
+
+# Callback Affichage résultat dropdown stats-page
+@app.callback(
+    [
+        Output('resultDropdown', 'children'),
+        Output('titre-detail-complement', 'children'),
+        Output('complement-dropdown', 'children')
+    ],
+    [
+        Input('dropdown-airline', 'value'),
+        Input('dropdown-dep-airport', 'value'),
+        Input('dropdown-arr-airport', 'value'),
+        Input('dropdown-aircraft', 'value'),
+        Input('dic-countries', 'data')
+    ]
+)
+def update_output(airline, dep_airport, arr_airport, aircraft, countries):
+    global global_statistics_df
+    ctx = dash.callback_context
+    if not ctx.triggered:
+        return "", "", ""
+    else:
+        input_id = ctx.triggered[0]['prop_id'].split('.')[0]
+        is_selected = bool(ctx.triggered[0]['value'])
+
+        if is_selected:
+            data_element = {}
+            titre_complement = ''
+            complement = ''
+
+            if input_id == 'dropdown-airline':
+                titre_complement = '  :  Compagnie Aérienne'
+                data_element = get_data_one_element(airline, 'airline_iata', global_statistics_df)
+            elif input_id == 'dropdown-dep-airport':
+                titre_complement = '  :  Aéroport de départ'
+                data_element = get_data_one_element(dep_airport, 'dep_iata', global_statistics_df)
+            elif input_id == 'dropdown-arr-airport':
+                titre_complement = '  :  Aéroport d\'arrivée'
+                data_element = get_data_one_element(arr_airport, 'arr_iata', global_statistics_df)
+            elif input_id == 'dropdown-aircraft':
+                titre_complement = ':  Type d\'avion'
+                data_element = get_data_one_element(aircraft, 'aircraft_icao', global_statistics_df, dic_countries=countries)
+
+            if titre_complement != '':
+                complement = "( * Les données numériques sont des moyennes journalières sur la période disponible)"
+
+            table_rows = []
+            for key, value in data_element.items():
+                table_rows.append(html.Tr([html.Td(key), html.Td(value)]))
+
+            output_table = dbc.Table(
+                [
+                    html.Tbody(table_rows)
+                ],
+                bordered=False, striped=True, responsive=True
+            )
+            return output_table, titre_complement, complement
+
+        else:
+            return "", "", ""
+
+# Callback mise à jour "disabled" des dropdowns
+@app.callback(
+    [
+        Output('dropdown-airline', 'disabled'),
+        Output('dropdown-dep-airport', 'disabled'),
+        Output('dropdown-arr-airport', 'disabled'),
+        Output('dropdown-aircraft', 'disabled'),
+    ],
+    [
+        Input('dropdown-airline', 'value'),
+        Input('dropdown-dep-airport', 'value'),
+        Input('dropdown-arr-airport', 'value'),
+        Input('dropdown-aircraft', 'value'),
+    ]
+)
+def disable_dropdowns(airline, dep_airport, arr_airport, aircraft):
+    ctx = dash.callback_context
+    if not ctx.triggered:
+        return False, False, False, False
+    else:
+        input_id = ctx.triggered[0]['prop_id'].split('.')[0]
+        is_selected = bool(ctx.triggered[0]['value'])
+
+        if is_selected:
+            return [input_id != dropdown_id for dropdown_id in ['dropdown-airline', 'dropdown-dep-airport', 'dropdown-arr-airport', 'dropdown-aircraft']]
+        else:
+            return False, False, False, False
+
+
 # Callback affichage des pages
 @app.callback(
     Output("page-content", "children"), 
@@ -255,6 +548,9 @@ def filter_button(click, static_data, dynamic_data, filters, date_time):
 def display_page(pathname):
     global global_data_static
     global global_data_dynamic
+    global global_statistics_df
+
+    # Page "live-map"
     if pathname == "/live-map":
         if global_data_static is None:
             global_data_static, global_data_dynamic = initialize_data()
@@ -262,8 +558,12 @@ def display_page(pathname):
         nb_planes = len(global_data_dynamic)
         return display_map(markers_tooltips, nb_planes)
 
-    elif pathname == "/search-page":
-        return search_page
+    # Page "stats-page"
+    elif pathname == "/stats-page":
+        global_data_dynamic = None
+        if global_statistics_df is None:
+            global_statistics_df = get_data_statistics()
+        return display_stats_page(global_statistics_df)
 
     else:
         return index_page
