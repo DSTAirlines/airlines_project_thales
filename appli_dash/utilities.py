@@ -7,6 +7,8 @@ import dash_leaflet as dl
 from dash import html
 from get_data import *
 from sqlalchemy import text
+from dash import dcc
+import dash_bootstrap_components as dbc
 import json
 
 # Ajout du path du projet
@@ -322,65 +324,75 @@ def create_markers_tooltips(static_data, dynamic_data):
     markers = []
     icon_url = "assets/img/test3.svg"
 
-    callsigns = [list(d.keys())[0] for d in dynamic_data if list(d.keys())[0] is not None]
-    static_data_dict = {k: v for dic in static_data for k, v in dic.items()}
-    dynamic_data_dict = {k: v for dic in dynamic_data for k, v in dic.items()}
+    print(f"STEP 2 : Création des markers et tooltips")
+    print(f"STEP 2 - len de dynamic_data {len(dynamic_data)}")
 
-    for callsign in callsigns:
-        flight_static = static_data_dict[callsign]
-        flight_dynamic = dynamic_data_dict[callsign]
+    if dynamic_data is not None:
+        callsigns = [list(d.keys())[0] for d in dynamic_data if list(d.keys())[0] is not None]
+        print(f"STEP 2 - len de callsigns {len(callsigns)}")
 
-        latitude = flight_dynamic["latitude"]
-        longitude = flight_dynamic["longitude"]
-        cap = flight_dynamic["cap"]
+        static_data_dict = {k: v for dic in static_data for k, v in dic.items()}
+        dynamic_data_dict = {k: v for dic in dynamic_data for k, v in dic.items()}
 
-        html_icon_content = f"""
-            <div data-callsign="{callsign}">
-                <img src="{icon_url}" id="plane_{callsign}" style="transform: rotate({cap}deg); width: 15px; height: 20px; background-color: transparent;" />
-            </div>
-        """
+        for callsign in callsigns:
+            flight_static = static_data_dict[callsign]
+            flight_dynamic = dynamic_data_dict[callsign]
 
-        dic_flight = {
-            callsign: {
-                "static_info":                  flight_static,
-                "dynamic_info": {
-                        "datatime":             flight_dynamic["datatime"],
-                        "baro_altitude":        flight_dynamic["baro_altitude"],
-                        "cap":                  cap,
-                        "geo_altitude":         flight_dynamic["geo_altitude"],
-                        "latitude":             latitude,
-                        "longitude":            longitude,
-                        "status":               flight_dynamic["status"],
-                        "velocity":             flight_dynamic["velocity"],
-                        "vertical_rate":        flight_dynamic["vertical_rate"]
+            latitude = flight_dynamic["latitude"]
+            longitude = flight_dynamic["longitude"]
+            cap = flight_dynamic["cap"]
+
+            html_icon_content = f"""
+                <div data-callsign="{callsign}">
+                    <img src="{icon_url}" id="plane_{callsign}" style="transform: rotate({cap}deg); width: 15px; height: 20px; background-color: transparent;" />
+                </div>
+            """
+
+            dic_flight = {
+                callsign: {
+                    "static_info":                  flight_static,
+                    "dynamic_info": {
+                            "datatime":             flight_dynamic["datatime"],
+                            "baro_altitude":        flight_dynamic["baro_altitude"],
+                            "cap":                  cap,
+                            "geo_altitude":         flight_dynamic["geo_altitude"],
+                            "latitude":             latitude,
+                            "longitude":            longitude,
+                            "status":               flight_dynamic["status"],
+                            "velocity":             flight_dynamic["velocity"],
+                            "vertical_rate":        flight_dynamic["vertical_rate"]
+                    }
                 }
             }
-        }
 
-        tooltip_hover = dl.Tooltip(f"Flight Number: {callsign}",
-            direction="auto",
-            permanent=False
-        )
-
-        tooltip = dl.Popup(
-            html.Div(tooltip_content(dic_flight)),
-            className="wrapper-tooltip",
-            closeButton=True
-        )
-
-        markers.append(
-            dl.DivMarker(
-                id=f"marker_{callsign}",
-                position=[latitude, longitude],
-                iconOptions={
-                    "icon_size": [15, 20],
-                    "html": html_icon_content
-                },
-                children=[tooltip_hover, tooltip]
+            tooltip_hover = dl.Tooltip(f"Flight Number: {callsign}",
+                direction="auto",
+                permanent=False
             )
-        )
 
-    return markers
+            tooltip = dl.Popup(
+                html.Div(tooltip_content(dic_flight)),
+                className="wrapper-tooltip",
+                closeButton=True
+            )
+
+            markers.append(
+                dl.DivMarker(
+                    id=f"marker_{callsign}",
+                    position=[latitude, longitude],
+                    iconOptions={
+                        "icon_size": [15, 20],
+                        "html": html_icon_content
+                    },
+                    children=[tooltip_hover, tooltip]
+                )
+            )
+
+        print(f"STEP 2 - len de markers {len(markers)}")
+        return markers
+
+    return []
+        
 
 def get_from_airports(global_data_static):
     """
@@ -485,4 +497,26 @@ def get_filtered_flights(filters, static_flights, dynamic_flights):
     return filtered_static_flights, filtered_dynamic_flights
 
 
+def create_dropdown_stats(id, label, options_dict):
+    return html.Div([
+        html.P(label, style={'marginTop': '8px', 'marginBottom': '4px'}, className='font-weight-bold'),
+        dcc.Dropdown(
+            id=id,
+            multi=False,
+            value=None,
+            options=[{'label': options_dict[x], 'value': x} for x in list(options_dict.keys())],
+            style={'width': '100%', 'fontSize': '12px'}
+        )
+    ])
 
+def create_cards_stats(label, value):
+    return dbc.Col(
+        dbc.Card(
+            dbc.CardBody(
+                html.Div([
+                    html.H5(label, style={'textAlign': 'center', 'color': 'teal', 'fontSize': '.9rem', 'padding-top': '.5rem'}),
+                    html.H5(value, style={'textAlign': 'center', 'color': 'teal', 'fontSize': '1.3rem'}),
+                ]),
+            )
+        ), width=3,
+    )
