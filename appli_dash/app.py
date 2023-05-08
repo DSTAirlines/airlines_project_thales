@@ -116,6 +116,11 @@ def display_stats_page(df):
 
     # Récupération des données
     stats_by_day =  get_global_stats(df)
+    dates = list(stats_by_day.index)
+    dates_str = [x.strftime("%d-%m-%Y") for x in dates]
+    synthese_values = []
+    for col in ['callsign', 'airline_iata', 'dep_iata', 'arr_iata']:
+        synthese_values.append(round(stats_by_day[col].mean()))
     dic_airlines = get_drop_dic_individual_stats('airline_iata', 'airline_name', df)
     dic_dep_airports = get_drop_dic_individual_stats('dep_iata', 'dep_airport_name', df)
     dic_arr_airports = get_drop_dic_individual_stats('arr_iata', 'arr_airport_name', df)
@@ -133,47 +138,20 @@ def display_stats_page(df):
             [
                 html.P('Choix des paramètres', style={'marginTop': '2rem', 'textTransform': 'underline', 'fontSize': '1.2rem', 'fontWeight': 'bold'}),
 
-                html.P('Compagnies',
-                           style={'marginTop': '8px', 'marginBottom': '4px'},
-                           className='font-weight-bold'),
-                dcc.Dropdown(id='dropdown-airline', multi=False, value=None,
-                    options=[{'label': dic_airlines[x], 'value': x} for x in list(dic_airlines.keys())],
-                    style={'width': '100%'}
-                ),
-
-                html.P('Aéroports de départ',
-                           style={'marginTop': '8px', 'marginBottom': '4px'},
-                           className='font-weight-bold'),
-                dcc.Dropdown(id='dropdown-dep-airport', multi=False, value=None,
-                    options=[{'label': dic_dep_airports[x], 'value': x} for x in list(dic_dep_airports.keys())],
-                    style={'width': '100%', 'fontSize': '12px'}
-                ),
-
-                html.P('Aéroports d\'arrivée',
-                           style={'marginTop': '8px', 'marginBottom': '4px'},
-                           className='font-weight-bold'),
-                dcc.Dropdown(id='dropdown-arr-airport', multi=False, value=None,
-                    options=[{'label': dic_arr_airports[x], 'value': x} for x in list(dic_arr_airports.keys())],
-                    style={'width': '100%', 'fontSize': '12px'}
-                ),
-
-                html.P('Type d\'avion',
-                           style={'marginTop': '8px', 'marginBottom': '4px'},
-                           className='font-weight-bold'),
-                dcc.Dropdown(id='dropdown-aircraft', multi=False, value=None,
-                    options=[{'label': dic_aircrafts[x], 'value': x} for x in list(dic_aircrafts.keys())],
-                    style={'width': '100%', 'fontSize': '12px'}
-                ),
+                create_dropdown_stats('dropdown-airline', 'Compagnies', dic_airlines),
+                create_dropdown_stats('dropdown-dep-airport', 'Aéroports de départ', dic_dep_airports),
+                create_dropdown_stats('dropdown-arr-airport', "Aéroports d'arrivée", dic_arr_airports),
+                create_dropdown_stats('dropdown-aircraft', "Type d'avion", dic_aircrafts),
             ],
             className='d-block color-dark',
-            style={"height": "45vh"}
+            style={"height": "63vh"}
         ),
         dbc.Row(
             [
                 html.P('Callsigns')
             ],
             className='d-block',
-            style={"height": "50vh"}
+            style={"height": "30vh"}
         )],
         className='bg-secondary text-white px-3'
     )
@@ -190,13 +168,13 @@ def display_stats_page(df):
                                 id='example-graph',
                                 figure={
                                     'data': [
-                                        go.Scatter(x=stats_by_day.index, y=stats_by_day['callsign'], 
-                                            name='Vols', yaxis='y1', mode='lines+markers', marker=dict(color='blue')),
-                                        go.Scatter(x=stats_by_day.index, y=stats_by_day['airline_iata'], 
+                                        go.Scatter(x=dates_str, y=stats_by_day['callsign'], 
+                                            name='Vols', yaxis='y1', mode='lines+markers', marker=dict(color='blue'), fill='tozeroy'),
+                                        go.Scatter(x=dates_str, y=stats_by_day['airline_iata'], 
                                             name='Compagnies', yaxis='y2', mode='lines+markers', marker=dict(color='green')),
-                                        go.Scatter(x=stats_by_day.index, y=stats_by_day['dep_iata'], 
+                                        go.Scatter(x=dates_str, y=stats_by_day['dep_iata'], 
                                             name='Aéroports de départ', yaxis='y2', mode='lines+markers', marker=dict(color='red')),
-                                        go.Scatter(x=stats_by_day.index, y=stats_by_day['arr_iata'], 
+                                        go.Scatter(x=dates_str, y=stats_by_day['arr_iata'], 
                                             name='Aéroports d\'arrivée', yaxis='y2', mode='lines+markers', marker=dict(color='purple'))
                                     ],
                                     'layout': go.Layout(
@@ -208,18 +186,28 @@ def display_stats_page(df):
                                             'y': 0.96,
                                             'xanchor': 'left'
                                         },
-                                        xaxis={'gridcolor': 'lightgrey', 'tickformat': '%d-%m-%Y', 'nticks': len(stats_by_day.index)},
-                                        yaxis={'title': 'Vols', 'side': 'left', 'gridcolor': 'lightgrey', 'titlefont': {'color': 'blue'}, 'tickfont': {'color': 'blue'}},
-                                        yaxis2={'title': 'Autres variables', 'overlaying': 'y', 'side': 'right', 'gridcolor': 'lightgrey', 'titlefont': {'color': 'green'}, 'tickfont': {'color': 'green'}},
+                                        xaxis={'gridcolor': '#e3e3e3', 'tickformat': '%d-%m-%Y', 'nticks': len(stats_by_day.index)},
+                                        yaxis={'title': 'Vols', 'side': 'left', 'gridcolor': '#e3e3e3', 'titlefont': {'color': 'blue'}, 'tickfont': {'color': 'blue'}},
+                                        yaxis2={'title': 'Autres variables', 'overlaying': 'y', 'side': 'right', 'gridcolor': '#e3e3e3', 'titlefont': {'color': 'green'}, 'tickfont': {'color': 'green'}},
                                         legend={'x': 0.2, 'y': 1.1, 'orientation': 'h', 'bgcolor': 'rgba(255, 255, 255, 0.5)', 'font': {'size': 12}},
                                         # legend={'x': 1.2, 'y': 1, 'bgcolor': 'rgba(255, 255, 255, 0.5)', 'bordercolor': 'black', 'borderwidth': 1, 'font': {'size': 10}},
                                         plot_bgcolor='rgba(237, 248, 251, 0.9)',
                                         paper_bgcolor='rgba(255, 255, 255, 0.1)'
                                     )
-                                }
+                                },
                             )
-                        ])
+                        ], style={'height': '85%'}),
+                        dbc.Row(
+                            [
+                                create_cards_stats('Vols', synthese_values[0]),
+                                create_cards_stats('Compagnies', synthese_values[1]),
+                                create_cards_stats('Aéroports Départ', synthese_values[2]),
+                                create_cards_stats('Aéroports Arrivée', synthese_values[3]),
+                            ],
+                            # style={"height": "6vh"}
+                        ),
                     ],
+                    style={"height": "49vh"},
                     className='bg-light'
                 ),
 
@@ -237,10 +225,11 @@ def display_stats_page(df):
                     ]),
                     html.Div(id='resultDropdown', style={'marginTop': '1.5rem'}),
                 ],
+                # className='bg-light pl-3'
                 className='bg-dark text-white pl-3'
                 )
             ],
-            style={"height": "48vh"}),
+            style={"height": "49vh"}),
 
         # Partie 3: Affichage du tableau des vols (durée, details pour un callsign particulier)
         dbc.Row([
@@ -251,7 +240,7 @@ def display_stats_page(df):
                     className='bg-light'
                     )
             ],
-            style={"height": "48vh"}
+            style={"height": "50vh"}
             )
         ]
     )
@@ -296,7 +285,7 @@ index_page = html.Div([
     ], style={"paddingTop": "5vh"}),
 
     html.Div([
-        dcc.Link("Interactive Live Map", href="/live-map", className="mx-3"),
+        dcc.Link("Interactive Live Map", href="/live-map", className="mr-3"),
         dcc.Link("Data Stats", href="/stats-page", className="mx-3"),
         dcc.Link("Map Stats", href="/stats-map-page", className="mx-3"),
     ], className="page-links"),
@@ -350,38 +339,48 @@ def init_statistics(pathname, countries):
 )
 def update_map(n_intervals, data_dyn, data_stat, filters):
     global global_data_dynamic
+    print("STEP 3 - Update map")
+    print(f"n_intervals: {n_intervals}")
+    old_data_dyn = global_data_dynamic
+    if data_dyn is not None:
+        old_data_dyn = get_data_live(data_dyn)
 
     # Ajout d'une sécutité en cas d'oubli de fermeture du script
     if n_intervals <= 15:
-
+    
         # Script d'update
-        if data_dyn is None:
-            global_data_dynamic = get_data_live(global_data_dynamic)
-        else:
-            global_data_dynamic = get_data_live(data_dyn)
+        static_datas, global_data_dynamic = get_filtered_flights(filters, data_stat, old_data_dyn)
 
-        static_datas, dynamic_datas = get_filtered_flights(filters, data_stat, global_data_dynamic)
-
-        if static_datas is not None and dynamic_datas is not None:
-            markers_tooltips = create_markers_tooltips(static_datas, dynamic_datas)
-            nb_planes = len(global_data_dynamic)
-            return [
-                datetime_refresh(nb_planes),
-                dl.TileLayer(),
-                *markers_tooltips,
-            ], global_data_dynamic
+        markers_tooltips = create_markers_tooltips(static_datas, global_data_dynamic)
+        nb_planes = len(global_data_dynamic)
+        return [
+            datetime_refresh(nb_planes),
+            dl.TileLayer(),
+            *markers_tooltips,
+        ], global_data_dynamic
 
     else:
-        if data_dyn is not None:
-            markers_tooltips = create_markers_tooltips(data_stat, data_dyn)
-            nb_planes = len(data_dyn)
-            return [
-                datetime_refresh(nb_planes, n_intervals=True),
-                dl.TileLayer(),
-                *markers_tooltips,
-            ], data_dyn
+        markers_tooltips = create_markers_tooltips(data_stat, old_data_dyn)
+        nb_planes = len(old_data_dyn)
+        return [
+            datetime_refresh(nb_planes, n_intervals=True),
+            dl.TileLayer(),
+            *markers_tooltips,
+        ], old_data_dyn
 
     return [], None
+
+
+# Callback pour mettre à jour l'intervalle du refresh en fonction de la page affichée
+@app.callback(
+    Output('refreshData', 'interval'),
+    [Input('url', 'pathname')]
+)
+def update_interval(pathname):
+    if pathname == "/live-map":
+        return 30 * 1000 
+    else:
+        return 60 * 60 * 1000
 
 
 # Callback des filtres Map-Live
@@ -552,8 +551,12 @@ def display_page(pathname):
 
     # Page "live-map"
     if pathname == "/live-map":
-        if global_data_static is None:
+        print("STEP 1 : Initialisation des données static et dynamic")
+        if global_data_static is None or global_data_dynamic is None:
             global_data_static, global_data_dynamic = initialize_data()
+        print(f"STEP 1 - len de global_data_static : {len(global_data_static)}")
+        print(f"STEP 1 - len de global_data_dynamic : {len(global_data_dynamic)}")
+        print(len(global_data_dynamic))
         markers_tooltips = create_markers_tooltips(global_data_static, global_data_dynamic)
         nb_planes = len(global_data_dynamic)
         return display_map(markers_tooltips, nb_planes)
