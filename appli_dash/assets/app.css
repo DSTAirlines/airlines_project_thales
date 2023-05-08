@@ -222,3 +222,7 @@
 #dropdown-aircraft .Select-value-label {
     color: white !important;
 }
+
+.card-body {
+    padding: 0 !important;
+}
