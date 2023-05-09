@@ -78,23 +78,23 @@ def get_data_dynamic_updated(old_data):
 
 
 
-def get_dic_countries():
-    """
-    Récupère correspondances pour les pays du code iso2 et du nom
-    Args:
-        None
-    Returns:
-        dict: dict de la forme dic['iso2'] = 'country_name'
-    """
-    engine = connection_mysql()
-    sql = f'''
-    SELECT country_iso2, country_name FROM countries;
-    '''
-    with engine.connect() as conn:
-        query = conn.execute(text(sql))
-    df_countries = pd.DataFrame(query.fetchall())
-    dic_countries = df_countries.set_index('country_iso2')['country_name'].to_dict()
-    return dic_countries
+# def get_dic_countries():
+#     """
+#     Récupère correspondances pour les pays du code iso2 et du nom
+#     Args:
+#         None
+#     Returns:
+#         dict: dict de la forme dic['iso2'] = 'country_name'
+#     """
+#     engine = connection_mysql()
+#     sql = f'''
+#     SELECT country_iso2, country_name FROM countries;
+#     '''
+#     with engine.connect() as conn:
+#         query = conn.execute(text(sql))
+#     df_countries = pd.DataFrame(query.fetchall())
+#     dic_countries = df_countries.set_index('country_iso2')['country_name'].to_dict()
+#     return dic_countries
 
 
 # Extraire les données statiques SQL des éléments récupérés par API
@@ -158,84 +158,114 @@ def get_sql_data(df):
     return df
 
 
+def convert_time_unix_utc_to_datetime_fr(time_unix_utc):
+    from datetime import datetime
+    import pytz
+    utc_datetime = datetime.utcfromtimestamp(time_unix_utc)
+    paris_tz = pytz.timezone("Europe/Paris")
+    local_datetime = utc_datetime.replace(tzinfo=pytz.utc).astimezone(paris_tz)
+    datetime_fr = local_datetime.strftime('%Y-%m-%d %H:%M:%S')
+
+    return datetime_fr
+
 def get_data_statistics():
     """
     Récupère les données de la base MongoDB
     Returns:
         DataFrame: Dataframe des données statistiques
     """
-    
+    print("STATS DATA - STEP 1 : Création du DF_stats général")
     client = connection_mongodb()
     db = client[MONGO_DB_NAME]
-    opensky_collection = db[MONGO_COL_OPENSKY]
-    airlabs_collection = db[MONGO_COL_AIRLABS]
+    data = db['data_aggregated']
 
-    # Recherche du "time" le plus récent
-    max_time_opensky_result = opensky_collection.find().sort("time", -1).limit(1)
-    max_time_opensky = max_time_opensky_result[0]["time"]
 
-    # Recherche du "time" le plus ancien
-    min_time_opensky_result = opensky_collection.find().sort("time", 1).limit(1)
-    min_time_opensky = min_time_opensky_result[0]["time"]
 
-    pipeline = [
-        {"$match": {"on_ground": False}},
-        { "$project": {
-            "airlabs_id": 1,
-            "time": 1,
-            "datatime": 1,
-            "callsign": 1,
-        }},
-        { "$sort":{ "airlabs_id" : 1} },
-        { "$group": {
-                "_id": "$airlabs_id",
-                "callsign": { "$first": "$callsign" },
-                "time_start": { "$first" : "$time" },
-                "datetime_start": { "$first" : "$datatime" },
-                "time_end": { "$last" : "$time" },
-                "datetime_end": { "$last" : "$datatime" },
-                "count": { "$sum": 1}
-            }
-        },
-        {"$lookup": {
-            "from": "airlabs",
-            "localField": "_id",
-            "foreignField": "_id",
-            "as": "airlabs_doc"
-        }},
-        {"$unwind": "$airlabs_doc"},
-        { "$project": {
-            "airlabs_id": 1,
-            "callsign": 1,
-            "time_start": 1,
-            "datetime_start": 1,
-            "time_end": 1,
-            "datetime_end": 1,
-            "count": 1,
-            "airline_iata": "$airlabs_doc.airline_iata",
-            "airline_number": "$airlabs_doc.flight_number",
-            "arr_iata": "$airlabs_doc.arr_iata",
-            "arr_icao": "$airlabs_doc.arr_icao",
-            "dep_iata": "$airlabs_doc.dep_iata",
-            "dep_icao": "$airlabs_doc.dep_icao",
-            "aircraft_flag": "$airlabs_doc.flag",
-            "aircraft_reg_number": "$airlabs_doc.reg_number",
-            "aircraft_icao": "$airlabs_doc.aircraft_icao",
-        }}
+    # pipeline = [
+    #     {"$match": {"on_ground": False}},
+    #     { "$project": {
+    #         "airlabs_id": 1,
+    #         "time": 1,
+    #         # "datatime": 1,
+    #         "callsign": 1,
+    #     }},
+    #     { "$sort":{ "airlabs_id" : 1} },
+    #     { "$group": {
+    #             "_id": "$airlabs_id",
+    #             "callsign": { "$first": "$callsign" },
+    #             "time_start": { "$first" : "$time" },
+    #             # "datetime_start": { "$first" : "$datatime" },
+    #             "time_end": { "$last" : "$time" },
+    #             # "datetime_end": { "$last" : "$datatime" },
+    #             # "count": { "$sum": 1}
+    #         }
+    #     },
+    #     {"$lookup": {
+    #         "from": "airlabs",
+    #         "localField": "_id",
+    #         "foreignField": "_id",
+    #         "as": "airlabs_doc"
+    #     }},
+    #     {"$unwind": "$airlabs_doc"},
+    #     { "$project": {
+    #         "airlabs_id": 1,
+    #         "callsign": 1,
+    #         "time_start": 1,
+    #         # "datetime_start": 1,
+    #         "time_end": 1,
+    #         # "datetime_end": 1,
+    #         # "count": 1,
+    #         "airline_iata": "$airlabs_doc.airline_iata",
+    #         "airline_number": "$airlabs_doc.flight_number",
+    #         "arr_iata": "$airlabs_doc.arr_iata",
+    #         "arr_icao": "$airlabs_doc.arr_icao",
+    #         "dep_iata": "$airlabs_doc.dep_iata",
+    #         "dep_icao": "$airlabs_doc.dep_icao",
+    #         "aircraft_flag": "$airlabs_doc.flag",
+    #         "aircraft_reg_number": "$airlabs_doc.reg_number",
+    #         "aircraft_icao": "$airlabs_doc.aircraft_icao",
+    #     }}
 
-    ]
-    results = list(opensky_collection.aggregate(pipeline))
+    # ]
+    # results = list(opensky_collection.aggregate(pipeline))
 
-    results_ok = []
-    for dic in results:
-        if dic['count'] > 1 \
-        and dic['time_start'] not in [min_time_opensky, max_time_opensky] \
-        and dic['time_end'] not in [min_time_opensky, max_time_opensky]:
-            results_ok.append(dic)
+    cursor = data.find()
+    df_temp = pd.DataFrame(list(cursor))
 
-    df_temp = pd.DataFrame(results_ok)
+    # Fermer la connexion
+    client.close()
+
+    print(f"STATS DATA - STEP 1 : len df_temp brut : {len(df_temp)}")
+
+    min_time = df_temp['time_start'].min()
+    max_time = df_temp['time_end'].max()
+
+    print(f"STATS DATA - STEP 1 min_time_data : {min_time}")
+    print(f"STATS DATA - STEP 1 max_time_data : {max_time}")
+
+    df_temp = df_temp.drop('_id', axis=1)
+    cond1 = df_temp['count'] > 1
+    cond2 = df_temp['time_start'] > min_time
+    cond3 = df_temp['time_end'] < max_time
+    df_temp = df_temp[cond1 & cond2 & cond3].reset_index(drop=True)
+
+    print(f"STATS DATA - STEP 1 : len df_temp {len(df_temp)}")
+
+    # results_ok = []
+    # for dic in results:
+    #     # dic['time_start'] = convert_time_unix_utc_to_datetime_fr(dic['time_start'])
+    #     # dic['time_end'] = convert_time_unix_utc_to_datetime_fr(dic['time_end'])
+    #     # if dic['count'] > 1 \
+    #     # and dic['time_start'] not in [min_time_opensky, max_time_opensky] \
+    #     # and dic['time_end'] not in [min_time_opensky, max_time_opensky]:
+    #     if dic['time_start'] not in [min_time_opensky, max_time_opensky] \
+    #     and dic['time_end'] not in [min_time_opensky, max_time_opensky]:
+    #         dic['datetime_start'] = convert_time_unix_utc_to_datetime_fr(dic['time_start'])
+    #         dic['datetime_end'] = convert_time_unix_utc_to_datetime_fr(dic['time_end'])
+    #         results_ok.append(dic)
+    # df_temp = pd.DataFrame(results_ok)
+
     df = get_sql_data(df_temp)
-    df = df.drop('_id', axis=1)
     df['datetime_start'] = pd.to_datetime(df['datetime_start'])
     df['datetime_end'] = pd.to_datetime(df['datetime_end'])
     df = df.astype({
@@ -244,7 +274,8 @@ def get_data_statistics():
         'arr_airport_latitude': 'float64',
         'arr_airport_longitude': 'float64',
     })
-    df.to_csv('test.csv', header=True, index=False)
+    print(f"STATS DATA - STEP 1 : len de df général : {len(df)}")
+    # df.to_csv('test.csv', header=True, index=False)
     return df
 
 
@@ -284,7 +315,7 @@ def get_drop_dic_individual_stats(value_col, label_col, df):
     return dic
 
 
-def get_data_one_element(value_col, label_col, df, dic_countries=None):
+def get_data_one_element(value_col, label_col, df):
     """_summary_
 
     Args:
@@ -331,15 +362,15 @@ def get_data_one_element(value_col, label_col, df, dic_countries=None):
             'airline_iata': 'nunique',
         })
         len_df = len(ddf)
-        flag = df.loc[0, 'aircraft_flag']
-        if dic_countries is not None:
-            flag = dic_countries.get(flag, flag)
+        # flag = df.loc[0, 'aircraft_flag']
+        # if dic_countries is not None:
+        #     flag = dic_countries.get(flag, flag)
         dic_return = {
             'Nom': df.loc[0, 'aircraft_name'],
             'Code IATA': df.loc[0, 'aircraft_iata'],
             'Code ICAO': value_col,
-            'N° d\'enregistrement': df.loc[0, 'aircraft_reg_number'],
-            'Pays d\'enregistrement': flag,
+            # 'N° d\'enregistrement': df.loc[0, 'aircraft_reg_number'],
+            # 'Pays d\'enregistrement': flag,
             'Nb de vols': f"{round(ddf['callsign'].sum() / len_df)} / j",
             'Nb d\'aéroprts de départ': f"{round(ddf['dep_iata'].sum() / len_df)} / j",
             'Nb d\'aéroprts d\'arrivée': f"{round(ddf['arr_iata'].sum() / len_df)} / j",
@@ -376,3 +407,66 @@ def get_data_one_element(value_col, label_col, df, dic_countries=None):
             'Nb de types d\'avions': f"{round(ddf['aircraft_icao'].sum() / len_df)} / j",
         }
     return dic_return
+
+
+def get_dropdown_callsigns_aiprorts_dep(df):
+    df = df.drop_duplicates(subset=['callsign']).reset_index(drop=True)
+    df = df[['callsign', 'dep_iata', 'dep_icao', 'dep_airport_name']].dropna().drop_duplicates().reset_index(drop=True)
+
+    df = df.sort_values(by=['dep_airport_name'])
+    df['new_name'] = df['dep_airport_name'] + ' (' + df['dep_iata'] + ' / ' + df['dep_icao'] + ')'
+    dic = df.set_index('dep_iata')['new_name'].to_dict()
+
+    return dic
+
+def get_dropdown_callsigns_aiprorts_arr(df, dep_iata):
+    df = df.drop_duplicates(subset=['callsign']).reset_index(drop=True)
+    df = df[['callsign', 'dep_iata', 'dep_airport_name', 'arr_iata', 'arr_icao', 'arr_airport_name']].dropna().drop_duplicates().reset_index(drop=True)
+    df = df[df['dep_iata'] == dep_iata].drop_duplicates(subset=['arr_iata']).reset_index(drop=True)
+    df = df.sort_values(by=['arr_airport_name'])
+
+    df['new_name'] = df['arr_airport_name'] + ' (' + df['arr_iata'] + ' / ' + df['arr_icao'] + ')'
+    dic = df.set_index('arr_iata')['new_name'].to_dict()
+    return dic
+
+
+def get_dropdowns_flight_numbers(df, dep_iata, arr_iata):
+    df = df.drop_duplicates(subset=['callsign']).reset_index(drop=True)
+    df = df[['callsign', 'dep_iata', 'arr_iata']].drop_duplicates().dropna().reset_index(drop=True)
+    cond1 = (df['dep_iata'] == dep_iata)
+    cond2 = (df['arr_iata'] == arr_iata)
+    df = df[cond1 & cond2].reset_index(drop=True)
+    return sorted(list(set(df['callsign'].tolist())))
+
+def get_table_callsign(df, dep_iata, arr_iata, callsign):
+    df = df.drop_duplicates().dropna().reset_index(drop=True)
+    cond1 = (df['dep_iata'] == dep_iata)
+    cond2 = (df['arr_iata'] == arr_iata)
+    cond3 = (df['callsign'] == callsign)
+    df = df[cond1 & cond2 & cond3]
+    
+    cols = [
+        'datetime_start', 'datetime_end', 
+        'airline_iata', 'airline_icao', 'airline_name',
+        'aircraft_name', 'aircraft_iata', 'aircraft_icao',
+        'dep_city_name', 'dep_country_name',
+        'arr_city_name', 'arr_country_name',
+    ]
+
+    df = df[cols]
+    df['travel_time'] = df['datetime_end'] - df['datetime_start']
+    df['travel_time'] = df['travel_time'].apply(lambda x: f"{x.seconds // 3600}h {x.seconds // 60 % 60}m")
+    df['datetime_start'] = df['datetime_start'].apply(lambda x: x.strftime('%Y-%m-%d %H:%M:%S'))
+    df['datetime_end'] = df['datetime_end'].apply(lambda x: x.strftime('%Y-%m-%d %H:%M:%S'))
+    df['airline'] = df['airline_name'] + ' (' + df['airline_iata'] + ' / ' + df['airline_icao'] + ')'
+    df['dep_country_name'] = df['dep_country_name'].apply(lambda x: x.upper())
+    df['arr_country_name'] = df['arr_country_name'].apply(lambda x: x.upper())
+    df['dep'] = df['dep_city_name'] + ' - ' + df['dep_country_name']
+    df['arr'] = df['arr_city_name'] +' - '+ df['arr_country_name']
+    df['appareil'] = df['aircraft_name'] + ' (' + df['aircraft_iata'] + ' / ' + df['aircraft_icao'] + ')'
+
+    df = df[['datetime_start', 'datetime_end', 'travel_time', 'airline', 'dep', 'arr', 'appareil']]
+    df = df.sort_values(by=['datetime_start'])
+    df.columns = ['Départ', 'Arrivée', 'Temps de Trajet', 'Compagnie', 'Ville Depart', 'Ville Arrivée', 'Appareil']
+    return df
+
