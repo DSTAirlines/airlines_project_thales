@@ -88,7 +88,7 @@ def lauch_script(cron=False):
     collection_opensky = db[MONGO_COL_OPENSKY]
     collection_airlabs = db[MONGO_COL_AIRLABS]
 
-    # Récupération du time du dernier appel API Opensky 
+    # Récupération du time du dernier appel API Airlabs
     max_time_airlabs_result = collection_airlabs.find().sort("time", -1).limit(1)
     max_time_airlabs = max_time_airlabs_result[0]["time"]
 
