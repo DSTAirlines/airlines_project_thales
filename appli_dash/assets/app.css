@@ -81,12 +81,13 @@
 }
 
 .left-side, .right-side, .left-side-company {
+    vertical-align: top;
     display: inline-block;
     width: 50%;
 }
 
 .left-side {
-    vertical-align: inherit;
+    /* vertical-align: inherit; */
     font-weight: 700;
 }
 
