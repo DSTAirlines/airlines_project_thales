@@ -251,20 +251,6 @@ def get_data_statistics():
 
     print(f"STATS DATA - STEP 1 : len df_temp {len(df_temp)}")
 
-    # results_ok = []
-    # for dic in results:
-    #     # dic['time_start'] = convert_time_unix_utc_to_datetime_fr(dic['time_start'])
-    #     # dic['time_end'] = convert_time_unix_utc_to_datetime_fr(dic['time_end'])
-    #     # if dic['count'] > 1 \
-    #     # and dic['time_start'] not in [min_time_opensky, max_time_opensky] \
-    #     # and dic['time_end'] not in [min_time_opensky, max_time_opensky]:
-    #     if dic['time_start'] not in [min_time_opensky, max_time_opensky] \
-    #     and dic['time_end'] not in [min_time_opensky, max_time_opensky]:
-    #         dic['datetime_start'] = convert_time_unix_utc_to_datetime_fr(dic['time_start'])
-    #         dic['datetime_end'] = convert_time_unix_utc_to_datetime_fr(dic['time_end'])
-    #         results_ok.append(dic)
-    # df_temp = pd.DataFrame(results_ok)
-
     df = get_sql_data(df_temp)
     df['datetime_start'] = pd.to_datetime(df['datetime_start'])
     df['datetime_end'] = pd.to_datetime(df['datetime_end'])
@@ -437,6 +423,7 @@ def get_dropdowns_flight_numbers(df, dep_iata, arr_iata):
     cond2 = (df['arr_iata'] == arr_iata)
     df = df[cond1 & cond2].reset_index(drop=True)
     return sorted(list(set(df['callsign'].tolist())))
+
 
 def get_table_callsign(df, dep_iata, arr_iata, callsign):
     df = df.drop_duplicates().dropna().reset_index(drop=True)
