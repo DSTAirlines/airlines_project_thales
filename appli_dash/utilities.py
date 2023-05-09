@@ -216,6 +216,21 @@ def get_data_live(data):
 
     return dataDynamicUpdated
 
+def tooltip_content_detail(label, value, margin=False):
+    """
+    Détail d'une row du tooltip
+    Args:
+        label (str): Label à afficher
+        value (str): Value à afficher
+        margin (bool, optional): Indique la résence ou non d'une marge (Default: False)
+    Returns:
+        Balise html.Div de la row du tooltip
+    """
+    margin_txt = "margin-y-2" if margin else ""
+    return html.Div([
+        html.Span(f"{label} : ", className="left-side"),
+        html.Span(value, className="right-side")
+    ], className=margin_txt)
 
 
 def tooltip_content(flight_data):
@@ -244,25 +259,11 @@ def tooltip_content(flight_data):
     content = [
         html.H5("Infos sur le vol", className="title-tooltip"),
 
-        html.Div([
-            html.Span("Numéro de vol : ", className="left-side"),
-            html.Span(callsign, className="right-side")
-        ], className="margin-y-2"),
-
-        html.Div([
-            html.Span("ICAO : ", className="left-side"),
-            html.Span(flight_static['flight_icao'], className="right-side")
-        ], className="margin-y-2"),
-
-        html.Div([
-            html.Span("Compagnie : ", className="left-side-company"),
-            html.Span(airline_txt, className="right-side")
-        ], className="margin-y-2"),
-
-        html.Div([
-            html.Span("Station avion : ", className="left-side"),
-            html.Span(flight_dynamic['status'], className="right-side")
-        ], className="margin-y-2"),
+        tooltip_content_detail("Numéro de vol", callsign, margin=True),
+        tooltip_content_detail("ICAO", flight_static['flight_icao'], margin=True),
+        tooltip_content_detail("Compagnie", airline_txt, margin=True),
+        tooltip_content_detail("Statut avion", flight_dynamic['status'], margin=True),
+        tooltip_content_detail("Type avion", flight_static['aircraft_sql']['aircraft_name'], margin=True),
 
         html.Div([
             html.Div("Aéroport de départ", style={'textDecoration': 'underline', 'marginBottom': '.2rem'}),
@@ -284,30 +285,11 @@ def tooltip_content(flight_data):
     
         html.H5("Infos sur la position actuelle", className="title-tooltip margin-y-3"),
 
-        html.Div([
-            html.Span("Date Time : ", className="left-side"),
-            html.Span(flight_dynamic['datatime'], className="right-side")
-        ]),
-
-        html.Div([
-            html.Span("Altitude : ", className="left-side"),
-            html.Span(altitude, className="right-side")
-        ]),
-
-        html.Div([
-            html.Span("Latitude : ", className="left-side"),
-            html.Span(flight_dynamic['latitude'], className="right-side")
-        ]),
-
-        html.Div([
-            html.Span("Longitude : ", className="left-side"),
-            html.Span(flight_dynamic['longitude'], className="right-side")
-        ]),
-
-        html.Div([
-            html.Span("Vitesse : ", className="left-side"),
-            html.Span(vitesse, className="right-side")
-        ]),
+        tooltip_content_detail("Date Time", flight_dynamic['datatime']),
+        tooltip_content_detail("Altitude", altitude),
+        tooltip_content_detail("Latitude", flight_dynamic['latitude']),
+        tooltip_content_detail("Longitude", flight_dynamic['longitude']),
+        tooltip_content_detail("Vitesse", vitesse)
     ]
 
     return content
@@ -327,7 +309,7 @@ def create_markers_tooltips(static_data, dynamic_data):
     print(f"STEP 2 : Création des markers et tooltips")
     print(f"STEP 2 - len de dynamic_data {len(dynamic_data)}")
 
-    if dynamic_data is not None:
+    if dynamic_data is not None or static_data is not None:
         callsigns = [list(d.keys())[0] for d in dynamic_data if list(d.keys())[0] is not None]
         print(f"STEP 2 - len de callsigns {len(callsigns)}")
 
