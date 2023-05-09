@@ -203,7 +203,10 @@
 #dropdown-airline .Select-control, 
 #dropdown-dep-airport .Select-control, 
 #dropdown-arr-airport .Select-control, 
-#dropdown-aircraft .Select-control {
+#dropdown-aircraft .Select-control,
+#dropdown-callsign-dep .Select-control, 
+#dropdown-callsign-arr .Select-control, 
+#dropdown-callsign-num .Select-control {
     border-color: transparent !important;
     background-color: rgb(25, 25, 25) !important;
     color:white;
@@ -212,7 +215,10 @@
 #dropdown-airline .Select-menu-outer, 
 #dropdown-dep-airport .Select-menu-outer, 
 #dropdown-arr-airport .Select-menu-outer, 
-#dropdown-aircraft .Select-menu-outer {
+#dropdown-aircraft .Select-menu-outer,
+#dropdown-callsign-dep .Select-menu-outer, 
+#dropdown-callsign-arr .Select-menu-outer, 
+#dropdown-callsign-num .Select-menu-outer {
     background-color: rgb(25, 25, 25);
     color: white;
 }
@@ -220,10 +226,17 @@
 #dropdown-airline .Select-value-label, 
 #dropdown-dep-airport .Select-value-label, 
 #dropdown-arr-airport .Select-value-label, 
-#dropdown-aircraft .Select-value-label {
+#dropdown-aircraft .Select-value-label,
+#dropdown-callsign-dep .Select-value-label, 
+#dropdown-callsign-arr .Select-value-label, 
+#dropdown-callsign-num .Select-value-label {
     color: white !important;
 }
 
 .card-body {
     padding: 0 !important;
+}
+
+.Select-input > input {
+    color: cornsilk !important;
 }
