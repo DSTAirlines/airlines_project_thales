@@ -306,12 +306,12 @@ def create_markers_tooltips(static_data, dynamic_data):
     markers = []
     icon_url = "assets/img/test3.svg"
 
-    print(f"STEP 2 : Création des markers et tooltips")
-    print(f"STEP 2 - len de dynamic_data {len(dynamic_data)}")
+    print(f"MAP LIVE - STEP 2 : Création des markers et tooltips")
+    print(f"MAP LIVE - STEP 2 - len de dynamic_data {len(dynamic_data)}")
 
     if dynamic_data is not None or static_data is not None:
         callsigns = [list(d.keys())[0] for d in dynamic_data if list(d.keys())[0] is not None]
-        print(f"STEP 2 - len de callsigns {len(callsigns)}")
+        print(f"MAP LIVE - STEP 2 - len de callsigns {len(callsigns)}")
 
         static_data_dict = {k: v for dic in static_data for k, v in dic.items()}
         dynamic_data_dict = {k: v for dic in dynamic_data for k, v in dic.items()}
@@ -370,7 +370,7 @@ def create_markers_tooltips(static_data, dynamic_data):
                 )
             )
 
-        print(f"STEP 2 - len de markers {len(markers)}")
+        print(f"MAP LIVE - STEP 2 - len de markers {len(markers)}")
         return markers
 
     return []
@@ -491,12 +491,31 @@ def create_dropdown_stats(id, label, options_dict):
         )
     ])
 
+
+def create_dropdown_callsign(id, label, options_dict=None):
+    if options_dict is None:
+        options = []
+    else:
+        options=[{'label': options_dict[x], 'value': x} for x in list(options_dict.keys())]
+    div_dropdown = html.Div([
+        html.P(label, style={'marginTop': '8px', 'marginBottom': '4px'}, className='font-weight-bold'),
+        dcc.Dropdown(
+            id=id,
+            multi=False,
+            value=None,
+            options=options,
+            style={'width': '100%', 'fontSize': '12px'}
+        )
+    ])
+    return div_dropdown
+        
+
 def create_cards_stats(label, value):
     return dbc.Col(
         dbc.Card(
             dbc.CardBody(
                 html.Div([
-                    html.H5(label, style={'textAlign': 'center', 'color': 'teal', 'fontSize': '.9rem', 'padding-top': '.5rem'}),
+                    html.H5(label, style={'textAlign': 'center', 'color': 'teal', 'fontSize': '.9rem', 'paddingTop': '.5rem'}),
                     html.H5(value, style={'textAlign': 'center', 'color': 'teal', 'fontSize': '1.3rem'}),
                 ]),
             )
