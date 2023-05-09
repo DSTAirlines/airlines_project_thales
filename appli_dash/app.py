@@ -144,7 +144,7 @@ def display_stats_page(df):
                 create_dropdown_stats('dropdown-aircraft', "Type d'avion", dic_aircrafts),
             ],
             className='d-block color-dark',
-            style={"height": "63vh"}
+            style={"height": "61vh"}
         ),
         dbc.Row(
             [
