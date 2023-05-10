@@ -237,6 +237,12 @@
     padding: 0 !important;
 }
 
-.Select-input > input {
+#dropdown-airline .Select-input > input,
+#dropdown-dep-airport .Select-input > input,
+#dropdown-arr-airport .Select-input > input,
+#dropdown-aircraft .Select-input > input,
+#dropdown-callsign-dep .Select-input > input,
+#dropdown-callsign-arr .Select-input > input,
+#dropdown-callsign-num .Select-input > input {
     color: cornsilk !important;
 }
