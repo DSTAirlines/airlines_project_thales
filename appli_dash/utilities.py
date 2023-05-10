@@ -480,6 +480,15 @@ def get_filtered_flights(filters, static_flights, dynamic_flights):
 
 
 def create_dropdown_stats(id, label, options_dict):
+    """
+    Création de l'affichage des dropdowns de stats du bloc 1
+    Args:
+        id (str): ID du dropdown
+        label (str): Label du dropdown
+        options_dict (dict): Dict des options du dropdown
+    Returns:
+        Div html d'affichage du dropdown
+    """
     return html.Div([
         html.P(label, style={'marginTop': '8px', 'marginBottom': '4px'}, className='font-weight-bold'),
         dcc.Dropdown(
@@ -493,6 +502,15 @@ def create_dropdown_stats(id, label, options_dict):
 
 
 def create_dropdown_callsign(id, label, options_dict=None):
+    """
+    Création de l'affichage des dropdowns de stats du bloc 2
+    Args:
+        id (str): ID du dropdown
+        label (str): Label du dropdown
+        options_dict (dict, optionnal): Dict des options du dropdown (par défaut : None)
+    Returns:
+        Div html d'affichage du dropdown
+    """
     if options_dict is None:
         options = []
     else:
@@ -508,9 +526,17 @@ def create_dropdown_callsign(id, label, options_dict=None):
         )
     ])
     return div_dropdown
-        
+
 
 def create_cards_stats(label, value):
+    """
+    Création de l'affichage des cards de stats du bloc 1
+    Args:
+        label (str): Label de la card
+        value (str): Value de la card (valeur moeyenne pat jour du label)
+    Returns:
+        html boostrap de l'affichage de la card
+    """
     return dbc.Col(
         dbc.Card(
             dbc.CardBody(
