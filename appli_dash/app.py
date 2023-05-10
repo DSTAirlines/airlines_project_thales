@@ -347,9 +347,7 @@ def init_static(pathname, static_data):
     if pathname == "/live-map":
         if static_data is None:
             return global_data_static
-    else:
-        static_data = None
-    return static_data
+    return None
 
 
 ################################################################################################
@@ -396,9 +394,10 @@ def display_page(pathname):
     [Input("refreshData", "n_intervals"),
      Input('dynamicData', 'data'),
      Input('staticData', 'data'),
-     State('filters', 'data')]
+     State('filters', 'data'),
+     Input('url', 'pathname')]
 )
-def update_map(n_intervals, data_dyn, data_stat, filters):
+def update_map(n_intervals, data_dyn, data_stat, filters, pathname):
     global global_data_dynamic
     global global_n_intervals_map
     print("MAP LIVE - STEP 3 - Update map")
@@ -408,35 +407,36 @@ def update_map(n_intervals, data_dyn, data_stat, filters):
     #     global_n_intervals_map = n_intervals
     # else:
         # if global_n_intervals_map != n_intervals:
-    global_n_intervals_map = n_intervals
-    old_data_dyn = global_data_dynamic
-    if data_dyn is not None:
-        old_data_dyn = get_data_live(data_dyn)
+    if pathname == "/live-map":
+        global_n_intervals_map = n_intervals
+        old_data_dyn = global_data_dynamic
+        if data_dyn is not None:
+            old_data_dyn = get_data_live(data_dyn)
 
-    # Ajout d'une sécutité en cas d'oubli de fermeture du script
-    if n_intervals <= 15:
-    
-        # Script d'update
-        static_datas, global_data_dynamic = get_filtered_flights(filters, data_stat, old_data_dyn)
+        # Ajout d'une sécutité en cas d'oubli de fermeture du script
+        if n_intervals <= 15:
+        
+            # Script d'update
+            static_datas, global_data_dynamic = get_filtered_flights(filters, data_stat, old_data_dyn)
 
-        markers_tooltips = create_markers_tooltips(static_datas, global_data_dynamic)
-        nb_planes = len(global_data_dynamic)
-        return [
-            datetime_refresh(nb_planes),
-            dl.TileLayer(),
-            *markers_tooltips,
-        ], global_data_dynamic
+            markers_tooltips = create_markers_tooltips(static_datas, global_data_dynamic)
+            nb_planes = len(global_data_dynamic)
+            return [
+                datetime_refresh(nb_planes),
+                dl.TileLayer(),
+                *markers_tooltips,
+            ], global_data_dynamic
 
+        else:
+            markers_tooltips = create_markers_tooltips(data_stat, old_data_dyn)
+            nb_planes = len(old_data_dyn)
+            return [
+                datetime_refresh(nb_planes, n_intervals=True),
+                dl.TileLayer(),
+                *markers_tooltips,
+            ], old_data_dyn
     else:
-        markers_tooltips = create_markers_tooltips(data_stat, old_data_dyn)
-        nb_planes = len(old_data_dyn)
-        return [
-            datetime_refresh(nb_planes, n_intervals=True),
-            dl.TileLayer(),
-            *markers_tooltips,
-        ], old_data_dyn
-
-    return [], None
+        return [], None
 
 
 # Callback pour mettre à jour l'intervalle du refresh en fonction de la page affichée
