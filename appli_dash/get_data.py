@@ -179,56 +179,6 @@ def get_data_statistics():
     db = client[MONGO_DB_NAME]
     data = db['data_aggregated']
 
-
-
-    # pipeline = [
-    #     {"$match": {"on_ground": False}},
-    #     { "$project": {
-    #         "airlabs_id": 1,
-    #         "time": 1,
-    #         # "datatime": 1,
-    #         "callsign": 1,
-    #     }},
-    #     { "$sort":{ "airlabs_id" : 1} },
-    #     { "$group": {
-    #             "_id": "$airlabs_id",
-    #             "callsign": { "$first": "$callsign" },
-    #             "time_start": { "$first" : "$time" },
-    #             # "datetime_start": { "$first" : "$datatime" },
-    #             "time_end": { "$last" : "$time" },
-    #             # "datetime_end": { "$last" : "$datatime" },
-    #             # "count": { "$sum": 1}
-    #         }
-    #     },
-    #     {"$lookup": {
-    #         "from": "airlabs",
-    #         "localField": "_id",
-    #         "foreignField": "_id",
-    #         "as": "airlabs_doc"
-    #     }},
-    #     {"$unwind": "$airlabs_doc"},
-    #     { "$project": {
-    #         "airlabs_id": 1,
-    #         "callsign": 1,
-    #         "time_start": 1,
-    #         # "datetime_start": 1,
-    #         "time_end": 1,
-    #         # "datetime_end": 1,
-    #         # "count": 1,
-    #         "airline_iata": "$airlabs_doc.airline_iata",
-    #         "airline_number": "$airlabs_doc.flight_number",
-    #         "arr_iata": "$airlabs_doc.arr_iata",
-    #         "arr_icao": "$airlabs_doc.arr_icao",
-    #         "dep_iata": "$airlabs_doc.dep_iata",
-    #         "dep_icao": "$airlabs_doc.dep_icao",
-    #         "aircraft_flag": "$airlabs_doc.flag",
-    #         "aircraft_reg_number": "$airlabs_doc.reg_number",
-    #         "aircraft_icao": "$airlabs_doc.aircraft_icao",
-    #     }}
-
-    # ]
-    # results = list(opensky_collection.aggregate(pipeline))
-
     cursor = data.find()
     df_temp = pd.DataFrame(list(cursor))
 
@@ -239,14 +189,12 @@ def get_data_statistics():
 
     min_time = df_temp['time_start'].min()
     max_time = df_temp['time_end'].max()
-
-    print(f"STATS DATA - STEP 1 min_time_data : {min_time}")
-    print(f"STATS DATA - STEP 1 max_time_data : {max_time}")
-
+    
     df_temp = df_temp.drop('_id', axis=1)
     cond1 = df_temp['count'] > 1
     cond2 = df_temp['time_start'] > min_time
     cond3 = df_temp['time_end'] < max_time
+   
     df_temp = df_temp[cond1 & cond2 & cond3].reset_index(drop=True)
 
     print(f"STATS DATA - STEP 1 : len df_temp {len(df_temp)}")
@@ -254,6 +202,9 @@ def get_data_statistics():
     df = get_sql_data(df_temp)
     df['datetime_start'] = pd.to_datetime(df['datetime_start'])
     df['datetime_end'] = pd.to_datetime(df['datetime_end'])
+    last_day = df['datetime_start'].max().date()
+    condition = df['datetime_start'].dt.date < last_day
+    df = df[condition].reset_index(drop=True)
     df = df.astype({
         'dep_airport_latitude': 'float64',
         'dep_airport_longitude': 'float64',
@@ -396,6 +347,13 @@ def get_data_one_element(value_col, label_col, df):
 
 
 def get_dropdown_callsigns_aiprorts_dep(df):
+    """
+    Obtenir les airports de départ possibles, cad ceux présents dans les données globales de stats
+    Args:
+        df (DataFrame): DF des données globales de stats
+    Returns:
+        dict: Options du dropdown "airport de départ"
+    """
     df = df.drop_duplicates(subset=['callsign']).reset_index(drop=True)
     df = df[['callsign', 'dep_iata', 'dep_icao', 'dep_airport_name']].dropna().drop_duplicates().reset_index(drop=True)
 
@@ -406,6 +364,14 @@ def get_dropdown_callsigns_aiprorts_dep(df):
     return dic
 
 def get_dropdown_callsigns_aiprorts_arr(df, dep_iata):
+    """
+    Obtenir les airports d'arrivée correspondant à l'airports d'origine sélectionné
+    Args:
+        df (DataFrame): DF des données globales de stats
+        dep_iata (str): code IATA de l'airports d'origine
+    Returns:
+        dict: Options du dropdown "airport d'arrivée"
+    """
     df = df.drop_duplicates(subset=['callsign']).reset_index(drop=True)
     df = df[['callsign', 'dep_iata', 'dep_airport_name', 'arr_iata', 'arr_icao', 'arr_airport_name']].dropna().drop_duplicates().reset_index(drop=True)
     df = df[df['dep_iata'] == dep_iata].drop_duplicates(subset=['arr_iata']).reset_index(drop=True)
@@ -417,6 +383,15 @@ def get_dropdown_callsigns_aiprorts_arr(df, dep_iata):
 
 
 def get_dropdowns_flight_numbers(df, dep_iata, arr_iata):
+    """
+    Obtenir les callsigns correspondant aux airports d'origine et d'arrivée slectionnés
+    Args:
+        df (DataFrame): DF des données globales de stats
+        dep_iata (str): code IATA de l'airports d'origine
+        arr_iata (str): code IATA de l'airports d'arrivée
+    Returns:
+        dict: Options du dropdown "callsign"
+    """
     df = df.drop_duplicates(subset=['callsign']).reset_index(drop=True)
     df = df[['callsign', 'dep_iata', 'arr_iata']].drop_duplicates().dropna().reset_index(drop=True)
     cond1 = (df['dep_iata'] == dep_iata)
@@ -426,6 +401,16 @@ def get_dropdowns_flight_numbers(df, dep_iata, arr_iata):
 
 
 def get_table_callsign(df, dep_iata, arr_iata, callsign):
+    """
+    Obtenir le df des données correspondant aux dropdowns sélectionnés
+    Args:
+        df (DataFrame): DF des données globales de stats
+        dep_iata (str): code IATA de l'airports d'origine
+        arr_iata (str): code IATA de l'airports d'arrivée
+        callsign (str): code du callsign
+    Returns:
+        DataFrame: DF des données filtrées
+    """
     df = df.drop_duplicates().dropna().reset_index(drop=True)
     cond1 = (df['dep_iata'] == dep_iata)
     cond2 = (df['arr_iata'] == arr_iata)
