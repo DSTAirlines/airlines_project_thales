@@ -568,7 +568,7 @@ def create_markers():
                 id=f"marker_{iata}",
                 position=[latitude, longitude],
                 iconOptions={
-                    "icon_size": [10, 10],
+                    "icon_size": [8, 8],
                     "html": html_icon_content
                 },
                 children=[tooltip_hover]
@@ -580,7 +580,7 @@ def create_markers():
 
 def create_patterns(airports):
 
-    patterns = dict(offset='20', endOffset='20', repeat='25', dash=dict(pixelSize=10, pathOptions=dict(color='#f00', weight=2))),
+    patterns = dict(offset='20', endOffset='20', repeat='15', dash=dict(pixelSize=10, pathOptions=dict(color='red', weight=2))),
     multi_pattern =[]
     
     dep_airport = airports.pop(0)
@@ -595,13 +595,11 @@ def create_flight_markers(flight_positions):
 
     iconUrl = "assets/img/test3.svg"
     marker = dict(rotate=True, markerOptions=dict(icon=dict(iconUrl=iconUrl, iconAnchor=[15, 15])))
-    patterns = [dict(repeat='10', dash=dict(pixelSize=5, pathOptions=dict(color='blue', weight=1.5, opacity=1))),
+    patterns = [dict(repeat='10', dash=dict(pixelSize=5, pathOptions=dict(color='blue', weight=2))),
                 dict(offset='10', endOffset='10', repeat='15%', marker=marker)]
     
     positions = [[flight_position['latitude'], flight_position['longitude']] for flight_position in flight_positions]
    
     rotated_markers = dl.PolylineDecorator(positions=positions, patterns=patterns)
-    print(len(rotated_markers))
-   
 
     return rotated_markers
