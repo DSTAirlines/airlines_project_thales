@@ -5,6 +5,7 @@ from pathlib import Path
 from pprint import pprint
 import pandas as pd
 from sqlalchemy import text
+from datetime import datetime, timedelta
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -22,10 +23,14 @@ from connection_sql import get_connection as connection_mysql
 # Importer la fonction d'appel à l'API OpenSky
 from fetch_opensky_data import query_opensky_api
 
+# Importer le module properties
+import properties as pr
+
 # CREDENTIALS
 MONGO_DB_NAME = os.environ.get("MONGO_DB_NAME")
 MONGO_COL_OPENSKY = os.environ.get("MONGO_COL_OPENSKY")
 MONGO_COL_AIRLABS = os.environ.get("MONGO_COL_AIRLABS")
+MONGO_COL_DATA_AGGREGATED = os.environ.get("MONGO_COL_DATA_AGGREGATED")
 
 
 def get_data_initial():
@@ -457,3 +462,126 @@ def get_table_callsign(df, dep_iata, arr_iata, callsign):
     df.columns = ['Départ', 'Arrivée', 'Temps de Trajet', 'Compagnie', 'Ville Depart', 'Ville Arrivée', 'Appareil']
     return df
 
+# Liste de tous les aéroports en base de données SQL pour dropdown de la Map stat
+def get_airports():
+    
+    AIRPORT_NAME_INDEX = 0
+    AIRPORT_IATA_INDEX = 1
+
+    engine = connection_mysql()
+    sql = """
+            SELECT airport_name, airport_iata, airport_latitude, airport_longitude FROM airports 
+            WHERE airport_latitude BETWEEN 35.93302587741835 AND 71.40896420697621
+            AND airport_longitude BETWEEN -11.360649771804841 AND 32.017698096436696 
+            ORDER BY airport_name;
+        """
+    
+    with engine.connect() as conn:
+        query = conn.execute(text(sql))
+        airports = query.all()
+    
+    airports = [{'label': airport[AIRPORT_NAME_INDEX], 'value': airport[AIRPORT_IATA_INDEX]} for airport in airports]
+    
+    return airports
+
+# Liste de toutes les données à afficher sur la Map Stat
+def get_datas(dep_airport):
+
+    AIRPORT_IATA_INDEX = 0
+    AIRPORT_LATITUDE_INDEX = 1
+    AIRPORT_LONGITUDE_INDEX = 2
+
+    client = connection_mongodb()
+    db = client[MONGO_DB_NAME]
+    datas_collection = db[MONGO_COL_DATA_AGGREGATED]
+
+    pipeline = [
+        {
+            "$match": 
+            {
+                "dep_iata": dep_airport,
+                "arr_iata": {"$nin": [dep_airport, None]},
+                
+            }
+        },
+        {
+            "$group":
+            {
+                '_id':'$callsign',
+                'arrival': 
+                {
+                    '$first':'$arr_iata'
+                }
+            }
+        },
+        {
+            "$group":
+            {
+                '_id':'$arrival',
+                'count': {
+                    '$count': {}
+                }
+            }
+        },
+
+        {
+            "$sort": 
+            {
+                'count': -1
+            }
+        },
+        {
+            '$limit':10 
+        }
+    ]
+
+    airports_without_coordinates = list(datas_collection.aggregate(pipeline))
+    airports_with_coordinates = []
+    engine = connection_mysql()
+
+    for airport in airports_without_coordinates:
+        sql_request = f"""
+            SELECT airport_iata, airport_latitude, airport_longitude FROM airports 
+            WHERE airport_iata = '{airport['_id']}';
+        """
+          
+        with engine.connect() as conn:
+
+            query = conn.execute(text(sql_request))
+            airport = query.all()
+            airports_with_coordinates.append({'airport_iata': airport[0][AIRPORT_IATA_INDEX], 'airport_latitude': airport[0][AIRPORT_LATITUDE_INDEX],
+                     'airport_longitude': airport[0][AIRPORT_LONGITUDE_INDEX]})
+
+    sql_request_dep_airport = f"""
+            SELECT airport_iata, airport_latitude, airport_longitude FROM airports 
+            WHERE airport_iata = '{dep_airport}';
+    """
+
+    with engine.connect() as conn:
+        query = conn.execute(text(sql_request_dep_airport))
+        dep_airport = query.first()
+    
+    dep_airport = dict(airport_iata=dep_airport[0], airport_latitude=dep_airport[1], airport_longitude=dep_airport[2])
+    airports_with_coordinates.insert(0, dep_airport)
+
+    client.close()
+
+    return airports_with_coordinates
+
+# Retourne toutes les positions (latitude et longitude) du vol pendant la journée en cours
+def get_flight_positions(flight_number):
+
+    day_date = datetime.now().strftime("%Y-%m-%d")
+    day_date_after = (datetime.now() + timedelta(days= 1)).strftime('%Y-%m-%d')
+
+    client = connection_mongodb()
+    db = client[MONGO_DB_NAME]
+    datas_collection = db[MONGO_COL_OPENSKY]
+
+    airplane_datas = datas_collection.find({'callsign': flight_number, 'datatime': {'$gte': day_date, '$lte': day_date_after}}).sort("datatime", 1)
+
+    airplane_positions = [{'latitude': airplane ['latitude'], 'longitude': airplane['longitude']} for airplane in airplane_datas]
+
+    client.close()
+
+    return airplane_positions

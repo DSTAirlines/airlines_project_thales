@@ -13,7 +13,7 @@ import pandas as pd
 from utilities import *
 from get_data import *
 from dash.exceptions import PreventUpdate
-
+from datetime import date
 
 
 ################################################################################################
@@ -73,7 +73,7 @@ def display_map(markers_tooltips, nb_planes):
                     dcc.Dropdown(id='airline_company', options = get_airlines(global_data_static), value=None)
                 ]),
                 html.Div(className="mx-3", style={'display': 'inline-block', 'width': '15%'}, children=[
-                    dbc.Label("Pays d'immatriculation :", html_for='state_registration'),
+                    dbc.Label("Pays d'origine :", html_for='state_registration'),
                     dcc.Dropdown(id='state_registration', options = get_countries(global_data_static), value=None)
                 ]),
                 html.Div(className="mx-3", style={'display': 'inline-block'}, children=[
@@ -274,6 +274,57 @@ def display_stats_page(df):
     )
 
 
+################################################################################################
+## LAYOUT STAT MAP PAGE
+################################################################################################
+
+def display_stat_map(markers):
+
+    return html.Div(
+        children=[
+            html.Div([
+                html.Div(style = {'width': '100%', 'height': '20vh', 'marginBottom': "auto", "marginTop": "0", 
+                              "display": "flex", 'justifyContent':'center', 'alignItems':'center', 'backgroundColor':'#ECEFF1'}, 
+                     children=[
+                html.Div(nav(), className="marges-navbar-map", style={'display': 'inline-block', 'width': '10%'}),
+                html.Div(className="mx-3 py-2", style={'display': 'inline-block'}, children=[
+                    dcc.Store(id='date_stat', storage_type='memory'),
+                    dbc.Label('Date :', html_for='date', style={'display':'block'}),
+                    dcc.DatePickerSingle(id='date_picker', 
+                                         month_format='DD-MM-YYYY',
+                                         display_format='DD/MM/YYYY',
+                                         clearable=True,
+                                         min_date_allowed = date(2023, 1, 1), max_date_allowed = date(2023, 6, 30), 
+                                         initial_visible_month = date.today(),
+                                         style={'zIndex':100000, 'position':'relative'})
+                ]),
+                html.Div(className="mx-3", style={'display': 'inline-block', 'width': '15%'}, children=[
+                    dcc.Store(id='dep_airport_data', storage_type='memory'),
+                    dbc.Label("Aéroport de départ :", html_for='arrival_airport'),
+                    dcc.Dropdown(id='dep_airport_stat', options = get_airports(), value=None, style={'fontSize': '12px'})
+                ]), 
+                html.Div(className="mx-3", style={'display': 'inline-block'}, children=[
+                    dcc.Store(id='flight_number_data', storage_type='memory'),
+                    dbc.Label('Numéro de vol :'),
+                    dbc.Input(id="flight_number_stat", placeholder="Entrer un numéro de vol...", type="text",
+                              style={'textTransform': 'uppercase'}, value=None)
+                ]),
+                html.Div(style={'marginTop':'32px'}, children=[
+                    dbc.Button('ROUTES', id='routes_button')])
+                ])
+            ]),
+            dl.Map(
+                id="mapStat",
+                style={'width': '100%', 'height': '80vh', 'marginBottom': "0", "marginTop": "auto", "display": "block"},
+                center=(46.067314, 4.098643),
+                zoom=6,
+                children=[
+                    dl.TileLayer(),
+                    *markers
+                ]
+            )
+        ]
+    )
 
 ################################################################################################
 ## NAVIGATION PAGE
@@ -382,6 +433,10 @@ def display_page(pathname):
         if global_statistics_df is None:
             global_statistics_df = get_data_statistics()
         return display_stats_page(global_statistics_df)
+    
+    elif pathname == '/stats-map-page':
+        markers = create_markers()
+        return display_stat_map(markers)
 
     else:
         return index_page
@@ -667,6 +722,64 @@ def create_table_callsign(depart, arrivee, callsign):
     df = get_table_callsign(global_statistics_df, depart, arrivee, callsign)
     flight_numbers = get_dropdowns_flight_numbers(global_statistics_df, depart, arrivee)
     return dbc.Table.from_dataframe(df, striped=True, bordered=True, hover=True)
+
+# Callback du DatePicker
+@app.callback(
+    Output('date_stat', 'data'),
+    Input('date_picker', 'date'))
+def update_date(date_value):
+    return date_value
+    
+
+# Callback du dropdown aéroport de départ de la page Map stat
+@app.callback(
+    Output('dep_airport_data', 'data'),
+    Input('dep_airport_stat', 'value'))
+def update_dep_airport(airport):
+    print(airport)
+    return airport
+    
+# Callback du champ texte flight number de la page Map stat
+@app.callback(
+    Output('flight_number_data', 'data'),
+    Input('flight_number_stat', 'value'))
+def update_flight_number(flight_number):
+    print(flight_number)
+    return flight_number
+    
+# Callback du bouton 'ROUTES', qui permet d'afficher les routes d'un aéroport de départ, et d'un vol en particulier
+@app.callback(
+        Output("mapStat", "children"),
+        [Input('routes_button', 'n_clicks'),
+         State('date_stat', 'data'),
+         State('dep_airport_data', 'data'),
+         State('flight_number_data', 'data')
+         ]
+)
+def routes_button(click, date, airport, flight_number):
+
+    if click is None:
+        raise PreventUpdate
+    
+    else:
+        markers = create_markers()
+        children = [dl.TileLayer(), *markers]
+
+        if airport is not None:
+            airports = get_datas(airport)
+            polyline = create_patterns(airports)
+
+            children = children + [*polyline]
+        
+        if flight_number is not None and flight_number:
+            flight_positions = get_flight_positions(flight_number)
+            flight_markers = create_flight_markers(flight_positions)
+
+            children = children + [flight_markers]
+    
+    print("Mise à jour de la Map Stat réussie.")
+    
+    return children
 
 
 if __name__ == "__main__":

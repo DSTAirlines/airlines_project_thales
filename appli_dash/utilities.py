@@ -453,7 +453,7 @@ def get_filtered_flights(filters, static_flights, dynamic_flights):
     filtered_dynamic_flights = []
     test_flight_by_filter = lambda flight_value, filter_value: flight_value == filter_value if filter_value is not None else flight_value
 
-    if any(filter is not None for filter in filters.values()):
+    if filters is not None and any(filter is not None for filter in filters.values()):
 
         filtered_static_flights = [flight for flight in static_flights if
             (test_flight_by_filter(flight[next(iter(flight))]['airport_dep_sql']['airport_name'], filters['from_airport']))
@@ -521,3 +521,87 @@ def create_cards_stats(label, value):
             )
         ), width=3,
     )
+
+
+def create_markers():
+
+    AIRPORT_NAME_INDEX = 0
+    AIRPORT_IATA_INDEX = 1
+    AIRPORT_LATITUDE_INDEX = 2
+    AIRPORT_LONGITUDE_INDEX = 3
+
+    engine = connection_mysql()
+    sql = """
+            SELECT airport_name, airport_iata, airport_latitude, airport_longitude FROM airports 
+            WHERE airport_latitude BETWEEN 35.93302587741835 AND 71.40896420697621
+            AND airport_longitude BETWEEN -11.360649771804841 AND 32.017698096436696 
+            ORDER BY airport_name;
+        """
+    
+    with engine.connect() as conn:
+        query = conn.execute(text(sql))
+        airports = query.all()
+
+    markers = []
+    icon_url = "assets/img/dot.svg"
+
+    for airport in airports:
+        
+        name = airport[AIRPORT_NAME_INDEX]
+        iata = airport[AIRPORT_IATA_INDEX]
+        latitude = airport[AIRPORT_LATITUDE_INDEX]
+        longitude = airport[AIRPORT_LONGITUDE_INDEX]
+
+        html_icon_content = f"""
+            <div data-callsign="{iata}">
+                <img src="{icon_url}" id="airport_{iata}" style="width: 10px; height: 10px; background-color: transparent;" />
+            </div>
+        """
+
+        tooltip_hover = dl.Tooltip(name,
+            direction="auto",
+            permanent=False
+        )
+
+        markers.append(
+            dl.DivMarker(
+                id=f"marker_{iata}",
+                position=[latitude, longitude],
+                iconOptions={
+                    "icon_size": [10, 10],
+                    "html": html_icon_content
+                },
+                children=[tooltip_hover]
+            )
+        )
+
+    return markers
+
+
+def create_patterns(airports):
+
+    patterns = dict(offset='20', endOffset='20', repeat='25', dash=dict(pixelSize=10, pathOptions=dict(color='#f00', weight=2))),
+    multi_pattern =[]
+    
+    dep_airport = airports.pop(0)
+    for airport in airports:
+        positions = [[dep_airport['airport_latitude'], dep_airport['airport_longitude']], [airport['airport_latitude'], airport['airport_longitude']]]
+        pattern = dl.PolylineDecorator(positions=positions, patterns=patterns)
+        multi_pattern.append(pattern)
+
+    return multi_pattern
+
+def create_flight_markers(flight_positions):
+
+    iconUrl = "assets/img/test3.svg"
+    marker = dict(rotate=True, markerOptions=dict(icon=dict(iconUrl=iconUrl, iconAnchor=[15, 15])))
+    patterns = [dict(repeat='10', dash=dict(pixelSize=5, pathOptions=dict(color='blue', weight=1.5, opacity=1))),
+                dict(offset='10', endOffset='10', repeat='15%', marker=marker)]
+    
+    positions = [[flight_position['latitude'], flight_position['longitude']] for flight_position in flight_positions]
+   
+    rotated_markers = dl.PolylineDecorator(positions=positions, patterns=patterns)
+    print(len(rotated_markers))
+   
+
+    return rotated_markers
