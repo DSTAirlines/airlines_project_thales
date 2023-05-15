@@ -469,7 +469,7 @@ def get_airports():
     
     return airports
 
-# Liste de toutes les données à afficher sur la Map Stat
+# Liste de tous les aéroports à afficher sur la MAP STAT
 def get_datas(dep_airport):
 
     AIRPORT_IATA_INDEX = 0

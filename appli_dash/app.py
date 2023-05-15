@@ -14,6 +14,7 @@ from utilities import *
 from get_data import *
 from dash.exceptions import PreventUpdate
 from datetime import date
+import re
 
 
 ################################################################################################
@@ -283,7 +284,7 @@ def display_stat_map(markers):
     return html.Div(
         children=[
             html.Div([
-                html.Div(style = {'width': '100%', 'height': '20vh', 'marginBottom': "auto", "marginTop": "0", 
+                html.Div(style = {'width': '100%', 'height': '15vh', 'marginBottom': "auto", "marginTop": "0", 
                               "display": "flex", 'justifyContent':'center', 'alignItems':'center', 'backgroundColor':'#ECEFF1'}, 
                      children=[
                 html.Div(nav(), className="marges-navbar-map", style={'display': 'inline-block', 'width': '10%'}),
@@ -315,7 +316,7 @@ def display_stat_map(markers):
             ]),
             dl.Map(
                 id="mapStat",
-                style={'width': '100%', 'height': '80vh', 'marginBottom': "0", "marginTop": "auto", "display": "block"},
+                style={'width': '100%', 'height': '85vh', 'marginBottom': "0", "marginTop": "auto", "display": "block"},
                 center=(46.067314, 4.098643),
                 zoom=6,
                 children=[
@@ -420,7 +421,6 @@ def display_page(pathname):
             global_data_static, global_data_dynamic = initialize_data()
         print(f"MAP LIVE - STEP 1 - len de global_data_static : {len(global_data_static)}")
         print(f"MAP LIVE - STEP 1 - len de global_data_dynamic : {len(global_data_dynamic)}")
-        print(len(global_data_dynamic))
         markers_tooltips = create_markers_tooltips(global_data_static, global_data_dynamic)
         nb_planes = len(global_data_dynamic)
         return display_map(markers_tooltips, nb_planes)
@@ -472,10 +472,10 @@ def update_map(n_intervals, data_dyn, data_stat, filters, pathname):
         if n_intervals <= 15:
         
             # Script d'update
-            static_datas, global_data_dynamic = get_filtered_flights(filters, data_stat, old_data_dyn)
+            static_datas, datas_dyn = get_filtered_flights(filters, data_stat, old_data_dyn)
 
-            markers_tooltips = create_markers_tooltips(static_datas, global_data_dynamic)
-            nb_planes = len(global_data_dynamic)
+            markers_tooltips = create_markers_tooltips(static_datas, datas_dyn)
+            nb_planes = len(markers_tooltips)
             return [
                 datetime_refresh(nb_planes),
                 dl.TileLayer(),
@@ -571,10 +571,10 @@ def filter_button(click, static_data, dynamic_data, filters, date_time):
         filtered_static_flights, filtered_dynamic_flights = get_filtered_flights(filters, static_data, dynamic_data)
         filtered_markers_tooltips = create_markers_tooltips(filtered_static_flights, filtered_dynamic_flights)
         date_time = date_time.strip('Last update : ')
-        print(date_time)
+        date_time = re.sub('\(.*?\)', '', date_time)
         nb_planes = len(filtered_dynamic_flights)
         
-        return [datetime_refresh(nb_planes, date_time), dl.TileLayer(), *filtered_markers_tooltips]
+        return [datetime_refresh(nb_planes, date_time=date_time), dl.TileLayer(), *filtered_markers_tooltips]
 
 
 
@@ -736,7 +736,6 @@ def update_date(date_value):
     Output('dep_airport_data', 'data'),
     Input('dep_airport_stat', 'value'))
 def update_dep_airport(airport):
-    print(airport)
     return airport
     
 # Callback du champ texte flight number de la page Map stat
@@ -744,7 +743,6 @@ def update_dep_airport(airport):
     Output('flight_number_data', 'data'),
     Input('flight_number_stat', 'value'))
 def update_flight_number(flight_number):
-    print(flight_number)
     return flight_number
     
 # Callback du bouton 'ROUTES', qui permet d'afficher les routes d'un aéroport de départ, et d'un vol en particulier
