@@ -84,7 +84,7 @@ def create_db(db_name):
 
     # Faire d'abord un appel à opensky
     opensky_api(init=True, cron=False)
-    airlabs_api(cron=False)
+    airlabs_api(init=True, cron=False)
 
     # fermer la connection
     client.close()
