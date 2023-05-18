@@ -4,6 +4,8 @@ import sys
 from pathlib import Path
 from pprint import pprint
 import pandas as pd
+import numpy as np
+import re
 from sqlalchemy import text
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
@@ -82,26 +84,6 @@ def get_data_dynamic_updated(old_data):
     return [data for data in opensky_data if data['callsign'] in old_callsigns]
 
 
-
-# def get_dic_countries():
-#     """
-#     Récupère correspondances pour les pays du code iso2 et du nom
-#     Args:
-#         None
-#     Returns:
-#         dict: dict de la forme dic['iso2'] = 'country_name'
-#     """
-#     engine = connection_mysql()
-#     sql = f'''
-#     SELECT country_iso2, country_name FROM countries;
-#     '''
-#     with engine.connect() as conn:
-#         query = conn.execute(text(sql))
-#     df_countries = pd.DataFrame(query.fetchall())
-#     dic_countries = df_countries.set_index('country_iso2')['country_name'].to_dict()
-#     return dic_countries
-
-
 # Extraire les données statiques SQL des éléments récupérés par API
 def get_sql_data(df):
     """
@@ -173,13 +155,38 @@ def convert_time_unix_utc_to_datetime_fr(time_unix_utc):
 
     return datetime_fr
 
-def get_data_statistics():
+
+def validate_date(input_date):
+    # Vérifier le pattern
+    if not re.match(r'\d{4}-\d{2}-\d{2}', input_date):
+        return "date_incorrect_format"
+
+    # Convertir la chaine de caractères en date
+    try:
+        input_date = datetime.strptime(input_date, '%Y-%m-%d')
+    except ValueError:
+        return "date_not_valid"
+
+    # Vérifier si la date est dans la plage de temps
+    today = datetime.today()
+    a_week_ago = today - timedelta(days=7)
+
+    if not a_week_ago <= input_date <= today:
+        return "date_out_of_range"
+
+    return "ok"
+
+
+def get_data_statistics(date_data=None):
     """
     Récupère les données de la base MongoDB
+    Arguments:
+        date_data (str, optionnal): date de recherche (pour API - exemple 2023-10-01)
     Returns:
         DataFrame: Dataframe des données statistiques
     """
-    print("STATS DATA - STEP 1 : Création du DF_stats général")
+    
+    print("STATS DATA - Création du DF_stats général")
     client = connection_mongodb()
     db = client[MONGO_DB_NAME]
     data = db['data_aggregated']
@@ -190,34 +197,39 @@ def get_data_statistics():
     # Fermer la connexion
     client.close()
 
-    print(f"STATS DATA - STEP 1 : len df_temp brut : {len(df_temp)}")
+    if date_data is not None:
+        df_temp['date_data'] = df_temp['datetime_start'].apply(lambda x: x.split(' ')[0])
+        all_date_data = df_temp['date_data'].unique().tolist()
+        if date_data not in all_date_data:
+            return None
+        cond1 = df_temp['count'] > 1
+        cond2 = df_temp['date_data'] == date_data
+        df_temp = df_temp[cond1 & cond2].reset_index(drop=True)
 
-    min_time = df_temp['time_start'].min()
-    max_time = df_temp['time_end'].max()
-    
-    df_temp = df_temp.drop('_id', axis=1)
-    cond1 = df_temp['count'] > 1
-    cond2 = df_temp['time_start'] > min_time
-    cond3 = df_temp['time_end'] < max_time
-   
-    df_temp = df_temp[cond1 & cond2 & cond3].reset_index(drop=True)
-
-    print(f"STATS DATA - STEP 1 : len df_temp {len(df_temp)}")
+    else:
+        min_time = df_temp['time_start'].min()
+        max_time = df_temp['time_end'].max()
+        df_temp = df_temp.drop('_id', axis=1)
+        cond1 = df_temp['count'] > 1
+        cond2 = df_temp['time_start'] > min_time
+        cond3 = df_temp['time_end'] < max_time
+        df_temp = df_temp[cond1 & cond2 & cond3].reset_index(drop=True)
 
     df = get_sql_data(df_temp)
     df['datetime_start'] = pd.to_datetime(df['datetime_start'])
     df['datetime_end'] = pd.to_datetime(df['datetime_end'])
-    last_day = df['datetime_start'].max().date()
-    condition = df['datetime_start'].dt.date < last_day
-    df = df[condition].reset_index(drop=True)
+
+    if date_data is None:
+        last_day = df['datetime_start'].max().date()
+        condition = df['datetime_start'].dt.date < last_day
+        df = df[condition].reset_index(drop=True)
+
     df = df.astype({
         'dep_airport_latitude': 'float64',
         'dep_airport_longitude': 'float64',
         'arr_airport_latitude': 'float64',
         'arr_airport_longitude': 'float64',
     })
-    print(f"STATS DATA - STEP 1 : len de df général : {len(df)}")
-    # df.to_csv('test.csv', header=True, index=False)
     return df
 
 
@@ -235,7 +247,6 @@ def get_global_stats(df):
         'dep_iata': 'nunique',
         'arr_iata': 'nunique',
     })
-    print(stats_global)
     return stats_global
 
 
@@ -304,15 +315,10 @@ def get_data_one_element(value_col, label_col, df):
             'airline_iata': 'nunique',
         })
         len_df = len(ddf)
-        # flag = df.loc[0, 'aircraft_flag']
-        # if dic_countries is not None:
-        #     flag = dic_countries.get(flag, flag)
         dic_return = {
             'Nom': df.loc[0, 'aircraft_name'],
             'Code IATA': df.loc[0, 'aircraft_iata'],
             'Code ICAO': value_col,
-            # 'N° d\'enregistrement': df.loc[0, 'aircraft_reg_number'],
-            # 'Pays d\'enregistrement': flag,
             'Nb de vols': f"{round(ddf['callsign'].sum() / len_df)} / j",
             'Nb d\'aéroprts de départ': f"{round(ddf['dep_iata'].sum() / len_df)} / j",
             'Nb d\'aéroprts d\'arrivée': f"{round(ddf['arr_iata'].sum() / len_df)} / j",
@@ -543,7 +549,7 @@ def get_datas(dep_airport):
             SELECT airport_iata, airport_latitude, airport_longitude FROM airports 
             WHERE airport_iata = '{airport['_id']}';
         """
-          
+
         with engine.connect() as conn:
 
             query = conn.execute(text(sql_request))
@@ -559,7 +565,7 @@ def get_datas(dep_airport):
     with engine.connect() as conn:
         query = conn.execute(text(sql_request_dep_airport))
         dep_airport = query.first()
-    
+
     dep_airport = dict(airport_iata=dep_airport[0], airport_latitude=dep_airport[1], airport_longitude=dep_airport[2])
     airports_with_coordinates.insert(0, dep_airport)
 
@@ -587,3 +593,63 @@ def get_flight_positions(flight_number):
     client.close()
 
     return airplane_positions
+
+
+##########################################################
+# Fonctions API
+##########################################################
+
+
+def get_static_data_api(table, elements=[]):
+    """
+    Retourne les enregistrements de la base de données MySQL
+    Args:
+        table (str): Nom de la table
+        element (array, optionnal): Code de l'élément à récupérer (Primary Key de la table)
+    Returns:
+        Array: Array des dictionnaires des enregistrements de la table
+    """
+
+    # Dictionnaire de correspondance table - primary key
+    dic_primary_keys = {
+        "airports": "airport_iata",
+        "airlines": "airline_iata",
+        "aircraft": "aircraft_iaco",
+        "country": "country_iso2",
+        "city": "city_iata",
+    }
+
+    # Récupération de la connexion à la base de données
+    engine = connection_mysql()
+
+    sql = f'''
+    SELECT * FROM {table}
+    '''
+    if len(elements) > 0:
+        pk = dic_primary_keys[table]
+        placeholders = ', '.join(['%s'] * len(elements))
+        sql += f'''
+        WHERE {pk} IN ({placeholders})
+        '''
+    with engine.connect() as conn:
+        query = conn.execute(str(sql), elements)
+
+    return [dict(row) for row in query.fetchall()]
+
+
+def get_data_statistics_type_data_api(df, type_data, elements):
+    """
+    Retourne les enregistrements de la collection des données agrégées MongoDB filtrés par les paramètres spécifiées
+    Args:
+        df_stats (DataFrame): DataFrame des données agrégées
+        type_data (str): Type de données à récupérer
+        elements (array): Valeur(s) de la variable "type_data" à récupérer
+    Returns:
+        Dict: Dictionnaires des données agrégées filtrés par les paramètres spécifiées
+    """
+
+    df = df[df[type_data].isin(elements)].drop(['airline_number', 'dep_airport_icao', 'arr_airport_icao'], axis=1).reset_index(drop=True)
+    df['datetime_start'] = df['datetime_start'].dt.strftime('%Y-%m-%dT%H:%M:%S')
+    df['datetime_end'] = df['datetime_end'].dt.strftime('%Y-%m-%dT%H:%M:%S')
+    df = df.replace(np.nan, None)
+    return df.to_dict('records')
