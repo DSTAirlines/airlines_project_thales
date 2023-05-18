@@ -449,6 +449,9 @@ def get_table_callsign(df, dep_iata, arr_iata, callsign):
 
 # Liste de tous les aéroports en base de données SQL pour dropdown de la Map stat
 def get_airports():
+    """
+    Retourne la liste de tous les aéroports de la Map Stat (en Europe), pour le dropdown 'Aéroport de départ'
+    """
     
     AIRPORT_NAME_INDEX = 0
     AIRPORT_IATA_INDEX = 1
@@ -471,6 +474,9 @@ def get_airports():
 
 # Liste de tous les aéroports à afficher sur la MAP STAT
 def get_datas(dep_airport):
+    """
+    Retourne la liste de toutes les coordonnées des aéroports les plus désservis à partir de l'aéroport de départ (dep_airport) de la Map Stat
+    """
 
     AIRPORT_IATA_INDEX = 0
     AIRPORT_LATITUDE_INDEX = 1
@@ -493,16 +499,24 @@ def get_datas(dep_airport):
             "$group":
             {
                 '_id':'$callsign',
-                'arrival': 
+                'arr_airport': 
                 {
-                    '$first':'$arr_iata'
+                    '$addToSet':'$arr_iata'
                 }
             }
         },
         {
+            "$unwind":
+            {
+                'path': "$arr_airport",
+                'preserveNullAndEmptyArrays': True
+            }
+
+        },
+        {
             "$group":
             {
-                '_id':'$arrival',
+                '_id':'$arr_airport',
                 'count': {
                     '$count': {}
                 }
@@ -516,7 +530,7 @@ def get_datas(dep_airport):
             }
         },
         {
-            '$limit':10 
+            '$limit':15
         }
     ]
 
@@ -555,6 +569,9 @@ def get_datas(dep_airport):
 
 # Retourne toutes les positions (latitude et longitude) du vol pendant la journée en cours
 def get_flight_positions(flight_number):
+    """
+    Retourne les positions du vol donné par le numéro de vol en entré
+    """
 
     day_date = datetime.now().strftime("%Y-%m-%d")
     day_date_after = (datetime.now() + timedelta(days= 1)).strftime('%Y-%m-%d')

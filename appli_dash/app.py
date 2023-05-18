@@ -723,6 +723,10 @@ def create_table_callsign(depart, arrivee, callsign):
     flight_numbers = get_dropdowns_flight_numbers(global_statistics_df, depart, arrivee)
     return dbc.Table.from_dataframe(df, striped=True, bordered=True, hover=True)
 
+################################################################################################
+## CALLBACK PAGE MAP STAT
+################################################################################################
+
 # Callback du DatePicker
 @app.callback(
     Output('date_stat', 'data'),
@@ -755,6 +759,16 @@ def update_flight_number(flight_number):
          ]
 )
 def routes_button(click, date, airport, flight_number):
+    """
+    Retourne les routes concernant un aéroport de départ, ainsi que les routes pour un vol
+    Args:
+        click: event click sur le bouton 'ROUTES'
+        date: date à entrer pour afficher les routes pour le jour en question
+        airport: aéroport de départ
+        flight_number: numéro de vol, de l'avion en question
+    Return:
+        children (array): Toutes les routes à afficher sur la MAP STAT
+    """
 
     if click is None:
         raise PreventUpdate

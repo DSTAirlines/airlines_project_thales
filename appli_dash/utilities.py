@@ -550,6 +550,9 @@ def create_cards_stats(label, value):
 
 
 def create_markers():
+    """
+    Création des markers aéroports sur la MAP STAT
+    """
 
     AIRPORT_NAME_INDEX = 0
     AIRPORT_IATA_INDEX = 1
@@ -605,6 +608,9 @@ def create_markers():
 
 
 def create_patterns(airports):
+    """
+    Création des markers des routes de l'aéroport de départ vers les aéroports les plus désservis.
+    """
 
     patterns = dict(offset='20', endOffset='20', repeat='15', dash=dict(pixelSize=10, pathOptions=dict(color='red', weight=2))),
     multi_pattern =[]
@@ -618,6 +624,9 @@ def create_patterns(airports):
     return multi_pattern
 
 def create_flight_markers(flight_positions):
+    """
+    Création des markers des routes du vol donné par le numéro de vol
+    """
 
     iconUrl = "assets/img/test3.svg"
     marker = dict(rotate=True, markerOptions=dict(icon=dict(iconUrl=iconUrl, iconAnchor=[15, 15])))
