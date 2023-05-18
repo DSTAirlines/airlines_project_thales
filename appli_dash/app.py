@@ -1,5 +1,7 @@
 import pandas as pd
 import dash
+from flask import Flask, redirect
+from flasgger import Swagger
 from dash import dcc
 from dash import html
 import dash_leaflet as dl
@@ -12,6 +14,7 @@ import dash_extensions as de
 import pandas as pd
 from utilities import *
 from get_data import *
+from routes import api
 from dash.exceptions import PreventUpdate
 from datetime import date
 import re
@@ -29,6 +32,7 @@ index_page = html.Div([
         dcc.Link("Live Map", href="/live-map", className="mx-3"),
         dcc.Link("Data Stats", href="/stats-page", className="mx-3"),
         dcc.Link("Map Stats", href="/stats-map-page", className="mx-3"),
+        dcc.Link("API", href="/apidocs", className="mx-3"),
     ], className="page-links"),
 
     html.Div([
@@ -206,9 +210,9 @@ def display_stats_page(df):
                                         xaxis={'gridcolor': '#e3e3e3', 'tickformat': '%d-%m-%Y', 'nticks': len(stats_by_day.index)},
                                         yaxis={'title': 'Vols', 'side': 'left', 'gridcolor': '#e3e3e3', 'titlefont': {'color': 'blue'}, 'tickfont': {'color': 'blue'}},
                                         yaxis2={'title': 'Autres variables', 'overlaying': 'y', 'side': 'right', 'gridcolor': '#e3e3e3', 'titlefont': {'color': 'green'}, 'tickfont': {'color': 'green'}},
-                                        legend={'x': 0.2, 'y': 1.1, 'orientation': 'h', 'bgcolor': 'rgba(255, 255, 255, 0.5)', 'font': {'size': 12}},
-                                        # legend={'x': 1.2, 'y': 1, 'bgcolor': 'rgba(255, 255, 255, 0.5)', 'bordercolor': 'black', 'borderwidth': 1, 'font': {'size': 10}},
+                                        legend={'x': 0.2, 'y': 1.1, 'orientation': 'h', 'font': {'size': 12}},
                                         plot_bgcolor='rgba(237, 248, 251, 0.9)',
+                                        # plot_bgcolor='rgba(27, 25, 25, 0.9)',
                                         paper_bgcolor='rgba(255, 255, 255, 0.1)'
                                     )
                                 },
@@ -346,8 +350,9 @@ def nav(classes=""):
         children=[
             dbc.DropdownMenuItem("Index", href="/"),
             dbc.DropdownMenuItem("Map Live", href="/live-map"),
-            dbc.DropdownMenuItem("Statistics Data", href="stats-page"),
-            dbc.DropdownMenuItem("Statistics Map", href="stats-map-page"),
+            dbc.DropdownMenuItem("Statistics Data", href="/stats-page"),
+            dbc.DropdownMenuItem("Statistics Map", href="/stats-map-page"),
+            dbc.DropdownMenuItem("API", href="/apidocs"),
         ],
         nav=True,
         in_navbar=True,
@@ -357,7 +362,7 @@ def nav(classes=""):
 
 
 ################################################################################################
-## APPLICATION DASH
+## APPLICATIONS (DASH - FLASK - API - SWAGGER)
 ################################################################################################
 
 # Variable globale contenant les data
@@ -368,13 +373,42 @@ global_launch_flag = True
 global_statistics_df = None
 global_n_intervals_map = None
 
-# Création de l'application Dash et de la carte Leaflet
+# Création de l'application Dash
 app = dash.Dash(__name__, 
                 external_stylesheets=[dbc.themes.BOOTSTRAP],
                 suppress_callback_exceptions=True)
 
-# Layout de base de l'application
-# -------------------------------
+# Création d'une instance de Flask
+server = app.server
+
+# Configuration du modèle Swagger
+template = {
+  "info": {
+    "title": "API DSTAirlines",
+    "description": "Récupérer les données de l'application Dash\n\n[Application DSTAirlines](http://localhost:8050)",
+    "version": "0.0.1"
+  },
+    "basePath": "/",
+    "schemes": [
+        "http"
+    ],
+    "produces": [
+        "application/json"
+    ],
+    "consumes": [
+        "application/json"
+    ]
+}
+
+# Création d'une instance de Swagger (Documentation API)
+swagger = Swagger(server, template=template)
+
+# Enregistrement du blueprint de l'API
+server.register_blueprint(api, url_prefix='/api/v1')
+
+
+# Layout de base de l'application Dash
+# ------------------------------------
 app.layout = html.Div([
     # Avoir le chemin d'accès à l'application 
     dcc.Location(id='url', refresh=False),
@@ -435,9 +469,13 @@ def display_page(pathname):
     elif pathname == '/stats-map-page':
         markers = create_markers()
         return display_stat_map(markers)
+    
+    elif pathname == '/apidocs':
+        return dcc.Location(pathname="/apidocs/", id="swagger-ui")
 
     else:
         return index_page
+            
 
 
 ################################################################################################
