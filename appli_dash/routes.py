@@ -1,7 +1,8 @@
 from flask import Blueprint, jsonify, request, make_response
 from werkzeug.exceptions import BadRequest, NotFound, InternalServerError
-from pydantic import BaseModel, ValidationError, validator
+from pydantic import BaseModel, ValidationError, validator, Field
 from flask_pydantic import validate
+from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 from get_data import *
 from typing import Optional
 
@@ -30,6 +31,16 @@ def handle_not_found(e):
 @api.errorhandler(InternalServerError)
 def handle_internal_error(e):
     return jsonify(error="Une erreur interne est survenue. Veuillez réessayer plus tard."), 500
+
+# Gestion d'une erreur d'authentification (401)
+@api.errorhandler(401)
+def unauthorized(e):
+    return jsonify(error=str("L'utilisateur n'est pas authentifié")), 401
+
+# Gestion d'une erreur de permissions suffisantes (403)
+@api.errorhandler(403)
+def forbidden(e):
+    return jsonify(error=str("L'utilisateur n'a pas les droits suffisants pour accéder au modèle demandé")), 403
 
 
 # ----------------------------------------------
@@ -63,10 +74,10 @@ class DataStatistic(BaseModel):
     elements_statistic: str
     date_data: Optional[str] = None
 
-
 # ----------------------------------------------
 # Définition des routes
 # ----------------------------------------------
+
 
 # ROUTE STATIC_DATA
 @api.route('/static_data', methods=['GET'])
@@ -192,7 +203,7 @@ def static_data(query: DataStatic):
                         example: CDG
                     airport_icao:
                         type: string
-                        description: Code OACI de l'aéroport
+                        description: Code ICAO de l'aéroport
                         example: LFPG
                     fk_city_iata:
                         type: string
@@ -201,7 +212,7 @@ def static_data(query: DataStatic):
                     airport_name:
                         type: string
                         description: Nom de l'aéroport
-                        example: Charles_de_Gaulle_Airport
+                        example: Charles de Gaulle Airport
                     airport_utc_offset_str:
                         type: string
                         description: Fuseau horaire de l'aéroport
@@ -212,7 +223,7 @@ def static_data(query: DataStatic):
                         example: 60.0
                     airport_timezone_id:
                         type: string
-                        description: ID de la zone de temps de l'aéroport
+                        description: ID de la timezone de l'aéroport
                         example: Europe/Paris
                     airport_latitude:
                         type: number
@@ -277,6 +288,8 @@ def static_data(query: DataStatic):
                         example: '//upload.wikimedia.org/wikipedia/en/thumb/c/c3/Flag_of_France.svg/23px-Flag_of_France.svg.png'
         400:
             description: La catégorie est invalide et/ou les identifiants sont invalides
+        404:
+            description: Aucun enregistrement ne correspond à la requête
     """
 
     if query.category not in ['airports', 'airlines', 'aircrafts', 'countries', 'cities']:
@@ -287,6 +300,8 @@ def static_data(query: DataStatic):
         try:
             list_elements = query.elements_static.split(',')
             data_sql = get_static_data_api(query.category, elements=list_elements)
+            if data_sql is None or len(data_sql) == 0:
+                raise NotFound("Aucun enregistrement ne correspond à la requête")
         except ValueError:
             raise BadRequest("Le champ elements_static est invalide")
     else:
@@ -577,7 +592,7 @@ def statistic_data(query: DataStatistic):
     if query.type_data not in ['callsign', 'departure_airport', 'arrival_airport', 'airline', 'aircraft', 'country', 'city']:
         if query.type_data is None or query.type_data == "":
             raise BadRequest("Le champ type_data est obligatoire")
-        raise BadRequest("La variable d'agrégation n'est pas valide. Les variables valides sont : callsign, departure_airport, arrival_airport, airline, aircraft, country, city.")
+        raise BadRequest("La catégorie spécifiée n'est pas valide. Les catégories valides sont : callsign, departure_airport, arrival_airport, airline, aircraft, country, city.")
     else:
         if query.elements_statistic is None or query.elements_statistic == "":
             raise BadRequest("Le champ elements_statistic est obligatoire")
@@ -600,7 +615,1086 @@ def statistic_data(query: DataStatistic):
             df_stats = get_data_statistics()
 
         data = get_data_statistics_type_data_api(df_stats, dic_var_stats[query.type_data], list_elements)
-        if len(data) == 0:
+        if data is None:
             raise NotFound("Aucun enregistrement correspondant à la requête n'a été trouvé. Modifier la requête et essayer à nouveau")
 
     return jsonify(data)
+
+
+
+#####################################################################
+#  ROUTES ADMIN
+#####################################################################
+
+# ROUTE ADMIN LOGIN
+
+
+class Admin(BaseModel):
+    """Class permettant d'authentifier l'utilisateur Admin"""
+    username: str
+    password: str
+
+@api.route('/login', methods=['POST'])
+def login():
+    """
+    Création d'un token d'authentification pour l'utilisateur Admin
+    ---
+    tags:
+        - Admin
+    parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+            properties:
+              username:
+                type: string
+                description: Admin Username
+              password:
+                type: string
+                description: Admin Password
+            required: 
+              - username
+              - password
+    responses:
+        200:
+            description: L'utilisateur est authentifié
+            schema:
+                type: object
+                properties:
+                    access_token:
+                        type: string
+                        description: le token d'authentification
+                        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJS
+        400:
+            description: Les champs username et password sont obligatoires
+        401:
+            description: L'utilisateur n'est pas authentifié
+    """
+    username = request.json.get('username', None)
+    password = request.json.get('password', None)
+
+    # Données de connexion de l'utilisateur Admin
+    LOG_ADMIN = os.environ.get('ADMIN_LOGIN_API')
+    PASS_ADMIN = os.environ.get('ADMIN_PASSWORD_API')
+
+    # Vérification de la connexion
+    if username is None or password is None:
+        return jsonify(error="Les champs username et password sont obligatoires"), 400
+    elif username != LOG_ADMIN or password != PASS_ADMIN:
+        return jsonify(error="L'utilisateur Admin n'est pas authentifié"), 401
+    else:
+        access_token = create_access_token(identity=username)
+        return jsonify(access_token=access_token), 200
+    return jsonify(error="Une erreur inattendue s'est produite"), 500
+
+
+# -------------------------------------------------------------
+# Table airlines
+# -------------------------------------------------------------
+
+# Route pour ajouter une compagnie aérienne
+###########################################
+class AirlineInsert(BaseModel):
+    """Class AirlineInsert permettant d'ajouter une compagnie aérienne"""
+    airline_iata: str = Field(..., description="Le code IATA de la compagnie aérienne.")
+    airline_icao: Optional[str] = Field(None, description="Le code ICAO de la compagnie aérienne.")
+    airline_name: Optional[str] = Field(None, description="Le nom de la compagnie aérienne.")
+
+@api.route('/airlines', methods=['POST'])
+@jwt_required()
+def create_airline():
+    """
+    Ajouter une compagnie aérienne
+    ---
+    tags:
+        - Airlines Admin
+    parameters:
+        - in: header
+          name: Authorization
+          required: true
+          type: string
+          description: |
+            Token d'authentification (Saisir : Bearer + [token])
+
+            Vous pouvez générer un token d'authentification à partir de la route `/login` en méthode `POST` en saisissant votre username et votre password.
+          type: string
+          format: Bearer
+          example: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJS
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+            properties:
+              airline_iata:
+                type: string
+                description: Code IATA de la compagnie aérienne
+                example: AF
+                minLength: 2
+                maxLength: 2
+                pattern: ^[A-Z0-9]{2}$
+              airline_icao:
+                type: string
+                description: Code ICAO de la compagnie aérienne
+                example: AFR
+                minLength: 3
+                maxLength: 3
+                pattern: ^[A-Z]{3}$
+                nullable: true
+              airline_name:
+                type: string
+                description: Nom de la compagnie aérienne
+                example: Air France
+                nullable: true
+                maxLength: 255
+            required: 
+              - airline_iata
+    responses:
+        201:
+            description: La compagnie aérienne a bien été ajoutée
+        400:
+            description: |
+                Le champs airline_iata est obligatoire
+                Les données sont invalides (Les champs à renseigner sont : airline_iata, airline_icao, airline_name)
+        403:
+            description: |
+                Vous n'êtes pas autorisé à ajouter une compagnie aérienne
+    """
+    current_user = get_jwt_identity()
+
+    # Vérification que l'utilisateur est autorisé à créer une compagnie aérienne
+    if current_user == os.environ.get('ADMIN_LOGIN_API'):
+
+        # Vérification des données envoyées
+        data = request.get_json()
+        data_keys_send = list(data.keys())
+        airline = AirlineInsert(**data)
+        dict_airline = airline.dict()
+        keys_invalids = list(set(data_keys_send) - set(dict_airline.keys()))
+        if len(keys_invalids) > 0:
+            return jsonify(error="Les données sont invalides (Les champs à renseigner sont : airline_iata, airline_icao, airline_name)"), 400
+        if len(dict_airline) != 0:
+            airline_iata = dict_airline.get('airline_iata', None)
+            airline_iata = airline_iata.upper() if airline_iata is not None else None
+
+            # Vérification de la présence de la clé primaire
+            if airline_iata is None or airline_iata == "":
+                return jsonify(error="Le champ 'airline_iata' est obligatoire"), 400
+            test_add = admin_api('airlines', 'post', data=dict_airline)
+            result = list(test_add.keys())[0]
+            if result == 'error':
+                return jsonify(test_add), 400
+            else:
+                return jsonify(dict_airline), 201
+        else:
+            return jsonify(error="Aucune donnée envoyée"), 400
+    else:
+        return jsonify(error="Vous n'êtes pas autorisé à ajouter une compagnie aérienne"), 403
+
+
+# Route pour modifier une compagnie aérienne
+############################################
+
+class AirlineUpdate(BaseModel):
+    """Class AirlineUpdate permettant de modifier une compagnie aérienne"""
+    airline_icao: Optional[str] = Field(None, description="Le code ICAO de la compagnie aérienne.")
+    airline_name: Optional[str] = Field(None, description="Le nom de la compagnie aérienne.")
+
+@api.route('/airlines/<airline_iata>', methods=['PUT'])
+@jwt_required()
+def update_airline(airline_iata):
+    """
+    Modifier une compagnie aérienne
+    ---
+    tags:
+        - Airlines Admin
+    parameters:
+        - in: path
+          name: airline_iata
+          required: true
+          description: Code IATA de la compagnie aérienne
+          type: string
+          pattern: ^[A-Z0-9]{2}$
+          example: AF
+        - in: header
+          name: Authorization
+          required: true
+          type: string
+          description: |
+            Token d'authentification (Saisir : Bearer + [token])
+
+            Vous pouvez générer un token d'authentification à partir de la route `/login` en méthode `POST` en saisissant votre username et votre password.
+          type: string
+          format: Bearer
+          example: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJS
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+            properties:
+              airline_icao:
+                type: string
+                description: Code ICAO de la compagnie aérienne
+                example: AFR
+                minLength: 3
+                maxLength: 3
+                pattern: ^[A-Z]{3}$
+                nullable: true
+              airline_name:
+                type: string
+                description: Nom de la compagnie aérienne
+                example: Air France
+                nullable: true
+                maxLength: 255
+    responses:
+        200:
+            description: La compagnie aérienne a bien été modifiée
+        400:
+            description: |
+                Le champs airline_iata est obligatoire
+                Les données sont invalides (Les champs à renseigner sont : airline_iata, airline_icao, airline_name)
+        403:
+            description: |
+                Vous n'êtes pas autorisé à modifier une compagnie aérienne
+        404:
+            description: |
+                Aucun enregistrement trouvé avec ce code IATA
+    """
+    current_user = get_jwt_identity()
+
+    # Vérification que l'utilisateur est autorisé à modifier la compagnie aérienne
+    if current_user == os.environ.get('ADMIN_LOGIN_API'):
+
+        # Vérification de la présence du code_iata dans le path de la requête
+        if airline_iata is None or airline_iata == "":
+            return jsonify(error="Le champ 'airline_iata' est obligatoire"), 400
+
+        # Vérification de la présence du code_iata en base de données
+        test_code_iata = check_primary_key("airlines", "airline_iata", airline_iata)
+        airline_iata = airline_iata.upper()
+        if test_code_iata is False:
+            data = request.get_json()
+            data_keys_send = list(data.keys())
+            airline = AirlineUpdate(**data)
+            dict_airline = airline.dict()
+            keys_invalids = list(set(data_keys_send) - set(dict_airline.keys()))
+            if len(keys_invalids) > 0:
+                return jsonify(error="Les données sont invalides (Les champs à renseigner sont : airline_iata, airline_icao, airline_name)"), 400
+
+            # Vérification des données envoyées
+            if len(data) != 0:
+                test_update = admin_api('airlines', 'put', data=dict_airline, pk_value=airline_iata)
+                result = list(test_update.keys())[0]
+                if result == 'error':
+                    return jsonify(test_update), 400
+                else:
+                    dict_result = {k:v for k, v in dict_airline.items() if v is not None}
+                    return jsonify(dict_result), 200
+            else:
+                return jsonify(error="Aucune donnée envoyée"), 400
+        else:
+            return jsonify(error="Aucun enregistrement trouvé avec ce code IATA"), 404
+    else:
+        return jsonify(error="Vous n'êtes pas autorisé à modifier une compagnie aérienne"), 403
+
+
+
+# Route pour supprimer une compagnie aérienne
+############################################
+
+@api.route('/airlines/<airline_iata>', methods=['DELETE'])
+@jwt_required()
+def delete_airline(airline_iata):
+    """
+    Supprimer une compagnie aérienne
+    ---
+    tags:
+        - Airlines Admin
+    parameters:
+        - in: path
+          name: airline_iata
+          required: true
+          description: Code IATA de la compagnie aérienne
+          type: string
+          pattern: ^[A-Z0-9]{2}$
+          example: AF
+        - in: header
+          name: Authorization
+          required: true
+          type: string
+          description: |
+            Token d'authentification (Saisir : Bearer + [token])
+
+            Vous pouvez générer un token d'authentification à partir de la route `/login` en méthode `POST` en saisissant votre username et votre password.
+          type: string
+          format: Bearer
+          example: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJS
+    responses:
+        204:
+            description: La compagnie aérienne a bien été supprimée
+        400:
+            description: |
+                Le champs airline_iata est obligatoire
+        403:
+            description: |
+                Vous n'êtes pas autorisé à supprimer une compagnie aérienne
+        404:
+            description: |
+                Aucun enregistrement trouvé avec ce code IATA
+    """
+    current_user = get_jwt_identity()
+
+    # Vérification que l'utilisateur est autorisé à supprimer la compagnie aérienne
+    if current_user == os.environ.get('ADMIN_LOGIN_API'):
+
+        # Vérification de la présence du code_iata dans le path de la requête
+        if airline_iata is None or airline_iata == "":
+            return jsonify(error="Le champ 'airline_iata' est obligatoire"), 400
+
+        # Vérification de la présence du code_iata en base de données
+        airline_iata = airline_iata.upper()
+        test_code_iata = check_primary_key("airlines", "airline_iata", airline_iata)
+        if test_code_iata is False:
+
+            # Suppression de la compagnie aérienne
+            test_delete = admin_api('airlines', 'delete', pk_value=airline_iata)
+            result = list(test_delete.keys())[0]
+            if result == 'error':
+                return jsonify(test_delete), 400
+            else:
+                return '', 204
+
+        else:
+            return jsonify(error="Aucun enregistrement trouvé avec ce code IATA"), 404
+    else:
+        return jsonify(error="Vous n'êtes pas autorisé à supprimer une compagnie aérienne"), 403
+
+
+
+
+# -------------------------------------------------------------
+# Table aircrafts
+# -------------------------------------------------------------
+
+# Route pour ajouter un avion
+#############################
+class AircraftInsert(BaseModel):
+    """Class AircraftInsert permettant d'ajouter un avion"""
+    aircraft_iata: str = Field(..., description="Le code IATA de l'avion.")
+    aircraft_icao: Optional[str] = Field(None, description="Le code ICAO de l'avion.")
+    aircraft_name: Optional[str] = Field(None, description="Le nom de l'avion.")
+    aircraft_wiki_link: Optional[str] = Field(None, description="Le lien vers la page Wikipedia.")
+
+@api.route('/aircrafts', methods=['POST'])
+@jwt_required()
+def create_aircraft():
+    """
+    Ajouter un avion
+    ---
+    tags:
+        - Aircrafts Admin
+    parameters:
+        - in: header
+          name: Authorization
+          required: true
+          type: string
+          description: |
+            Token d'authentification (Saisir : Bearer + [token])
+
+            Vous pouvez générer un token d'authentification à partir de la route `/login` en méthode `POST` en saisissant votre username et votre password.
+          type: string
+          format: Bearer
+          example: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJS
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+            properties:
+              aircraft_iata:
+                type: string
+                description: Code IATA de l'avion
+                example: 320
+                minLength: 3
+                maxLength: 3
+                pattern: ^[A-Z0-9]{3}$
+                nullable: false
+              aircraft_icao:
+                type: string
+                description: Code ICAO de l'avion
+                example: A320
+                minLength: 4
+                maxLength: 4
+                pattern: ^[A-Z0-9]{4}$
+                nullable: true
+              aircraft_name:
+                type: string
+                description: Nom de l'avion
+                example: Airbus A320
+                nullable: true
+                maxLength: 255
+              aircraft_wiki_link:
+                type: string
+                description: Lien vers la page Wikipedia
+                example: '/wiki/Airbus_A320'
+                nullable: true
+                maxLength: 255
+            required: 
+              - aircraft_iata
+    responses:
+        201:
+            description: L'avion a bien été ajouté
+        400:
+            description: |
+                Le champs aircraft_iata est obligatoire
+                Les données sont invalides (Les champs à renseigner sont : aircraft_iata, aircraft_icao, aircraft_name, aircraft_wiki_link)
+        403:
+            description: |
+                Vous n'êtes pas autorisé à ajouter un avion
+    """
+    current_user = get_jwt_identity()
+
+    # Vérification que l'utilisateur est autorisé à créer un avion
+    if current_user == os.environ.get('ADMIN_LOGIN_API'):
+
+        # Vérification des données envoyées
+        data = request.get_json()
+        data_keys_send = list(data.keys())
+        aircraft = AircraftInsert(**data)
+        dict_aircraft = aircraft.dict()
+        keys_invalids = list(set(data_keys_send) - set(dict_aircraft.keys()))
+        if len(keys_invalids) > 0:
+            return jsonify(error="Les données sont invalides (Les champs à renseigner sont : aircraft_iata, aircraft_icao, aircraft_name, aircraft_wiki_link)"), 400
+
+        if len(data) != 0:
+            aircraft_iata = dict_aircraft.get('aircraft_iata', None)
+            aircraft_iata = aircraft_iata.upper() if aircraft_iata is not None else None
+
+            # Vérification de la présence de la clé primaire
+            if aircraft_iata is None or aircraft_iata == "":
+                return jsonify(error="Le champ 'aircraft_iata' est obligatoire"), 400
+            test_add = admin_api('aircrafts', 'post', data=dict_aircraft)
+            result = list(test_add.keys())[0]
+            if result == 'error':
+                return jsonify(test_add), 400
+            else:
+                return jsonify(dict_aircraft), 201
+        else:
+            return jsonify(error="Aucune donnée envoyée"), 400
+    else:
+        return jsonify(error="Vous n'êtes pas autorisé à ajouter un avion"), 403
+
+
+# Route pour modifier un avion
+############################################
+class AircraftUpdate(BaseModel):
+    """Class AircraftUpdate permettant de modifier un avion"""
+    aircraft_icao: Optional[str] = Field(None, description="Le code ICAO de l'avion.")
+    aircraft_name: Optional[str] = Field(None, description="Le nom de l'avion.")
+    aircraft_wiki_link: Optional[str] = Field(None, description="Le lien vers la page Wikipedia.")
+
+@api.route('/aircrafts/<aircraft_iata>', methods=['PUT'])
+@jwt_required()
+def update_aircraft(aircraft_iata):
+    """
+    Modifier un avion
+    ---
+    tags:
+        - Aircrafts Admin
+    parameters:
+        - in: path
+          name: aircraft_iata
+          required: true
+          description: Code IATA de l'avion
+          type: string
+          example: 320
+          format: string
+          pattern: ^[A-Z0-9]{3}$
+        - in: header
+          name: Authorization
+          required: true
+          type: string
+          description: |
+            Token d'authentification (Saisir : Bearer + [token])
+
+            Vous pouvez générer un token d'authentification à partir de la route `/login` en méthode `POST` en saisissant votre username et votre password.
+          type: string
+          format: Bearer
+          example: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJS
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+            properties:
+              aircraft_icao:
+                type: string
+                description: Code ICAO de l'avion
+                example: A320
+                minLength: 4
+                maxLength: 4
+                pattern: ^[A-Z0-9]{4}$
+                nullable: true
+              aircraft_name:
+                type: string
+                description: Nom de l'avion
+                example: Airbus A320
+                nullable: true
+                maxLength: 255
+              aircraft_wiki_link:
+                type: string
+                description: Lien vers la page Wikipedia
+                example: '/wiki/Airbus_A320'
+                nullable: true
+                maxLength: 255
+    responses:
+        200:
+            description: L'avion a bien été modifié
+        400:
+            description: |
+                Le champs aircraft_iata est obligatoire
+                Les données sont invalides (Les champs à renseigner sont : aircraft_iata, aircraft_icao, aircraft_name, aircraft_wiki_link)
+        403:
+            description: |
+                Vous n'êtes pas autorisé à modifier un avion
+        404:
+            description: |
+                Aucun enregistrement trouvé avec ce code IATA
+    """
+    current_user = get_jwt_identity()
+
+    # Vérification que l'utilisateur est autorisé à modifier l'avion
+    if current_user == os.environ.get('ADMIN_LOGIN_API'):
+
+        # Vérification de la présence du code_iata dans le path de la requête
+        if aircraft_iata is None or aircraft_iata == "":
+            return jsonify(error="Le champ 'aircraft_iata' est obligatoire"), 400
+
+        # Vérification de la présence du code_iata en base de données
+        aircraft_iata = aircraft_iata.upper()
+        test_code_iata = check_primary_key("aircrafts", "aircraft_iata", aircraft_iata)
+        if test_code_iata is False:
+            data = request.get_json()
+            data_keys_send = list(data.keys())
+            aircraft = AircraftUpdate(**data)
+            dict_aircraft = aircraft.dict()
+            keys_invalids = list(set(data_keys_send) - set(dict_aircraft.keys()))
+            if len(keys_invalids) > 0:
+                return jsonify(error="Les données sont invalides (Les champs à renseigner sont : aircraft_iata, aircraft_icao, aircraft_name, aircraft_wiki_link)"), 400
+
+            # Vérification des données envoyées
+            if len(data) != 0:
+                test_update = admin_api('aircrafts', 'put', data=dict_aircraft, pk_value=aircraft_iata)
+                result = list(test_update.keys())[0]
+                if result == 'error':
+                    return jsonify(test_update), 400
+                else:
+                    dict_result = {k:v for k, v in dict_aircraft.items() if v is not None}
+                    return jsonify(dict_result), 200
+            else:
+                return jsonify(error="Aucune donnée envoyée"), 400
+        else:
+            return jsonify(error="Aucun enregistrement trouvé avec ce code IATA"), 404
+    else:
+        return jsonify(error="Vous n'êtes pas autorisé à modifier un avion"), 403
+
+
+# Route pour supprimer un avion
+############################################
+
+@api.route('/aircrafts/<aircraft_iata>', methods=['DELETE'])
+@jwt_required()
+def delete_aircraft(aircraft_iata):
+    """
+    Supprimer un avion
+    ---
+    tags:
+        - Aircrafts Admin
+    parameters:
+        - in: path
+          name: aircraft_iata
+          required: true
+          description: Code IATA de l'avion
+          type: string
+          example: AF
+        - in: header
+          name: Authorization
+          required: true
+          type: string
+          description: |
+            Token d'authentification (Saisir : Bearer + [token])
+
+            Vous pouvez générer un token d'authentification à partir de la route `/login` en méthode `POST` en saisissant votre username et votre password.
+          type: string
+          format: Bearer
+          example: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJS
+    responses:
+        204:
+            description: L'avion a bien été supprimé
+        400:
+            description: |
+                Le champs aircraft_iata est obligatoire
+        403:
+            description: |
+                Vous n'êtes pas autorisé à supprimer un avion
+        404:
+            description: |
+                Aucun enregistrement trouvé avec ce code IATA
+    """
+    current_user = get_jwt_identity()
+
+    # Vérification que l'utilisateur est autorisé à supprimer l'avion
+    if current_user == os.environ.get('ADMIN_LOGIN_API'):
+
+        # Vérification de la présence du code_iata dans le path de la requête
+        if aircraft_iata is None or aircraft_iata == "":
+            return jsonify(error="Le champ 'aircraft_iata' est obligatoire"), 400
+
+        # Vérification de la présence du code_iata en base de données
+        aircraft_iata = aircraft_iata.upper()
+        test_code_iata = check_primary_key("aircrafts", "aircraft_iata", aircraft_iata)
+        if test_code_iata is False:
+
+            # Suppression de l'avion
+            test_delete = admin_api('aircrafts', 'delete', pk_value=aircraft_iata)
+            result = list(test_delete.keys())[0]
+            if result == 'error':
+                return jsonify(test_delete), 400
+            else:
+                return '', 204
+
+        else:
+            return jsonify(error="Aucun enregistrement trouvé avec ce code IATA"), 404
+    else:
+        return jsonify(error="Vous n'êtes pas autorisé à supprimer un avion"), 403
+
+
+
+
+# -------------------------------------------------------------
+# Table airports
+# -------------------------------------------------------------
+
+# Route pour ajouter un aéroport
+#############################
+class AirportInsert(BaseModel):
+    """Class AirportInsert permettant d'ajouter un aéroport"""
+    airport_iata: str = Field(..., description="Le code IATA de l'aéroport.")
+    airport_icao: Optional[str] = Field(None, description="Le code ICAO de l'aéroport.")
+    fk_city_iata: str = Field(..., description="Le code IATA de la ville de l'aéroport.")
+    airport_name: Optional[str] = Field(None, description="Le nom de l'aéroport.")
+    airport_utc_offset_str: Optional[str] = Field(None, description="Fuseau horaire de l'aéroport.")
+    airport_utc_offset_min: Optional[int] = Field(None, description="Décalage en minutes par rapport à l'UTC.")
+    airport_timezone_id: Optional[str] = Field(None, description="Id de la timezone de l'aéroport.")
+    airport_latitude: Optional[float] = Field(None, description="Latitude de l'aéroport.")
+    airport_longitude: Optional[float] = Field(None, description="Longitude de l'aéroport.")
+    airport_wiki_link: Optional[str] = Field(None, description="Le lien vers la page Wikipedia.")
+
+@api.route('/airports', methods=['POST'])
+@jwt_required()
+def create_airport():
+    """
+    Ajouter un aéroport
+    ---
+    tags:
+        - Airports Admin
+    parameters:
+        - in: header
+          name: Authorization
+          required: true
+          type: string
+          description: |
+            Token d'authentification (Saisir : Bearer + [token])
+
+            Vous pouvez générer un token d'authentification à partir de la route `/login` en méthode `POST` en saisissant votre username et votre password.
+          type: string
+          format: Bearer
+          example: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJS
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+            properties:
+              airport_iata:
+                type: string
+                description: Code IATA de l'aéroport
+                example: CDG
+                minLength: 3
+                maxLength: 3
+                pattern: ^[A-Z]{3}$
+                nullable: false
+              airport_icao:
+                type: string
+                description: Code ICAO de l'aéroport
+                example: LFPG
+                minLength: 4
+                maxLength: 4
+                pattern: ^[A-Z]{4}$
+                nullable: true
+              fk_city_iata:
+                type: string
+                description: |
+                  Code IATA de la ville de l'aéroport
+                  Remarque : le code IATA de la ville doit être présent dans la table cities.
+                  (vous pouvez vérifier son existence en utilisant la méthode `GET` la route `/static_data`, avec le paramètre `category=cities`) 
+                example: PAR
+                minLength: 3
+                maxLength: 3
+                pattern: ^[A-Z]{3}$
+                nullable: false
+              airport_name:
+                type: string
+                description: Nom de l'aéroport
+                example: Charles de Gaulle Airport
+                nullable: true
+                maxLength: 255
+              airport_utc_offset_str:
+                type: string
+                description: Fuseau horaire de l'aéroport
+                example: '+01:00'
+                maxLength: 20
+                nullable: true
+              airport_utc_offset_min:
+                type: integer
+                description: Décalage en minutes par rapport à l'UTC
+                example: 60
+                nullable: true
+              airport_timezone_id:
+                type: string
+                description: Id de la timezone de l'aéroport
+                example: 'Europe/Paris'
+                maxLength: 100
+                nullable: true
+              airport_latitude:
+                type: number
+                format: float
+                description: Latitude de l'aéroport
+                example: 49.0097
+                nullable: true
+                min: -90
+                max: 90
+              airport_longitude:
+                type: number
+                format: float
+                description: Longitude de l'aéroport
+                example: 2.5478
+                nullable: true
+                min: -180
+                max: 180
+              airport_wiki_link:
+                type: string
+                description: Lien vers la page Wikipedia
+                example: '/wiki/Charles_de_Gaulle_Airport'
+                nullable: true
+                maxLength: 255
+            required: 
+              - [airport_iata, fk_city_iata]
+    responses:
+        201:
+            description: L'aéroport a bien été ajouté
+        400:
+            description: |
+                Les champs airport_iata et fk_city_iata sont obligatoires
+                Les données sont invalides (Les champs à renseigner sont : airport_iata, airport_icao, fk_city_iata, airport_name, airport_utc_offset_str, airport_utc_offset_min, airport_timezone_id, airport_latitude, airport_longitude, airport_wiki_link)
+        403:
+            description: |
+                Vous n'êtes pas autorisé à ajouter un aéroport
+    """
+    current_user = get_jwt_identity()
+
+    # Vérification que l'utilisateur est autorisé à créer un aéroport
+    if current_user == os.environ.get('ADMIN_LOGIN_API'):
+
+        # Vérification des données envoyées
+        data = request.get_json()
+        data_keys_send = list(data.keys())
+        airport = AirportInsert(**data)
+        dict_airport = airport.dict()
+        keys_invalids = list(set(data_keys_send) - set(dict_airport.keys()))
+        if len(keys_invalids) > 0:
+            return jsonify(error="Les données sont invalides (Les champs à renseigner sont : airport_iata, airport_icao, fk_city_iata, airport_name, airport_utc_offset_str, airport_utc_offset_min, airport_timezone_id, airport_latitude, airport_longitude, airport_wiki_link)"), 400
+
+        if len(data) != 0:
+            airport_iata = dict_airport.get('airport_iata', None)
+            airport_iata = airport_iata.upper() if airport_iata is not None else None
+            fk_city_iata = dict_airport.get('fk_city_iata', None)
+            fk_city_iata = fk_city_iata.upper() if fk_city_iata is not None else None
+
+            # Vérification de la présence de la clé primaire
+            if airport_iata is None or airport_iata == "":
+                return jsonify(error="Le champ 'airport_iata' est obligatoire"), 400
+
+            # Vérification de la présence de fk_city_iata
+            if fk_city_iata is None or fk_city_iata == "":
+                return jsonify(error="Le champ 'fk_city_iata' est obligatoire"), 400
+
+            # Vérification de la présence de fk_city_iata dans la table cities
+            test_fk = check_primary_key("cities", "city_iata", fk_city_iata)
+            if test_fk is False:
+                test_add = admin_api('airports', 'post', data=dict_airport)
+                result = list(test_add.keys())[0]
+
+                if result == 'error':
+                    return jsonify(test_add), 400
+                else:
+                    return jsonify(dict_airport), 201
+            else:
+                return jsonify(error="Le code IATA de la ville de l'aéroport n'est pas présent dans la table 'cities'"), 401
+        else:
+            return jsonify(error="Aucune donnée envoyée"), 400
+    else:
+        return jsonify(error="Vous n'êtes pas autorisé à ajouter un aéroport"), 403
+
+
+# Route pour modifier un aéroport
+############################################
+class AirportUpdate(BaseModel):
+    """Class AirportUpdate permettant de modifier un aéroport"""
+    airport_icao: Optional[str] = Field(None, description="Le code ICAO de l'aéroport.")
+    fk_city_iata: Optional[str] = Field(None, description="Le code IATA de la ville de l'aéroport.")
+    airport_name: Optional[str] = Field(None, description="Le nom de l'aéroport.")
+    airport_utc_offset_str: Optional[str] = Field(None, description="Fuseau horaire de l'aéroport.")
+    airport_utc_offset_min: Optional[int] = Field(None, description="Décalage en minutes par rapport à l'UTC.")
+    airport_timezone_id: Optional[str] = Field(None, description="Id de la timezone de l'aéroport.")
+    airport_latitude: Optional[float] = Field(None, description="Latitude de l'aéroport.")
+    airport_longitude: Optional[float] = Field(None, description="Longitude de l'aéroport.")
+    airport_wiki_link: Optional[str] = Field(None, description="Le lien vers la page Wikipedia.")
+
+@api.route('/airports/<airport_iata>', methods=['PUT'])
+@jwt_required()
+def update_airport(airport_iata):
+    """
+    Modifier un aéroport
+    ---
+    tags:
+        - Airports Admin
+    parameters:
+        - in: path
+          name: airport_iata
+          required: true
+          description: Code IATA de l'aéroport
+          type: string
+          example: CDG
+          format: string
+          pattern: ^[A-Z]{3}$
+        - in: header
+          name: Authorization
+          required: true
+          type: string
+          description: |
+            Token d'authentification (Saisir : Bearer + [token])
+
+            Vous pouvez générer un token d'authentification à partir de la route `/login` en méthode `POST` en saisissant votre username et votre password.
+          type: string
+          format: Bearer
+          example: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJS
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+            properties:
+              airport_icao:
+                type: string
+                description: Code ICAO de l'aéroport
+                example: LFPG
+                minLength: 4
+                maxLength: 4
+                pattern: ^[A-Z]{4}$
+                nullable: true
+              fk_city_iata:
+                type: string
+                description: |
+                  Code IATA de la ville de l'aéroport
+                  Remarque : le code IATA de la ville doit être présent dans la table cities.
+                  (vous pouvez vérifier son existence en utilisant la méthode `GET` la route `/static_data`, avec le paramètre `category=cities`) 
+                example: PAR
+                minLength: 3
+                maxLength: 3
+                pattern: ^[A-Z]{3}$
+                nullable: false
+              airport_name:
+                type: string
+                description: Nom de l'aéroport
+                example: Charles de Gaulle Airport
+                nullable: true
+                maxLength: 255
+              airport_utc_offset_str:
+                type: string
+                description: Fuseau horaire de l'aéroport
+                example: '+01:00'
+                maxLength: 20
+                nullable: true
+              airport_utc_offset_min:
+                type: integer
+                description: Décalage en minutes par rapport à l'UTC
+                example: 60
+                nullable: true
+              airport_timezone_id:
+                type: string
+                description: Id de la timezone de l'aéroport
+                example: 'Europe/Paris'
+                maxLength: 100
+                nullable: true
+              airport_latitude:
+                type: number
+                format: float
+                description: Latitude de l'aéroport
+                example: 49.0097
+                nullable: true
+                min: -90
+                max: 90
+              airport_longitude:
+                type: number
+                format: float
+                description: Longitude de l'aéroport
+                example: 2.5478
+                nullable: true
+                min: -180
+                max: 180
+              airport_wiki_link:
+                type: string
+                description: Lien vers la page Wikipedia
+                example: '/wiki/Charles_de_Gaulle_Airport'
+                nullable: true
+                maxLength: 255
+    responses:
+        200:
+            description: L'aéroport a bien été modifié
+        400:
+            description: |
+                Le champs airport_iata est obligatoire
+                Les données sont invalides (Les champs à renseigner sont : airport_iata, airport_icao, fk_city_iata, airport_name, airport_utc_offset_str, airport_utc_offset_min, airport_timezone_id, airport_latitude, airport_longitude, airport_wiki_link)
+        403:
+            description: |
+                Vous n'êtes pas autorisé à modifier un aéroport
+        404:
+            description: |
+                Aucun enregistrement trouvé avec ce code IATA
+    """
+    current_user = get_jwt_identity()
+
+    # Vérification que l'utilisateur est autorisé à modifier l'aéroport
+    if current_user == os.environ.get('ADMIN_LOGIN_API'):
+
+        # Vérification de la présence du code_iata dans le path de la requête
+        if airport_iata is None or airport_iata == "":
+            return jsonify(error="Le champ 'airport_iata' est obligatoire"), 400
+
+        # Vérification de la présence du code_iata en base de données
+        airport_iata = airport_iata.upper()
+        test_code_iata = check_primary_key("airports", "airport_iata", airport_iata)
+        if test_code_iata is False:
+
+            data = request.get_json()
+            data_keys_send = list(data.keys())
+            airport = AirportUpdate(**data)
+            dict_airport = airport.dict()
+            keys_invalids = list(set(data_keys_send) - set(dict_airport.keys()))
+            if len(keys_invalids) > 0:
+                return jsonify(error="Les données sont invalides (Les champs à renseigner sont : airport_iata, airport_icao, fk_city_iata, airport_name, airport_utc_offset_str, airport_utc_offset_min, airport_timezone_id, airport_latitude, airport_longitude, airport_wiki_link)"), 400
+
+            # Vérification des données envoyées
+            if len(data) != 0:
+                # Vérification de la présence de fk_city_iata dans le body de la requête
+                fk_city_iata = dict_airport.get('fk_city_iata', None)
+                # Si fk_city_ita est renseigné, alors on vérifie son existence dans la table cities
+                if fk_city_iata is not None:
+                    fk_city_iata = fk_city_iata.upper()
+                    test_fk = check_primary_key("cities", "city_iata", fk_city_iata)
+                    if test_fk is True:
+                        return jsonify(error="Le code IATA de la ville de l'aéroport n'est pas présent dans la table 'cities'"), 401
+                else:
+                    # on récupère la valeur de fk_city_iata en base de données
+                    fk_city_iata = get_value_pk_airports(airport_iata)
+                    if fk_city_iata is None:
+                        return jsonify(error="Aucun enregistrement trouvé avec ce code IATA"), 404
+                    dict_airport['fk_city_iata'] = fk_city_iata
+                test_update = admin_api('airports', 'put', data=dict_airport, pk_value=airport_iata)
+                result = list(test_update.keys())[0]
+                if result == 'error':
+                    return jsonify(test_update), 400
+                else:
+                    dict_result = {k:v for k, v in dict_airport.items() if v is not None}
+                    return jsonify(dict_result), 200
+            else:
+                return jsonify(error="Aucune donnée envoyée"), 400
+        else:
+            return jsonify(error="Aucun enregistrement trouvé avec ce code IATA"), 404
+    else:
+        return jsonify(error="Vous n'êtes pas autorisé à modifier un aéroport"), 403
+
+
+
+# Route pour supprimer un aéroport
+############################################
+
+@api.route('/airports/<airport_iata>', methods=['DELETE'])
+@jwt_required()
+def delete_airport(airport_iata):
+    """
+    Supprimer un aéroport
+    ---
+    tags:
+        - Airports Admin
+    parameters:
+        - in: path
+          name: airport_iata
+          required: true
+          description: Code IATA de l'aéroport
+          type: string
+          example: CDG
+        - in: header
+          name: Authorization
+          required: true
+          type: string
+          description: |
+            Token d'authentification (Saisir : Bearer + [token])
+
+            Vous pouvez générer un token d'authentification à partir de la route `/login` en méthode `POST` en saisissant votre username et votre password.
+          type: string
+          format: Bearer
+          example: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJS
+    responses:
+        204:
+            description: L'aéroport a bien été supprimé
+        400:
+            description: |
+                Le champs airport_iata est obligatoire
+        403:
+            description: |
+                Vous n'êtes pas autorisé à supprimer un aéroport
+        404:
+            description: |
+                Aucun enregistrement trouvé avec ce code IATA
+    """
+    current_user = get_jwt_identity()
+
+    # Vérification que l'utilisateur est autorisé à supprimer l'aéroport
+    if current_user == os.environ.get('ADMIN_LOGIN_API'):
+
+        # Vérification de la présence du code_iata dans le path de la requête
+        if airport_iata is None or airport_iata == "":
+            return jsonify(error="Le champ 'airport_iata' est obligatoire"), 400
+
+        # Vérification de la présence du code_iata en base de données
+        airport_iata = airport_iata.upper()
+        test_code_iata = check_primary_key("airports", "airport_iata", airport_iata)
+        if test_code_iata is False:
+
+            # Suppression de l'aéroport
+            test_delete = admin_api('airports', 'delete', pk_value=airport_iata)
+            result = list(test_delete.keys())[0]
+            if result == 'error':
+                return jsonify(test_delete), 400
+            else:
+                return '', 204
+
+        else:
+            return jsonify(error="Aucun enregistrement trouvé avec ce code IATA"), 404
+    else:
+        return jsonify(error="Vous n'êtes pas autorisé à supprimer un aéroport"), 403
