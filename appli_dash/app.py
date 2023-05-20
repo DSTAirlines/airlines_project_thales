@@ -2,6 +2,7 @@ import pandas as pd
 import dash
 from flask import Flask, redirect
 from flasgger import Swagger
+from flask_jwt_extended import JWTManager
 from dash import dcc
 from dash import html
 import dash_leaflet as dl
@@ -16,8 +17,13 @@ from utilities import *
 from get_data import *
 from routes import api
 from dash.exceptions import PreventUpdate
-from datetime import date
-import re
+from datetime import date, timedelta
+import re, os
+from dotenv import load_dotenv
+load_dotenv()
+
+# Credentials API
+JWT_SECRET_KEY = os.environ.get("JWT_SECRET_KEY")
 
 
 ################################################################################################
@@ -381,6 +387,11 @@ app = dash.Dash(__name__,
 # Création d'une instance de Flask
 server = app.server
 
+# Configuration de JWT
+server.config['JWT_SECRET_KEY'] = JWT_SECRET_KEY
+server.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(minutes=30)
+jwt = JWTManager(server)
+
 # Configuration du modèle Swagger
 template = {
   "info": {
@@ -449,6 +460,8 @@ def display_page(pathname):
     global global_statistics_df
 
     # Page "live-map"
+    if pathname == "/liveMap":
+        return dcc.Location(pathname="/live-map", id="mapLive")
     if pathname == "/live-map":
         print("MAP LIVE - STEP 1 : Initialisation des données static et dynamic")
         if global_data_static is None or global_data_dynamic is None:
@@ -500,6 +513,8 @@ def update_map(n_intervals, data_dyn, data_stat, filters, pathname):
     #     global_n_intervals_map = n_intervals
     # else:
         # if global_n_intervals_map != n_intervals:
+    # if pathname == "/liveMap":
+    #     return dash.no_update, dash.no_update
     if pathname == "/live-map":
         global_n_intervals_map = n_intervals
         old_data_dyn = global_data_dynamic
@@ -532,16 +547,16 @@ def update_map(n_intervals, data_dyn, data_stat, filters, pathname):
         return [], None
 
 
-# Callback pour mettre à jour l'intervalle du refresh en fonction de la page affichée
-@app.callback(
-    Output('refreshData', 'interval'),
-    [Input('url', 'pathname')]
-)
-def update_interval(pathname):
-    if pathname == "/live-map":
-        return 30 * 1000 
-    else:
-        return 60 * 60 * 1000
+# # Callback pour mettre à jour l'intervalle du refresh en fonction de la page affichée
+# @app.callback(
+#     Output('refreshData', 'interval'),
+#     [Input('url', 'pathname')]
+# )
+# def update_interval(pathname):
+#     if pathname == "/live-map":
+#         return 30 * 1000 
+#     else:
+#         return 60 * 60 * 1000
 
 
 ################################################################################################
