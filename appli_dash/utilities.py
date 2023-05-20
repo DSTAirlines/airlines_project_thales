@@ -10,6 +10,9 @@ from sqlalchemy import text
 from dash import dcc
 import dash_bootstrap_components as dbc
 import json
+import base64
+import dotenv
+load_dotenv()
 
 # Ajout du path du projet
 parent_dir = str(Path(__file__).resolve().parent.parent)
@@ -314,7 +317,7 @@ def create_markers_tooltips(static_data, dynamic_data):
         print(f"MAP LIVE - STEP 2 - len de callsigns {len(callsigns)}")
 
         static_data_dict = {k: v for dic in static_data for k, v in dic.items()}
-        dynamic_data_dict = {k: v for dic in dynamic_data for k, v in dic.items()}
+        dynamic_data_dict = {k: v for dic in dynamic_data if dic is not None for k, v in dic.items()}
 
         for callsign in callsigns:
             flight_static = static_data_dict[callsign]
@@ -638,3 +641,27 @@ def create_flight_markers(flight_positions):
     rotated_markers = dl.PolylineDecorator(positions=positions, patterns=patterns)
 
     return rotated_markers
+
+
+def encode_credentials(username, password):
+    """
+    Encode des credentials username et password en chaîne de caractères base64
+    """
+    username = str(username)
+    password = str(password)
+    return base64.b64encode(bytes(username + ':' + password, 'utf-8')).decode('utf-8')
+
+
+def decode_credentials(credentials):
+    """
+    Decode des credentials base64 en 2 chaines de caractères username et password
+    """
+    return base64.b64decode(bytes(credentials, 'utf-8')).decode('utf-8').split(':')
+
+def get_encoded_credentials_admin():
+    username = os.environ.get('ADMIN_LOGIN_API')
+    password = os.environ.get('ADMIN_PASSWORD_API')
+    return encode_credentials(username, password)
+
+# header_authorization_admin = get_encoded_credentials_admin()
+# print(header_authorization_admin)
