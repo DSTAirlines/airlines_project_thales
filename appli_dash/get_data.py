@@ -7,7 +7,9 @@ import pandas as pd
 import numpy as np
 import re
 from sqlalchemy import text
+from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
+from models import Airline, Aircraft, Airport, City, Country
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -33,6 +35,7 @@ MONGO_DB_NAME = os.environ.get("MONGO_DB_NAME")
 MONGO_COL_OPENSKY = os.environ.get("MONGO_COL_OPENSKY")
 MONGO_COL_AIRLABS = os.environ.get("MONGO_COL_AIRLABS")
 MONGO_COL_DATA_AGGREGATED = os.environ.get("MONGO_COL_DATA_AGGREGATED")
+
 
 
 def get_data_initial():
@@ -648,8 +651,219 @@ def get_data_statistics_type_data_api(df, type_data, elements):
         Dict: Dictionnaires des données agrégées filtrés par les paramètres spécifiées
     """
 
-    df = df[df[type_data].isin(elements)].drop(['airline_number', 'dep_airport_icao', 'arr_airport_icao'], axis=1).reset_index(drop=True)
-    df['datetime_start'] = df['datetime_start'].dt.strftime('%Y-%m-%dT%H:%M:%S')
-    df['datetime_end'] = df['datetime_end'].dt.strftime('%Y-%m-%dT%H:%M:%S')
-    df = df.replace(np.nan, None)
-    return df.to_dict('records')
+    list_values = df[type_data].unique().tolist()
+    list_values_ok = list(set(elements).intersection(list_values))
+    if len(list_values_ok) > 0:
+        df = df[df[type_data].isin(elements)].drop(['airline_number', 'dep_airport_icao', 'arr_airport_icao'], axis=1).reset_index(drop=True)
+        df['datetime_start'] = df['datetime_start'].dt.strftime('%Y-%m-%dT%H:%M:%S')
+        df['datetime_end'] = df['datetime_end'].dt.strftime('%Y-%m-%dT%H:%M:%S')
+        df = df.replace(np.nan, None)
+        df = df.drop('_id', axis=1)
+        df = df.sort_values(['datetime_start', 'datetime_end'])
+        return df.to_dict('records')
+    return None
+
+
+def admin_api(table, action, data=None, pk_value=None):
+    """
+    Fonction d'administration des données
+    Args:
+        table (str): Nom de la table
+        action (str): Action à effectuer
+        data (dict): Dictionnaire des données
+    Returns:
+        None
+    """
+
+    dic_tables_requirements = {
+        'airlines':{
+            'pk': 'airline_iata',
+            'fk': None,
+            'requirements_fields': {
+                'airline_iata':
+                    { 'type': 'string',  'length': 2,    'required': True  },
+                'airline_icao':
+                    { 'type':'string',   'length': 3,    'required': False },
+                'airline_name':
+                    { 'type':'string',   'length': None, 'required': False }
+            }
+        },
+        'aircrafts':{
+            'pk': 'aircraft_iata',
+            'fk': None,
+            'requirements_fields': {
+                'aircraft_iata' :
+                    { 'type':'string',   'length': 3,      'required': True  },
+                'aircraft_icao':
+                    { 'type':'string',   'length': 4,      'required': False },
+                'aircraft_name':
+                    { 'type':'string',   'length': None,   'required': False },
+                'aircraft_wiki_link':
+                    { 'type':'string',   'length': None,   'required': False }
+            }
+        },
+        'airports':{
+            'pk': 'airport_iata',
+            'fk': {
+                'field': 'fk_city_iata',
+                'referenced_table': 'cities',
+                'referenced_field': 'city_iata'
+            },
+           'requirements_fields': {
+                'airport_iata':
+                    { 'type':'string',  'length': 3,    'required': True  },
+                'airport_icao':
+                    { 'type':'string',  'length': 4,    'required': False },
+                'fk_city_iata':
+                    { 'type':'string',  'length': 3,    'required': True  },
+                'airport_name':
+                    { 'type':'string',  'length': None, 'required': False },
+                'airport_utc_offset_str':
+                    { 'type':'string',  'length': None, 'required': False },
+                'airport_utc_offset_min':
+                    { 'type':'integer', 'length': None, 'required': False },
+                'airport_timezone_id':
+                    { 'type':'string',  'length': None, 'required': False },
+                'airport_latitude':
+                    { 'type':'float',   'length': None, 'required': False },
+                'airport_longitude':
+                    { 'type':'float',   'length': None, 'required': False },
+                'airport_wiki_link':
+                    { 'type':'string',  'length': None, 'required': False }
+           }
+        }
+    }
+
+    dic_table = dic_tables_requirements[table]
+    pk = dic_table['pk']
+    fk = dic_table['fk']
+    dict_values = {}
+
+    if data is not None:
+        for k, v in data.items():
+            if 'iata' in k or 'icao' in k:
+                dict_values[k] = v.upper() if v is not None else None
+            if k in list(dic_table['requirements_fields'].keys()):
+                requirements = dic_table['requirements_fields'][k]
+
+                if action == 'post':
+                    if requirements['required'] is not False:
+                        if v is None:
+                            return {'error': f'Le champ {k} est un champ obligatoire'}
+
+                if v is not None:
+                    if requirements['type'] == 'string':
+                        if isinstance(v, str) is False:
+                            try:
+                                v = str(v)
+                            except:
+                                return {'error': 'Type de données invalide'}
+                    elif requirements['type'] == 'integer':
+                        if isinstance(v, int) is False:
+                            try:
+                                v = int(v)
+                            except:
+                                return {'error': 'Type de données invalide'}
+                    elif requirements['type'] == 'float':
+                        if isinstance(v, float) is False:
+                            try:
+                                v = float(v)
+                            except:
+                                return {'error': 'Type de données invalide'}
+
+                    if requirements['length'] is not None:
+                        if len(str(v)) != requirements['length']:
+                            return {'error': f'La longueur du champ {k} n\'est pas conforme à la longueur autorisée'}
+
+                    dict_values[k] = v
+
+            else:
+                return {'error': f'Le champ {k} n\'est pas présent dans la table {table}'}
+
+    if action == 'post':
+        # Vérification que la valeur du champ 'pk' n'est pas déjà présent dans la table
+        if check_primary_key(table, pk, data[pk]) is False:
+            return {'error': f'La valeur {data[pk]} existe déjà comme clé primaire {pk} de la table {table}'}
+
+    # Récupération de la connexion à la base de données
+    engine = connection_mysql()
+    # Créer une session
+    session = Session(engine)
+
+    # Créer une instance de la classe SQLAlchemy de la table avec le dictionnaire dict_values
+    if table == 'airlines':
+        if action == 'post':
+            new_instance = Airline(**dict_values)
+        elif action == 'put' or action == 'delete':
+            new_instance = session.query(Airline).filter_by(airline_iata=pk_value).first()
+    elif table == 'aircrafts':
+        if action == 'post':
+            new_instance = Aircraft(**dict_values)
+        elif action == 'put' or action == 'delete':
+            new_instance = session.query(Aircraft).filter_by(aircraft_iata=pk_value).first()
+    elif table == 'airports':
+        if action == 'post':
+            new_instance = Airport(**dict_values)
+        elif action == 'put' or action == 'delete':
+            new_instance = session.query(Airport).filter_by(airport_iata=pk_value).first()
+    else:
+        return {'error': f'La table {table} n\'existe pas'}
+
+    # Ajout et commit de la modif de la base de données
+    if action == 'post':
+        session.add(new_instance)
+    elif action == 'put':
+        for field, value in dict_values.items():
+            setattr(new_instance, field, value)
+    elif action == 'delete':
+        session.delete(new_instance)
+    else:
+        return {'error': f'L\'action {action} n\'existe pas'}
+    session.commit()
+
+    # Fermer la session
+    session.close()
+
+    return {'success': True}
+
+
+def check_primary_key(table, pk_field, pk_value):
+    """
+    Vérifier l'bscence d'une valeur comme clé primaire pour une table SQL
+    Args:
+        table (str): Nom de la table
+        pk_field (str): Nom de la clé primaire
+        pk_value (str): Valeur de la clé primaire à vérifier
+    Returns:
+        bool: True si valeur n'existe pas comme clé primaire, False sinon
+    """
+    engine = connection_mysql()
+
+    query_pk = f'''
+    SELECT * FROM {table} WHERE {pk_field} = '{pk_value}'
+    '''
+    with engine.connect() as conn:
+        query = conn.execute(str(query_pk))
+
+    if query.rowcount != 0:
+        return False
+
+def get_value_pk_airports(pk_value):
+    """
+    Obtenir la valeur de la clé étrangère pour une valeur de clé primaire donnée pour la table airports
+    Args:
+        pk_value (str): Valeur de la clé primaire
+    Retirns:
+        str: Valeur de la clé étrangère
+    """
+    engine = connection_mysql()
+
+    query_pk = f'''
+    SELECT fk_city_iata FROM airports WHERE airport_iata = '{pk_value}'
+    '''
+    with engine.connect() as conn:
+        query = conn.execute(str(query_pk))
+
+    if query.rowcount!= 0:  
+        return query.fetchone()[0]
+    return None
