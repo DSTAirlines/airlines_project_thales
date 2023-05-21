@@ -307,7 +307,7 @@ def create_markers_tooltips(static_data, dynamic_data):
         Array: Tous les dl.DivMarker des avions en vol
     """
     markers = []
-    icon_url = "assets/img/test3.svg"
+    icon_url = "assets/img/plane.svg"
 
     print(f"MAP LIVE - STEP 2 : Création des markers et tooltips")
     print(f"MAP LIVE - STEP 2 - len de dynamic_data {len(dynamic_data)}")
@@ -631,7 +631,7 @@ def create_flight_markers(flight_positions):
     Création des markers des routes du vol donné par le numéro de vol
     """
 
-    iconUrl = "assets/img/test3.svg"
+    iconUrl = "assets/img/plane.svg"
     marker = dict(rotate=True, markerOptions=dict(icon=dict(iconUrl=iconUrl, iconAnchor=[15, 15])))
     patterns = [dict(repeat='10', dash=dict(pixelSize=5, pathOptions=dict(color='blue', weight=2))),
                 dict(offset='10', endOffset='10', repeat='15%', marker=marker)]
