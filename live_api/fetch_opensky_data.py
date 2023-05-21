@@ -103,7 +103,7 @@ def lauch_script(init=False, cron=False):
             match = collection_opensky.find_one({"time": max_time, "callsign": callsign})
 
             # si oui, on récupère la valeur de airlabs_id
-            if match and "airlabs_id" in match:
+            if match and match["airlabs_id"]:
                 opensky_doc["airlabs_id"] = match["airlabs_id"]
 
     # On insère les documents dans la collection OpenSky
