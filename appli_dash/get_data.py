@@ -26,6 +26,7 @@ from connection_sql import get_connection as connection_mysql
 
 # Importer la fonction d'appel à l'API OpenSky
 from fetch_opensky_data import query_opensky_api
+from fetch_airlabs_data import query_airlabs_api
 
 # Importer le module properties
 import properties as pr
@@ -56,19 +57,26 @@ def get_data_initial():
     max_time_result = opensky_collection.find().sort("time", -1).limit(1)
     max_time = max_time_result[0]["time"]
 
-    # Recherche des documents du dernier enregistrement avec un airlabs_id non nul
-    pipeline = [
-        {"$match": {"time": max_time, "airlabs_id": {"$ne": None}}},
-        {"$lookup": {
-            "from": "airlabs",
-            "localField": "airlabs_id",
-            "foreignField": "_id",
-            "as": "airlabs_doc"
-        }},
-        {"$unwind": "$airlabs_doc"},
-    ]
+    # Recherche des documents avec "time" = max_time
+    opensky_data = list(opensky_collection.find({"time": max_time}))
 
-    results = list(opensky_collection.aggregate(pipeline))
+    # Appel API Airlabs
+    airlabs_data = query_airlabs_api()
+
+    # convertir les deux listes en dictionnaires
+    dict_opensky = {d['callsign']: d for d in opensky_data if d['callsign']!= '' and d['callsign'] is not None}
+    dict_airlabs = {d['flight_icao']: d for d in airlabs_data if d['flight_icao']!= '' and d['flight_icao'] is not None}
+
+    # créer une nouvelle liste pour stocker le résultat
+    results = []
+
+    # itérer sur chaque clé dans dict_opensky
+    for key in dict_opensky:
+        # si la clé est aussi dans dict_airlabs
+        if key in dict_airlabs:
+            dic = dict_opensky[key]
+            dic['airlabs_doc'] = dict_airlabs[key]
+            results.append(dic)
     return results
 
 
