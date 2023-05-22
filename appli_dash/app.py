@@ -9,7 +9,6 @@ import dash_leaflet as dl
 import dash_bootstrap_components as dbc
 from dash.dependencies import Input, Output, State
 import plotly.graph_objs as go
-from tabulate import tabulate
 from pprint import pprint
 import dash_extensions as de
 import pandas as pd
@@ -547,16 +546,16 @@ def update_map(n_intervals, data_dyn, data_stat, filters, pathname):
         return [], None
 
 
-# # Callback pour mettre à jour l'intervalle du refresh en fonction de la page affichée
-# @app.callback(
-#     Output('refreshData', 'interval'),
-#     [Input('url', 'pathname')]
-# )
-# def update_interval(pathname):
-#     if pathname == "/live-map":
-#         return 30 * 1000 
-#     else:
-#         return 60 * 60 * 1000
+# Callback pour mettre à jour l'intervalle du refresh en fonction de la page affichée
+@app.callback(
+    Output('refreshData', 'interval'),
+    [Input('url', 'pathname')]
+)
+def update_interval(pathname):
+    if pathname == "/live-map":
+        return 30 * 1000 
+    else:
+        return 60 * 60 * 1000
 
 
 ################################################################################################
