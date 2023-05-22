@@ -1,11 +1,13 @@
 #!/usr/bin/python3
 import os
-from opensky_api import OpenSkyApi
 import properties as pr
 import sys
 import time
+import requests
+from requests.auth import HTTPBasicAuth
 from pathlib import Path
 from utilities_live_api import convert_time_unix_utc_to_datetime_fr
+from pprint import pprint
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -35,38 +37,63 @@ def query_opensky_api(cron=False):
     Returns:
         Array: Array de dict des résultats de l'appel API
     """
-
+    
+    # Récupérer les variables d'environnement
     USER = USER_OPENSKY_API_CRONJOB if cron else USER_OPENSKY_API
     PASS = PASS_OPENSKY_API_CRONJOB if cron else PASS_OPENSKY_API
+    BASE_URL = pr.ROOT_OPENSKY_URL
+
+    # Initialisation des data
     opensky_data = []
-    open_sky_api = OpenSkyApi(username=USER, password=PASS)
-    response = open_sky_api.get_states(bbox=(pr.la_min, pr.la_max, pr.lon_min, pr.lon_max))
-    states = response.states
+    states=[]
 
-    time_now = int(time.time())
-    datetime_fr = convert_time_unix_utc_to_datetime_fr(time_now)
+    # Définition des headers
+    headers = {
+        "Accept": "application/json"
+    }
 
-    opensky_data = [{
-        "time": time_now,
-        "datatime": datetime_fr if time_now else None,
-        "airlabs_id": None,
-        "icao_24": state.icao24.strip().upper() if state.icao24 else None,
-        "callsign": state.callsign.strip().upper() if state.callsign else None,
-        "origin_country": state.origin_country.strip() if state.origin_country else None,
-        "time_position": state.time_position,
-        "last_contact": state.last_contact,
-        "longitude": state.longitude,
-        "latitude": state.latitude,
-        "baro_altitude": state.baro_altitude,
-        "geo_altitude": state.geo_altitude,
-        "velocity": state.velocity,
-        "cap": state.true_track,
-        "vertical_rate": state.vertical_rate,
-        "on_ground": state.on_ground,
-    } for state in states if state.callsign and state.longitude \
-        and state.latitude and state.true_track is not None]
+    # Authorization Basic
+    basicAuth = HTTPBasicAuth(USER, PASS)
+    # Définition de l'url de la requête
+    url = f"{BASE_URL}/states/all?lamin={pr.la_min}&lomin={pr.lon_min}&lamax={pr.la_max}&lomax={pr.lon_max}"
 
-    return opensky_data
+    # Requête API OpenSky
+    response = requests.get(url, auth=basicAuth, headers=headers)
+
+    if response.status_code == 200:
+
+        # Insérer du time et du datetime format FR
+        time_now = int(time.time())
+        datetime_fr = convert_time_unix_utc_to_datetime_fr(time_now)
+
+        # Traitement des données renvoyées par l'API
+        response_data = response.json()
+        if 'states' in response_data:
+            states = response_data["states"]
+            opensky_data = [{
+                "time": time_now,
+                "datatime": datetime_fr if time_now else None,
+                "airlabs_id": None,
+                "icao_24": state[0].strip().upper() if state[0] else None,
+                "callsign": state[1].strip().upper() if state[1] else None,
+                "origin_country": state[2].strip() if state[2] else None,
+                "time_position": state[3],
+                "last_contact": state[4],
+                "longitude": state[5],
+                "latitude": state[6],
+                "baro_altitude": states[7],
+                "geo_altitude": state[13],
+                "velocity": state[9],
+                "cap": states[10] if states[10] is not None else 0,
+                "vertical_rate": states[11],
+                "on_ground": state[8],
+            } for state in states if state[1] and state[5] and state[6]]
+            return opensky_data
+
+        else:
+            raise Exception("Status: error\nDonnées renvoyées par l'API incorrectes")
+    else:
+        raise Exception(f"Status: error\n{response.status_code} {response.reason}")
 
 
 def lauch_script(init=False, cron=False):
