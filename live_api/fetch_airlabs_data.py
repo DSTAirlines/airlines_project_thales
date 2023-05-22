@@ -42,6 +42,10 @@ def query_airlabs_api(cron=False):
     url = pr.ROOT_AIRLABS_URL
 
     response = requests.get(url, params)
+
+    if response.status_code != 200:
+        raise Exception(f"Status: error\n{response.status_code} {response.reason}")
+
     result = response.json()
     states = result['response']
 
@@ -67,6 +71,7 @@ def query_airlabs_api(cron=False):
     return airlabs_data
 
 
+
 def lauch_script(init=False, cron=False):
     """
     Script de traitement et d'enregistrement des résultats de l'API
@@ -78,7 +83,7 @@ def lauch_script(init=False, cron=False):
         cron (bool, optional): Utilisation d'un compte API différent pour 
             le cronjob (True par défaut).
     """
-
+    
     # Récupération data API
     airlabs_data = query_airlabs_api(cron=cron)
 
@@ -99,8 +104,19 @@ def lauch_script(init=False, cron=False):
         # Création d'un dictionnaire basé sur 'flight_icao' pour accélérer la recherche de correspondances
         airlabs_dict = {airlab["flight_icao"]: airlab for airlab in airlabs_data}
 
-        # Mettre à jour les documents opensky correspondants et insérer les nouveaux documents airlabs
-        for callsign, match in airlabs_dict.items():
+        # Filtrer les documents opensky avec des 'callsign' correspondant aux 'flight_icao' de 'airlabs_data'
+        opensky_matching_callsigns = collection_opensky.find({
+            "airlabs_id": None,
+            "time": {"$gt": max_time_airlabs},
+            "callsign": {"$in": list(airlabs_dict.keys())}
+        }).sort("callsign")
+
+        # Parmi les documents qui matchent :
+        list_opensky = list(opensky_matching_callsigns)
+        callsigns = list(set([dic['callsign'] for dic in list_opensky]))
+
+        for callsign in callsigns:
+            match = airlabs_dict[callsign]
             match_copy = match.copy()
             airlabs_id = collection_airlabs.insert_one(match_copy).inserted_id
 
@@ -115,10 +131,3 @@ def lauch_script(init=False, cron=False):
 
     # on ferme la connexion
     client.close()
-
-    if init:
-        collection_airlabs.insert_many(airlabs_data)
-
-    # on ferme la connexion
-    client.close()
-
