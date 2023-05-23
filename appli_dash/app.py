@@ -297,17 +297,17 @@ def display_stat_map(markers):
                               "display": "flex", 'justifyContent':'center', 'alignItems':'center', 'backgroundColor':'#ECEFF1'}, 
                      children=[
                 html.Div(nav(), className="marges-navbar-map", style={'display': 'inline-block', 'width': '10%'}),
-                html.Div(className="mx-3 py-2", style={'display': 'inline-block'}, children=[
-                    dcc.Store(id='date_stat', storage_type='memory'),
-                    dbc.Label('Date :', html_for='date', style={'display':'block'}),
-                    dcc.DatePickerSingle(id='date_picker', 
-                                         month_format='DD-MM-YYYY',
-                                         display_format='DD/MM/YYYY',
-                                         clearable=True,
-                                         min_date_allowed = date(2023, 1, 1), max_date_allowed = date(2023, 6, 30), 
-                                         initial_visible_month = date.today(),
-                                         style={'zIndex':100000, 'position':'relative'})
-                ]),
+                # html.Div(className="mx-3 py-2", style={'display': 'inline-block'}, children=[
+                #     dcc.Store(id='date_stat', storage_type='memory'),
+                #     dbc.Label('Date :', html_for='date', style={'display':'block'}),
+                #     dcc.DatePickerSingle(id='date_picker', 
+                #                          month_format='DD-MM-YYYY',
+                #                          display_format='DD/MM/YYYY',
+                #                          clearable=True,
+                #                          min_date_allowed = date(2023, 1, 1), max_date_allowed = date(2023, 6, 30), 
+                #                          initial_visible_month = date.today(),
+                #                          style={'zIndex':100000, 'position':'relative'})
+                # ]),
                 html.Div(className="mx-3", style={'display': 'inline-block', 'width': '15%'}, children=[
                     dcc.Store(id='dep_airport_data', storage_type='memory'),
                     dbc.Label("Aéroport de départ :", html_for='arrival_airport'),
@@ -779,12 +779,12 @@ def create_table_callsign(depart, arrivee, callsign):
 ## CALLBACK PAGE MAP STAT
 ################################################################################################
 
-# Callback du DatePicker
-@app.callback(
-    Output('date_stat', 'data'),
-    Input('date_picker', 'date'))
-def update_date(date_value):
-    return date_value
+# # Callback du DatePicker
+# @app.callback(
+#     Output('date_stat', 'data'),
+#     Input('date_picker', 'date'))
+# def update_date(date_value):
+#     return date_value
     
 
 # Callback du dropdown aéroport de départ de la page Map stat
@@ -805,12 +805,12 @@ def update_flight_number(flight_number):
 @app.callback(
         Output("mapStat", "children"),
         [Input('routes_button', 'n_clicks'),
-         State('date_stat', 'data'),
+         # State('date_stat', 'data'),
          State('dep_airport_data', 'data'),
          State('flight_number_data', 'data')
          ]
 )
-def routes_button(click, date, airport, flight_number):
+def routes_button(click, airport, flight_number):
     """
     Retourne les routes concernant un aéroport de départ, ainsi que les routes pour un vol
     Args:
