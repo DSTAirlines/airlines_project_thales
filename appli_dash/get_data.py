@@ -585,7 +585,7 @@ def get_datas(dep_airport):
     return airports_with_coordinates
 
 # Retourne toutes les positions (latitude et longitude) du vol pendant la journée en cours
-def get_flight_positions(flight_number):
+def get_flight_positions(flight_number, api=False):
     """
     Retourne les positions du vol donné par le numéro de vol en entré
     """
@@ -598,7 +598,32 @@ def get_flight_positions(flight_number):
     datas_collection = db[MONGO_COL_OPENSKY]
 
     airplane_datas = datas_collection.find({'callsign': flight_number, 'datatime': {'$gte': day_date, '$lte': day_date_after}}).sort("datatime", 1)
+    
+    if api:
+        cleaned_airplane_datas = []
+        for airplane in airplane_datas:
 
+            client = connection_mongodb()
+            db = client[MONGO_DB_NAME]
+            airlabs_col = db[MONGO_COL_AIRLABS]
+
+            if airplane['airlabs_id'] is not None:
+                airlabs_data = airlabs_col.find_one({'_id': airplane['airlabs_id']}, {'_id': 0, 'flag': 1, 'arr_iata': 1, 'flight_iata': 1, 
+                                                                                      'dep_iata': 1, 'airline_iata': 1, 'status': 1})
+                airplane.update(airlabs_data)
+                print(airplane)
+
+            airplane.pop('_id')
+            airplane.pop('airlabs_id')
+            airplane.pop('time_position')
+            airplane.pop('time')
+            airplane.pop('last_contact')
+            airplane.pop('icao_24')
+            
+            cleaned_airplane_datas.append(airplane)
+
+        return list(cleaned_airplane_datas)
+    
     airplane_positions = [{'latitude': airplane ['latitude'], 'longitude': airplane['longitude']} for airplane in airplane_datas]
 
     client.close()
@@ -875,3 +900,65 @@ def get_value_pk_airports(pk_value):
     if query.rowcount!= 0:  
         return query.fetchone()[0]
     return None
+
+
+##########################################################
+# Fonctions API - Données dynamiques
+##########################################################
+
+def get_flights_api(callsign=None, dep_airport=None, arr_airport=None, airline_company=None, origin_country=None):
+
+    client = connection_mongodb()
+    db = client[MONGO_DB_NAME]
+    opensky_col = db[MONGO_COL_OPENSKY]
+    airlabs_col = db[MONGO_COL_AIRLABS]
+
+    flights_aggr = []
+
+    last_time = opensky_col.find().sort("datatime", -1)[0]['datatime']
+    flights_dyn = opensky_col.find({"datatime": last_time})
+    
+    for flight in flights_dyn:
+        if flight['airlabs_id'] is not None:
+            flight_stat = airlabs_col.find({'_id': flight['airlabs_id']})[0]
+            flight_dict = {
+                'flight_number': flight_stat['flight_number'],
+                'depart_airport': flight_stat['dep_iata'],
+                'arrival_airport': flight_stat['arr_iata'],
+                'airline_company': flight_stat['airline_iata'],
+                'origin_country_code': flight_stat['flag'],
+                'status': flight_stat['status']
+            }
+            flight.update(flight_dict)
+        
+        flight.pop('_id')
+        flight.pop('airlabs_id')
+        flight.pop('icao_24')
+        flight.pop('time')
+        flight.pop('last_contact')
+        flight.pop('time_position')
+
+        flights_aggr.append(flight)
+
+    client.close()
+
+    test_flight_by_filter = lambda flight_value, filter_value: flight_value == filter_value if filter_value is not None else flight_value
+    
+    if callsign or dep_airport or arr_airport or airline_company or origin_country:
+        filtered_flights = [flight for flight in flights_aggr if
+            (test_flight_by_filter(flight.get('depart_airport'), dep_airport))
+            and
+            (test_flight_by_filter(flight.get('arrival_airport'), arr_airport))
+            and
+            (test_flight_by_filter(flight.get('airline_company'), airline_company))
+            and
+            (test_flight_by_filter(flight.get('origin_country'), origin_country))
+            and
+            (test_flight_by_filter(flight.get('callsign'), callsign))]
+        
+        if not filtered_flights:
+            return '404'
+        
+        return filtered_flights
+        
+    return flights_aggr

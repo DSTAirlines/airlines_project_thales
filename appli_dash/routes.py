@@ -74,6 +74,22 @@ class DataStatistic(BaseModel):
     elements_statistic: str
     date_data: Optional[str] = None
 
+class Flight(BaseModel):
+    "Class permettant de récuperer les données dynamiques des vols en direct sur la Map"
+    callsign: Optional[str] = None
+    dep_airport: Optional[str] = None
+    arr_airport: Optional[str] = None
+    airline: Optional[str] = None
+    country: Optional[str] = None
+
+class Callsign(BaseModel):
+    "Class permettant de récuperer les positons d'un vol en particulier"
+    callsign: str
+
+class Airport(BaseModel):
+    "Class permettant de récuperer les positons d'un vol en particulier"
+    airport: str
+
 # ----------------------------------------------
 # Définition des routes
 # ----------------------------------------------
@@ -1698,3 +1714,215 @@ def delete_airport(airport_iata):
             return jsonify(error="Aucun enregistrement trouvé avec ce code IATA"), 404
     else:
         return jsonify(error="Vous n'êtes pas autorisé à supprimer un aéroport"), 403
+    
+
+# Route - Liste de tous les avions en vol à l'instant T, en Europe
+############################################
+@api.get('/flights')
+@validate()
+def get_flights(query: Flight):
+    """
+    Retourne le(s) vol(s) à l'instant de la requête en Europe
+    ---
+    tags:
+        - Dynamic datas
+    parameters:
+        - name: callsign
+          in: query
+          description: |
+            Callsign de l'appareil
+          required: false
+          schema: 
+            id: callsign
+            properties: 
+              callsign: 
+                type: string
+                description: callsign d'un aéronef
+                example: AFR1234
+        - name: dep_airport
+          in: query
+          description: |
+            Aéroport de départ de l'aéronef
+          required: false
+          schema:
+            id: dep_airport
+            properties:
+                dep_airport:
+                    type: string
+                    description: Aéroport de départ
+                    example: CDG
+        - name: arr_airport
+          in: query
+          description: |
+            Aéroport d'arrivé de l'aéronef
+          required: false
+          schema:
+            id: arr_airport
+            properties:
+                arr_airport:
+                    type: string
+                    description: Aéroport d'arrivé
+                    example: LHR
+        - name: airline
+          in: query
+          description: |
+            Compagnie aérienne de l'aéronef
+          required: false
+          schema:
+            id: airline
+            properties:
+                airline:
+                    type: string
+                    description: Compagnie aérienne
+                    example: AF
+        - name: country
+          in: query
+          description: |
+            Pays d'origine de l'aéronef
+          required: false
+          schema:
+            id: country
+            properties:
+                airline:
+                    type: string
+                    description: Pays d'origine
+                    example: France
+
+    responses:
+        200:
+            description: |
+                La réponse est une liste d'objet avec les propriétés suivantes :
+                - callsign, le callsign de l'aéronef
+                - origin_country, pays d'origine de l'aéronef
+                - origin_country_code, code pays d'origine de l'aéronef
+                - longitude, la longitude de l'aéronef
+                - latitude, la latitude de l'aéronef
+                - baro_altitude, l'altitude barométrique de l'aéronef
+                - geo_altitude, l'altitude géographique de l'aéronef
+                - velocity, la vitesse de l'aéronef
+                - cap, le cap de l'aéronef
+                - vertical_rate, la vitesse d'ascencion, ou de déscente de l'aéronef
+                - on_ground, si l'aéronef est au sol (hangar, aéroport ...) ou non
+                - airline_company, la compagnie aérienne de l'aéronef
+                - flight_number, le numéro de vol de l'aéronef
+                - datatime, date de l'enregistrement des données de vol d'un aéronef
+                - depart_airport, aéroport de départ
+                - arrival_airport, aéroport d'arrivé
+        404:
+            description: |
+                Aucun vol correspondant aux paramètres entrés dans l'URL n'a été trouvé dans note base de donnée.
+    """
+    flights = get_flights_api(query.callsign, query.dep_airport, query.arr_airport, query.airline, query.country)
+    if flights == '404':
+        raise NotFound(f"Aucun vol correspondant aux paramètres entrés dans l'URL n'a été trouvé dans note base de donnée.")
+        
+    return jsonify(flights), 200
+
+# Liste de toutes les positions de vols d'un appareil
+@api.get('/flight/positions')
+@validate()
+def get_positions(query: Callsign):
+    """
+    Retourne les positions d'un vol
+    ---
+    tags:
+        - Dynamic datas
+    parameters:
+        - name: callsign
+          in: query
+          description: |
+            Callsign de l'appareil
+          required: true
+          schema: 
+            id: callsign
+            properties: 
+              callsign: 
+                type: string
+                description: callsign d'un aéronef
+                example: AFR1234
+            required:
+              - callsign
+    responses:
+        200:
+            description: |
+                Retourne les positions de vol d'un aéronef
+                - airline_iata, numéro de la compagnie aérienne
+                - arr_iata, aéroport d'arrivé
+                - baro_altitude, l'altitude barométrique
+                - callsign, callsign de l'aéronef
+                - cap, le cap
+                - datatime, date de prise de la mesure
+                - dep_iata, aéroport d'arrivé
+                - flag, code pays de l'aéronef
+                - latitude, la latitude
+                - longitude, la longitutude
+                - on_ground, si l'appareil est au sol ou en vol
+                - origin_country, pays d'origine de l'appareil
+                - velocity, vitesse de l'appareil
+                - vertical_rate, vitesse ascencionnelle ou de déscente de l'aéronef
+        400:
+            description: |
+                Veuillez entrer un callsign valide, et réessayer.
+        404:
+            description: |
+                Aucun vol correspondant aux paramètres entrés dans l'URL n'a été trouvé dans note base de donnée.
+    """
+    if not query.callsign:
+        raise BadRequest("Veuillez entrer un callsign valide, et réessayer.")
+
+
+    positions = get_flight_positions(query.callsign, api=True)
+    if not positions:
+        raise NotFound("Aucun vol n'a été trouvé dans notre base de données.")
+    
+
+    return jsonify(positions), 200
+
+# Liste des aéroports les plus désservis à partir d'un aéroport de départ
+@api.get('/airports')
+@validate()
+def get_airports(query: Airport):
+    """
+    Retourne les aéroports les plus desservis à partir d'un aérport de départ
+    ---
+    tags:
+        - Dynamic datas
+    parameters:
+        - name: airport
+          in: query
+          description: |
+            Aéroport de départ
+          required: true
+          schema: 
+            id: airport
+            properties: 
+              airport: 
+                type: string
+                description: callsign d'un aéronef
+                example: CDG, LHR, DXB
+            required:
+              - airport
+    responses:
+        200:
+            description: |
+                Retourne les aéroports les plus desservis à partir d'un aérport de départ
+                - airport_iata, code aéroport à 3 caractères alphabétiques
+                - airport_latitude, la latitude de l'aéroport
+                - airport_longitude, la longitude de l'aéroport
+        400:
+            description: |
+                Veuillez entrer un code aéroport valide, et réessayer.
+        404:
+            description: |
+                Aucune donnée n'a été trouvée dans notre base de donnée.
+    """
+    if not query.airport:
+        raise BadRequest("Veuillez entrer un code aéroport valide, et réessayer.")
+    
+    try:
+        airports = get_datas(query.airport)
+
+    except:
+        raise BadRequest("Veuillez entrer un code aéroport valide, et réessayer.")
+
+    return jsonify(airports), 200
