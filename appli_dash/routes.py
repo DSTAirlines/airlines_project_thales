@@ -1732,82 +1732,51 @@ def get_flights(query: Flight):
           description: |
             Callsign de l'appareil
           required: false
-          schema: 
-            id: callsign
-            properties: 
-              callsign: 
-                type: string
-                description: callsign d'un aéronef
-                example: AFR1234
+          example: AFR1234
         - name: dep_airport
           in: query
           description: |
             Aéroport de départ de l'aéronef
           required: false
-          schema:
-            id: dep_airport
-            properties:
-                dep_airport:
-                    type: string
-                    description: Aéroport de départ
-                    example: CDG
+          example: CDG, LAX ...
         - name: arr_airport
           in: query
           description: |
             Aéroport d'arrivé de l'aéronef
           required: false
-          schema:
-            id: arr_airport
-            properties:
-                arr_airport:
-                    type: string
-                    description: Aéroport d'arrivé
-                    example: LHR
+          example: LHR, DXB ...
         - name: airline
           in: query
           description: |
             Compagnie aérienne de l'aéronef
           required: false
-          schema:
-            id: airline
-            properties:
-                airline:
-                    type: string
-                    description: Compagnie aérienne
-                    example: AF
+          example: Air France, Emirates Airline ...
         - name: country
           in: query
           description: |
-            Pays d'origine de l'aéronef
+            Pays d'origine de l'aéronef (en anglais)
           required: false
-          schema:
-            id: country
-            properties:
-                airline:
-                    type: string
-                    description: Pays d'origine
-                    example: France
-
+          example: France, United Kingdom ...
     responses:
         200:
             description: |
-                La réponse est une liste d'objet avec les propriétés suivantes :
-                - callsign, le callsign de l'aéronef
-                - origin_country, pays d'origine de l'aéronef
-                - origin_country_code, code pays d'origine de l'aéronef
-                - longitude, la longitude de l'aéronef
-                - latitude, la latitude de l'aéronef
-                - baro_altitude, l'altitude barométrique de l'aéronef
-                - geo_altitude, l'altitude géographique de l'aéronef
-                - velocity, la vitesse de l'aéronef
-                - cap, le cap de l'aéronef
-                - vertical_rate, la vitesse d'ascencion, ou de déscente de l'aéronef
-                - on_ground, si l'aéronef est au sol (hangar, aéroport ...) ou non
+                La réponse est une liste d'objet JSON (données de chaque appareil) avec les propriétés suivantes :
                 - airline_company, la compagnie aérienne de l'aéronef
-                - flight_number, le numéro de vol de l'aéronef
+                - arrival_airport, aéroport d'arrivé
+                - baro_altitude, l'altitude barométrique de l'aéronef
+                - callsign, le callsign de l'aéronef
+                - cap, le cap de l'aéronef
                 - datatime, date de l'enregistrement des données de vol d'un aéronef
                 - depart_airport, aéroport de départ
-                - arrival_airport, aéroport d'arrivé
+                - flight_number, le numéro de vol de l'aéronef
+                - geo_altitude, l'altitude géographique de l'aéronef
+                - latitude, la latitude de l'aéronef
+                - longitude, la longitude de l'aéronef
+                - on_ground, si l'aéronef est au sol (hangar, aéroport ...) ou en vol
+                - origin_country, pays d'origine de l'aéronef
+                - origin_country_code, code pays d'origine de l'aéronef
+                - velocity, la vitesse de l'aéronef          
+                - vertical_rate, la vitesse d'ascencion, ou de déscente de l'aéronef
         404:
             description: |
                 Aucun vol correspondant aux paramètres entrés dans l'URL n'a été trouvé dans note base de donnée.
@@ -1833,20 +1802,12 @@ def get_positions(query: Callsign):
           description: |
             Callsign de l'appareil
           required: true
-          schema: 
-            id: callsign
-            properties: 
-              callsign: 
-                type: string
-                description: callsign d'un aéronef
-                example: AFR1234
-            required:
-              - callsign
+          example: AFR1234
     responses:
         200:
             description: |
                 Retourne les positions de vol d'un aéronef
-                - airline_iata, numéro de la compagnie aérienne
+                - airline_iata, code iata de la compagnie aérienne (3 caractères alphabétiques)
                 - arr_iata, aéroport d'arrivé
                 - baro_altitude, l'altitude barométrique
                 - callsign, callsign de l'aéronef
@@ -1854,8 +1815,8 @@ def get_positions(query: Callsign):
                 - datatime, date de prise de la mesure
                 - dep_iata, aéroport d'arrivé
                 - flag, code pays de l'aéronef
-                - latitude, la latitude
-                - longitude, la longitutude
+                - latitude, la latitude de l'aéronef
+                - longitude, la longitutude de l'aéronef
                 - on_ground, si l'appareil est au sol ou en vol
                 - origin_country, pays d'origine de l'appareil
                 - velocity, vitesse de l'appareil
@@ -1893,19 +1854,11 @@ def get_airports(query: Airport):
           description: |
             Aéroport de départ
           required: true
-          schema: 
-            id: airport
-            properties: 
-              airport: 
-                type: string
-                description: callsign d'un aéronef
-                example: CDG, LHR, DXB
-            required:
-              - airport
+          example: CDG, LHR ...
     responses:
         200:
             description: |
-                Retourne les aéroports les plus desservis à partir d'un aérport de départ
+                Retourne les aéroports les plus desservis à partir d'un aérport de départ (y compris l'aéroport de départ en premiere position)
                 - airport_iata, code aéroport à 3 caractères alphabétiques
                 - airport_latitude, la latitude de l'aéroport
                 - airport_longitude, la longitude de l'aéroport

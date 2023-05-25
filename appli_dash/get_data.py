@@ -609,9 +609,8 @@ def get_flight_positions(flight_number, api=False):
 
             if airplane['airlabs_id'] is not None:
                 airlabs_data = airlabs_col.find_one({'_id': airplane['airlabs_id']}, {'_id': 0, 'flag': 1, 'arr_iata': 1, 'flight_iata': 1, 
-                                                                                      'dep_iata': 1, 'airline_iata': 1, 'status': 1})
+                                                                                      'dep_iata': 1, 'airline_iata': 1})
                 airplane.update(airlabs_data)
-                print(airplane)
 
             airplane.pop('_id')
             airplane.pop('airlabs_id')
@@ -926,8 +925,7 @@ def get_flights_api(callsign=None, dep_airport=None, arr_airport=None, airline_c
                 'depart_airport': flight_stat['dep_iata'],
                 'arrival_airport': flight_stat['arr_iata'],
                 'airline_company': flight_stat['airline_iata'],
-                'origin_country_code': flight_stat['flag'],
-                'status': flight_stat['status']
+                'origin_country_code': flight_stat['flag']
             }
             flight.update(flight_dict)
         
