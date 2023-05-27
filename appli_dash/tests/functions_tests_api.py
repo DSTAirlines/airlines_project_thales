@@ -47,7 +47,7 @@ today = datetime.today()
 datetime_str = today.strftime("%Y-%m-%d %H:%M:%S")
 insert_datetime = f'''
 ####################################################
-#  Test réalisés le {datetime_str}
+#  Tests réalisés le {datetime_str}
 ####################################################
 '''
 
