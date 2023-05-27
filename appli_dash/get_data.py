@@ -687,7 +687,7 @@ def get_data_statistics_type_data_api(df, type_data, elements):
     if type_data == 'city_iata':
         list_values = df['dep_fk_city_iata'].unique().tolist()
         list_values.extend(df['arr_fk_city_iata'].unique().tolist())
-    elif type_data == ' country_iso2':
+    elif type_data == 'country_iso2':
         list_values = df['dep_country_iso2'].unique().tolist()
         list_values.extend(df['arr_country_iso2'].unique().tolist())
     else:
@@ -697,7 +697,7 @@ def get_data_statistics_type_data_api(df, type_data, elements):
     if len(list_values_ok) > 0:
         if type_data == 'city_iata':
             df = df[(df['dep_fk_city_iata'].isin(elements)) | (df['arr_fk_city_iata'].isin(elements))].drop(['airline_number', 'dep_airport_icao', 'arr_airport_icao'], axis=1).reset_index(drop=True)
-        elif type_data == ' country_iso2':
+        elif type_data == 'country_iso2':
             df = df[(df['dep_country_iso2'].isin(elements)) | (df['arr_country_iso2'].isin(elements))].drop(['airline_number', 'dep_airport_icao', 'arr_airport_icao'], axis=1).reset_index(drop=True)
         else:
             df = df[df[type_data].isin(elements)].drop(['airline_number', 'dep_airport_icao', 'arr_airport_icao'], axis=1).reset_index(drop=True)
