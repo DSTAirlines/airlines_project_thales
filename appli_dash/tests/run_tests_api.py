@@ -246,3 +246,9 @@ test_admin('airports', 'PUT', 404, 'INCORRECT DATA - METHOD PUT - Test 2', id=ia
 
 # INCORRECT DATA - METHOD DELETE
 test_admin('airports', 'DELETE', 404, 'INCORRECT DATA - METHOD DELETE', id=iata_available)
+
+
+# --------------------------------------
+# RECAP TESTS
+# --------------------------------------
+recap_tests()
