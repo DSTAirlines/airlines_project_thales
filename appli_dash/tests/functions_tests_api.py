@@ -498,11 +498,11 @@ response_content = {response_content}
     with open('tests_api.log', 'a', encoding='utf-8') as file:
         file.write(formatted_output)
 
-<<<<<<< HEAD
+
 ###############################################################################
 ################## TEST de L'API - DONNEES DYNAMIQUES #########################
 ###############################################################################
-=======
+
 def recap_tests():
     """
     Récapitulatif des tests
@@ -544,7 +544,7 @@ def recap_tests():
     }
 
 >>>>>>> 8077ed306938fb2de1de3635e365cfe191a4b091
-
+    
 def test_airports_api():
     """Test la route /airports"""
     url = f"{BASE_URL}airports"
