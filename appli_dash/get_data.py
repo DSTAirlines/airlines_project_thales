@@ -419,7 +419,10 @@ def get_dropdowns_flight_numbers(df, dep_iata, arr_iata):
     cond1 = (df['dep_iata'] == dep_iata)
     cond2 = (df['arr_iata'] == arr_iata)
     df = df[cond1 & cond2].reset_index(drop=True)
-    return sorted(list(set(df['callsign'].tolist())))
+    if len(df) != 0:
+        return sorted(list(set(df['callsign'].tolist())))
+    else:
+        return []
 
 
 def get_table_callsign(df, dep_iata, arr_iata, callsign):
@@ -649,9 +652,9 @@ def get_static_data_api(table, elements=[]):
     dic_primary_keys = {
         "airports": "airport_iata",
         "airlines": "airline_iata",
-        "aircraft": "aircraft_iaco",
-        "country": "country_iso2",
-        "city": "city_iata",
+        "aircrafts": "aircraft_iaco",
+        "countries": "country_iso2",
+        "cities": "city_iata",
     }
 
     # Récupération de la connexion à la base de données
@@ -671,7 +674,6 @@ def get_static_data_api(table, elements=[]):
 
     return [dict(row) for row in query.fetchall()]
 
-
 def get_data_statistics_type_data_api(df, type_data, elements):
     """
     Retourne les enregistrements de la collection des données agrégées MongoDB filtrés par les paramètres spécifiées
@@ -682,15 +684,28 @@ def get_data_statistics_type_data_api(df, type_data, elements):
     Returns:
         Dict: Dictionnaires des données agrégées filtrés par les paramètres spécifiées
     """
-
-    list_values = df[type_data].unique().tolist()
+    if type_data == 'city_iata':
+        list_values = df['dep_fk_city_iata'].unique().tolist()
+        list_values.extend(df['arr_fk_city_iata'].unique().tolist())
+    elif type_data == ' country_iso2':
+        list_values = df['dep_country_iso2'].unique().tolist()
+        list_values.extend(df['arr_country_iso2'].unique().tolist())
+    else:
+        list_values = df[type_data].unique().tolist()
     list_values_ok = list(set(elements).intersection(list_values))
+
     if len(list_values_ok) > 0:
-        df = df[df[type_data].isin(elements)].drop(['airline_number', 'dep_airport_icao', 'arr_airport_icao'], axis=1).reset_index(drop=True)
+        if type_data == 'city_iata':
+            df = df[(df['dep_fk_city_iata'].isin(elements)) | (df['arr_fk_city_iata'].isin(elements))].drop(['airline_number', 'dep_airport_icao', 'arr_airport_icao'], axis=1).reset_index(drop=True)
+        elif type_data == ' country_iso2':
+            df = df[(df['dep_country_iso2'].isin(elements)) | (df['arr_country_iso2'].isin(elements))].drop(['airline_number', 'dep_airport_icao', 'arr_airport_icao'], axis=1).reset_index(drop=True)
+        else:
+            df = df[df[type_data].isin(elements)].drop(['airline_number', 'dep_airport_icao', 'arr_airport_icao'], axis=1).reset_index(drop=True)
         df['datetime_start'] = df['datetime_start'].dt.strftime('%Y-%m-%dT%H:%M:%S')
         df['datetime_end'] = df['datetime_end'].dt.strftime('%Y-%m-%dT%H:%M:%S')
         df = df.replace(np.nan, None)
-        df = df.drop('_id', axis=1)
+        if '_id' in df.columns:
+            df = df.drop('_id', axis=1)
         df = df.sort_values(['datetime_start', 'datetime_end'])
         return df.to_dict('records')
     return None
