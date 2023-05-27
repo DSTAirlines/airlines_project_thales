@@ -81,11 +81,11 @@ def query_opensky_api(cron=False):
                 "last_contact": state[4],
                 "longitude": state[5],
                 "latitude": state[6],
-                "baro_altitude": states[7],
+                "baro_altitude": state[7],
                 "geo_altitude": state[13],
                 "velocity": state[9],
-                "cap": states[10] if states[10] is not None else 0,
-                "vertical_rate": states[11],
+                "cap": state[10] if state[10] is not None else 0,
+                "vertical_rate": state[11],
                 "on_ground": state[8],
             } for state in states if state[1] and state[5] and state[6]]
             return opensky_data

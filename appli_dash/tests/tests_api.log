@@ -1,8 +1,7 @@
 
 ####################################################
-#  Test réalisés le 2023-05-20 21:42:53
+#  Test réalisés le 2023-05-27 17:43:23
 ####################################################
-
 
 ============================
    GET /static_data
@@ -45,7 +44,7 @@
 ============================
 
 | category = airlines
-| elements_static = 1J
+| elements_static = 26
 
 
 | expected result = 404
@@ -64,7 +63,7 @@
 
 | type_data = departure_airport
 | elements_statistic = CDG,BDO
-| date_data = 2023-05-19
+| date_data = 2023-05-26
 
 
 | expected result = 200
@@ -102,7 +101,7 @@
 
 | type_data = arrival_airport
 | elements_statistic = CDG,BDO
-| date_data = 2023-04-30
+| date_data = 2023-05-07
 
 
 | expected result = 400
@@ -139,7 +138,7 @@
 ============================
 
 | type_data = airline
-| elements_statistic = 69
+| elements_statistic = ZG
 | date_data = None
 
 
@@ -168,7 +167,7 @@ actual result = 200
 ==>  SUCCES
 ############################
 
-response_content = {"access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTY4NDYxMTgwMCwianRpIjoiMTViNDY2YWEtYWFjMi00M2QxLWFkNjgtYTc5YmQ4YzNlYTYzIiwidHlwZSI6ImFjY2VzcyIsInN1YiI6IkFkbWluQVBJMDU3ODQ1IiwibmJmIjoxNjg0NjExODAwLCJleHAiOjE2ODQ2MTM2MDB9.wZk40Bw8CoHv7a3C_vx9TCJAo42pqAwbswfNVTe3VpA"}
+response_content = {"access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTY4NTIwMjI0MSwianRpIjoiYjA4MjFhODYtYzBmYS00NWQxLThhM2QtNGFmOWQyZDAwMmQ2IiwidHlwZSI6ImFjY2VzcyIsInN1YiI6IkFkbWluQVBJMDU3ODQ1IiwibmJmIjoxNjg1MjAyMjQxLCJleHAiOjE2ODUyMDQwNDF9.YnLmoSX_S9t3pDXmwijSxRa-SmoOf7zLi8qaWYpMmcA"}
 
 -----------------------------
 
@@ -197,7 +196,7 @@ response_content = {"error": "L'utilisateur Admin n'est pas authentifi�"}
 TEST = CORRECT DATA - METHOD POST
 
 request done at "/airlines"
-data send = {'airline_iata': 'Y3', 'airline_icao': 'ZZZ', 'airline_name': 'Test Airline Name'}
+data send = {'airline_iata': '39', 'airline_icao': 'ZZZ', 'airline_name': 'Test Airline Name'}
 
 | expected result = 201
 | actual result = 201
@@ -206,7 +205,7 @@ data send = {'airline_iata': 'Y3', 'airline_icao': 'ZZZ', 'airline_name': 'Test 
 ==>  SUCCES
 ############################
 
-response_content = {"airline_iata": "Y3", "airline_icao": "ZZZ", "airline_name": "Test Airline Name"}
+response_content = {"airline_iata": "39", "airline_icao": "ZZZ", "airline_name": "Test Airline Name"}
 
 -------------------------------------------------------------------------------------
 
@@ -215,7 +214,7 @@ response_content = {"airline_iata": "Y3", "airline_icao": "ZZZ", "airline_name":
 ============================
 TEST = CORRECT DATA - METHOD PUT
 
-request done at "/airlines/Y3"
+request done at "/airlines/39"
 data send = {'airline_name': 'Test Airline New Name'}
 
 | expected result = 200
@@ -234,7 +233,7 @@ response_content = {"airline_name": "Test Airline New Name"}
 ============================
 TEST = CORRECT DATA - METHOD DELETE
 
-request done at "/airlines/Y3"
+request done at "/airlines/39"
 data send = None
 
 | expected result = 204
@@ -252,7 +251,7 @@ data send = None
 TEST = INCORRECT DATA - METHOD POST - Test 1
 
 request done at "/airlines"
-data send = {'airline_iata': 'TJ', 'airline_icao': 'ZZZ', 'airline_name': 'Test Airline Name'}
+data send = {'airline_iata': 'TI', 'airline_icao': 'ZZZ', 'airline_name': 'Test Airline Name'}
 
 | expected result = 400
 | actual result = 400
@@ -261,7 +260,7 @@ data send = {'airline_iata': 'TJ', 'airline_icao': 'ZZZ', 'airline_name': 'Test 
 ==>  SUCCES
 ############################
 
-response_content = {"error": "La valeur TJ existe déjà comme clé primaire airline_iata de la table airlines"}
+response_content = {"error": "La valeur TI existe déjà comme clé primaire airline_iata de la table airlines"}
 
 -------------------------------------------------------------------------------------
 
@@ -271,7 +270,7 @@ response_content = {"error": "La valeur TJ existe déjà comme clé primaire air
 TEST = INCORRECT DATA - METHOD POST - Test 2
 
 request done at "/airlines"
-data send = {'airline_iata': 'N3', 'airline_icao': 'ZZZ', 'airline_bad_field': 'Test Airline Bad Field'}
+data send = {'airline_iata': '92', 'airline_icao': 'ZZZ', 'airline_bad_field': 'Test Airline Bad Field'}
 
 | expected result = 400
 | actual result = 400
@@ -289,7 +288,7 @@ response_content = {"error": "Les données sont invalides (Les champs à renseig
 ============================
 TEST = INCORRECT DATA - METHOD PUT
 
-request done at "/airlines/N3"
+request done at "/airlines/92"
 data send = {'airline_name': 'Test Airline New Name'}
 
 | expected result = 404
@@ -308,7 +307,7 @@ response_content = {"error": "Aucun enregistrement trouvé avec ce code IATA"}
 ============================
 TEST = INCORRECT DATA - METHOD DELETE
 
-request done at "/airlines/N3"
+request done at "/airlines/92"
 data send = None
 
 | expected result = 404
@@ -326,7 +325,7 @@ data send = None
 TEST = CORRECT DATA - METHOD POST
 
 request done at "/aircrafts"
-data send = {'aircraft_iata': 'G3T', 'aircraft_icao': 'ZZZZ', 'aircraft_name': 'Test Aircraft Name', 'aircraft_wiki_link': '/wiki/Test Aircraft Name'}
+data send = {'aircraft_iata': '0QI', 'aircraft_icao': 'ZZZZ', 'aircraft_name': 'Test Aircraft Name', 'aircraft_wiki_link': '/wiki/Test Aircraft Name'}
 
 | expected result = 201
 | actual result = 201
@@ -335,7 +334,7 @@ data send = {'aircraft_iata': 'G3T', 'aircraft_icao': 'ZZZZ', 'aircraft_name': '
 ==>  SUCCES
 ############################
 
-response_content = {"aircraft_iata": "G3T", "aircraft_icao": "ZZZZ", "aircraft_name": "Test Aircraft Name", "aircraft_wiki_link": "/wiki/Test Aircraft Name"}
+response_content = {"aircraft_iata": "0QI", "aircraft_icao": "ZZZZ", "aircraft_name": "Test Aircraft Name", "aircraft_wiki_link": "/wiki/Test Aircraft Name"}
 
 -------------------------------------------------------------------------------------
 
@@ -344,7 +343,7 @@ response_content = {"aircraft_iata": "G3T", "aircraft_icao": "ZZZZ", "aircraft_n
 ============================
 TEST = CORRECT DATA - METHOD PUT
 
-request done at "/aircrafts/G3T"
+request done at "/aircrafts/0QI"
 data send = {'aircraft_icao': 'BBBB'}
 
 | expected result = 200
@@ -363,7 +362,7 @@ response_content = {"aircraft_icao": "BBBB"}
 ============================
 TEST = CORRECT DATA - METHOD DELETE
 
-request done at "/aircrafts/G3T"
+request done at "/aircrafts/0QI"
 data send = None
 
 | expected result = 204
@@ -381,7 +380,7 @@ data send = None
 TEST = INCORRECT DATA - METHOD POST - Test 1
 
 request done at "/aircrafts"
-data send = {'aircraft_iata': 'DH2', 'aircraft_icao': 'ZZZ', 'aircraft_name': 'Test Aircraft Name'}
+data send = {'aircraft_iata': '73E', 'aircraft_icao': 'ZZZ', 'aircraft_name': 'Test Aircraft Name'}
 
 | expected result = 400
 | actual result = 400
@@ -400,7 +399,7 @@ response_content = {"error": "La longueur du champ aircraft_icao n'est pas confo
 TEST = INCORRECT DATA - METHOD POST - Test 2
 
 request done at "/aircrafts"
-data send = {'aircraft_iata': 'EOF', 'aircraft_icao': 'ZZZ', 'aircraft_bad_field': 'Test Bad Field'}
+data send = {'aircraft_iata': 'V5B', 'aircraft_icao': 'ZZZ', 'aircraft_bad_field': 'Test Bad Field'}
 
 | expected result = 400
 | actual result = 400
@@ -418,7 +417,7 @@ response_content = {"error": "Les données sont invalides (Les champs à renseig
 ============================
 TEST = INCORRECT DATA - METHOD PUT
 
-request done at "/aircrafts/EOF"
+request done at "/aircrafts/V5B"
 data send = {'aircraft_name': 'Test Aircraft New Name'}
 
 | expected result = 404
@@ -437,7 +436,7 @@ response_content = {"error": "Aucun enregistrement trouvé avec ce code IATA"}
 ============================
 TEST = INCORRECT DATA - METHOD DELETE
 
-request done at "/aircrafts/EOF"
+request done at "/aircrafts/V5B"
 data send = None
 
 | expected result = 404
@@ -455,7 +454,7 @@ data send = None
 TEST = CORRECT DATA - METHOD POST
 
 request done at "/airports"
-data send = {'airport_iata': 'JPQ', 'airport_icao': 'AAAA', 'fk_city_iata': 'PAR', 'airport_name': 'Airport Test Name', 'airport_utc_offset_str': '+01:00', 'airport_utc_offset_min': 60, 'airport_timezone_id': 'Europe/Paris', 'airport_latitude': 49.0097, 'airport_longitude': 2.5478, 'airport_wiki_link': '/appli_dash/woki/blalala'}
+data send = {'airport_iata': 'OWX', 'airport_icao': 'AAAA', 'fk_city_iata': 'PAR', 'airport_name': 'Airport Test Name', 'airport_utc_offset_str': '+01:00', 'airport_utc_offset_min': 60, 'airport_timezone_id': 'Europe/Paris', 'airport_latitude': 49.0097, 'airport_longitude': 2.5478, 'airport_wiki_link': '/appli_dash/woki/blalala'}
 
 | expected result = 201
 | actual result = 201
@@ -464,7 +463,7 @@ data send = {'airport_iata': 'JPQ', 'airport_icao': 'AAAA', 'fk_city_iata': 'PAR
 ==>  SUCCES
 ############################
 
-response_content = {"airport_iata": "JPQ", "airport_icao": "AAAA", "airport_latitude": 49.0097, "airport_longitude": 2.5478, "airport_name": "Airport Test Name", "airport_timezone_id": "Europe/Paris", "airport_utc_offset_min": 60, "airport_utc_offset_str": "+01:00", "airport_wiki_link": "/appli_dash/woki/blalala", "fk_city_iata": "PAR"}
+response_content = {"airport_iata": "OWX", "airport_icao": "AAAA", "airport_latitude": 49.0097, "airport_longitude": 2.5478, "airport_name": "Airport Test Name", "airport_timezone_id": "Europe/Paris", "airport_utc_offset_min": 60, "airport_utc_offset_str": "+01:00", "airport_wiki_link": "/appli_dash/woki/blalala", "fk_city_iata": "PAR"}
 
 -------------------------------------------------------------------------------------
 
@@ -473,7 +472,7 @@ response_content = {"airport_iata": "JPQ", "airport_icao": "AAAA", "airport_lati
 ============================
 TEST = CORRECT DATA - METHOD PUT
 
-request done at "/airports/JPQ"
+request done at "/airports/OWX"
 data send = {'airport_icao': 'BBBB'}
 
 | expected result = 200
@@ -492,7 +491,7 @@ response_content = {"airport_icao": "BBBB", "fk_city_iata": "PAR"}
 ============================
 TEST = CORRECT DATA - METHOD DELETE
 
-request done at "/airports/JPQ"
+request done at "/airports/OWX"
 data send = None
 
 | expected result = 204
@@ -510,7 +509,7 @@ data send = None
 TEST = INCORRECT DATA - METHOD POST - Test 1
 
 request done at "/airports"
-data send = {'airport_iata': 'LMY', 'airport_icao': 'AAAA', 'fk_city_iata': 'PAR', 'airport_name': 'Airport Test Name', 'airport_utc_offset_str': '+01:00', 'airport_utc_offset_min': 60, 'airport_timezone_id': 'Europe/Paris', 'airport_latitude': 49.0097, 'airport_longitude': 2.5478, 'airport_wiki_link': '/appli_dash/woki/blalala'}
+data send = {'airport_iata': 'SVJ', 'airport_icao': 'AAAA', 'fk_city_iata': 'PAR', 'airport_name': 'Airport Test Name', 'airport_utc_offset_str': '+01:00', 'airport_utc_offset_min': 60, 'airport_timezone_id': 'Europe/Paris', 'airport_latitude': 49.0097, 'airport_longitude': 2.5478, 'airport_wiki_link': '/appli_dash/woki/blalala'}
 
 | expected result = 400
 | actual result = 400
@@ -519,7 +518,7 @@ data send = {'airport_iata': 'LMY', 'airport_icao': 'AAAA', 'fk_city_iata': 'PAR
 ==>  SUCCES
 ############################
 
-response_content = {"error": "La valeur LMY existe déjà comme clé primaire airport_iata de la table airports"}
+response_content = {"error": "La valeur SVJ existe déjà comme clé primaire airport_iata de la table airports"}
 
 -------------------------------------------------------------------------------------
 
@@ -529,7 +528,7 @@ response_content = {"error": "La valeur LMY existe déjà comme clé primaire ai
 TEST = INCORRECT DATA - METHOD POST - Test 2
 
 request done at "/airports"
-data send = {'airport_iata': 'FZB', 'airport_icao': 'AAAA', 'fk_city_iata': 'PAR', 'airport_bad_field': 'Airport Bad Field'}
+data send = {'airport_iata': 'QFZ', 'airport_icao': 'AAAA', 'fk_city_iata': 'PAR', 'airport_bad_field': 'Airport Bad Field'}
 
 | expected result = 400
 | actual result = 400
@@ -547,7 +546,7 @@ response_content = {"error": "Les données sont invalides (Les champs à renseig
 ============================
 TEST = INCORRECT DATA - METHOD PUT - Test 1
 
-request done at "/airports/FZB"
+request done at "/airports/QFZ"
 data send = {'airport_name': 'Test Airport New Name'}
 
 | expected result = 404
@@ -566,8 +565,8 @@ response_content = {"error": "Aucun enregistrement trouvé avec ce code IATA"}
 ============================
 TEST = INCORRECT DATA - METHOD PUT - Test 2
 
-request done at "/airports/FZB"
-data send = {'fk_city_iata': 'UJO', 'airport_name': 'Test Airport New Name'}
+request done at "/airports/QFZ"
+data send = {'fk_city_iata': 'UPQ', 'airport_name': 'Test Airport New Name'}
 
 | expected result = 404
 | actual result = 404
@@ -585,7 +584,7 @@ response_content = {"error": "Aucun enregistrement trouvé avec ce code IATA"}
 ============================
 TEST = INCORRECT DATA - METHOD DELETE
 
-request done at "/airports/FZB"
+request done at "/airports/QFZ"
 data send = None
 
 | expected result = 404
@@ -596,3 +595,12 @@ data send = None
 ############################
 
 -------------------------------------------------------------------------------------
+
+===========================================
+|    Récapitulatif des tests
+===========================================
+| Nombre de tests effectués : 32
+| Nombre de tests réussis : 32
+| Nombre de tests échoués : 0
+| Tests échoués : []
+===========================================

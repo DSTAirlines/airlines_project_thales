@@ -39,7 +39,7 @@ user_password = os.environ.get('ADMIN_PASSWORD_API')
 
 # Suppression d'un éventuel fichier de test
 try:
-    os.remove('./tests/tests_api.log')
+    os.remove('tests_api.log')
 except FileNotFoundError:
     pass
 
@@ -47,11 +47,20 @@ today = datetime.today()
 datetime_str = today.strftime("%Y-%m-%d %H:%M:%S")
 insert_datetime = f'''
 ####################################################
-#  Test réalisés le {datetime_str}
+#  Tests réalisés le {datetime_str}
 ####################################################
-
 '''
-with open('./tests/tests_api.log', 'a', encoding='utf-8') as file:
+
+global recap 
+recap = {
+    "nb_tests": 0,
+    "nb_tests_ok": 0,
+    "nb_tests_ko": 0,
+    "test_failed": []
+}
+
+
+with open('tests_api.log', 'a', encoding='utf-8') as file:
     file.write(insert_datetime)
 
 
@@ -63,6 +72,7 @@ def get_list_values_pk(table):
     Return: 
         list: liste des valeurs primaires de la table
     """
+    
     # Etablir la connection à la base SQL
     engine = connection_mysql()
     # Créer une session
@@ -132,6 +142,7 @@ def test_get_static(category, code_expected, elements_static=None):
     Teste la méthodes GET de l'endpoint static_data
     """
 
+    global recap
     url = f"{BASE_URL}static_data"
 
     headers = {
@@ -153,10 +164,20 @@ def test_get_static(category, code_expected, elements_static=None):
     except json.JSONDecodeError:
         json_response = "Invalid JSON response: " + response_content
 
+    recap['nb_tests'] += 1
     if status_code == code_expected:
         test_status = "SUCCES"
+        recap['nb_tests_ok'] += 1
     else:
         test_status = "FAIL"
+        recap['nb_tests_ko'] += 1
+        recap['test_failed'].append({
+            "category": category,
+            "elements_static": elements_static,
+            "code_expected": code_expected,
+            "status_code": status_code,
+            "response_content": response_content
+        })
 
     output = '''
 ============================
@@ -192,7 +213,7 @@ response_content = {response_content}
         response_content=json_response
     )
 
-    with open('./tests/tests_api.log', 'a', encoding='utf-8') as file:
+    with open('tests_api.log', 'a', encoding='utf-8') as file:
         file.write(formatted_output)
 
 
@@ -201,7 +222,7 @@ def test_get_statistic(type_data, elements_statistic, code_expected, date_data=N
     """
     Teste la méthodes GET de l'endpoint statistic_data
     """
-
+    global recap
     url = f"{BASE_URL}statistic_data"
 
     headers = {
@@ -225,10 +246,21 @@ def test_get_statistic(type_data, elements_statistic, code_expected, date_data=N
     except json.JSONDecodeError:
         json_response = "Invalid JSON response: " + response_content
 
+    recap['nb_tests'] += 1
     if status_code == code_expected:
         test_status = "SUCCES"
+        recap['nb_tests_ok'] += 1
     else:
         test_status = "FAIL"
+        recap['nb_tests_ko'] += 1
+        recap['test_failed'].append({
+            "type_data": type_data,
+            "elements_statistic": elements_statistic,
+            "date_data": date_data,
+            "code_expected": code_expected,
+            "status_code": status_code,
+            "response_content": response_content
+        })
 
     output = '''
 ============================
@@ -266,10 +298,8 @@ response_content = {response_content}
         response_content=json_response
     )
 
-    with open('./tests/tests_api.log', 'a', encoding='utf-8') as file:
+    with open('tests_api.log', 'a', encoding='utf-8') as file:
         file.write(formatted_output)
-
-
 
 
 
@@ -278,6 +308,7 @@ def test_connect_admin(username, password, correct=True):
     Teste la connexion d'un administrateur
     """
 
+    global recap
     credentials = {
         'username': username,
         'password': password
@@ -320,10 +351,21 @@ response_content = {response_content}
         json_response = json.dumps(dict_response, ensure_ascii=False)
     except json.JSONDecodeError:
         json_response = "Invalid JSON response: " + response_content
+
+    recap['nb_tests'] += 1
     if status_code == u_code:
         test_status = "SUCCES"
+        recap['nb_tests_ok'] += 1
     else:
         test_status = "FAIL"
+        recap['nb_tests_ko'] += 1
+        recap['test_failed'].append({
+            "username": username,
+            "password": password,
+            "code_expected": u_code,
+            "status_code": status_code,
+            "response_content": response_content
+        })
 
     formatted_output = output.format(
         u_name=u_name,
@@ -334,7 +376,7 @@ response_content = {response_content}
         test_status=test_status
     )
 
-    with open('./tests/tests_api.log', 'a') as file:
+    with open('tests_api.log', 'a') as file:
         file.write(formatted_output)
     return formatted_output
 
@@ -365,6 +407,7 @@ def test_admin(table, method, code_expected, titre, id=None, data=None):
     Teste les méthodes POST, PUT et DELETE des endpoints Admin de l'API
     """
 
+    global recap
     # Obtenir le token
     token = connection_admin()
     
@@ -399,10 +442,23 @@ def test_admin(table, method, code_expected, titre, id=None, data=None):
     except json.JSONDecodeError:
         json_response = "Invalid JSON response: " + response_content
 
+    recap['nb_tests'] += 1
     if status_code == code_expected:
         test_status = "SUCCES"
+        recap['nb_tests_ok'] += 1
     else:
         test_status = "FAIL"
+        recap['nb_tests_ko'] += 1
+        recap['test_failed'].append({
+            "method": method,
+            "table": table,
+            "titre": titre,
+            "data": data,
+            "endpoint": endpoint,
+            "code_expected": code_expected,
+            "status_code": status_code,
+            "response_content": response_content
+        })
 
     output = '''
 ============================
@@ -439,12 +495,55 @@ response_content = {response_content}
         test_status=test_status
     )
 
-    with open('./tests/tests_api.log', 'a', encoding='utf-8') as file:
+    with open('tests_api.log', 'a', encoding='utf-8') as file:
         file.write(formatted_output)
 
+<<<<<<< HEAD
 ###############################################################################
 ################## TEST de L'API - DONNEES DYNAMIQUES #########################
 ###############################################################################
+=======
+def recap_tests():
+    """
+    Récapitulatif des tests
+    """
+
+    global recap
+    output = '''
+===========================================
+|    Récapitulatif des tests
+===========================================
+| Nombre de tests effectués : {nb_tests}
+| Nombre de tests réussis : {nb_tests_ok}
+| Nombre de tests échoués : {nb_tests_ko}
+'''
+    if recap['nb_tests_ko'] > 0:
+        output += '''
+| Tests échoués : {test_failed}
+'''
+    output += '''
+===========================================
+'''
+
+    formatted_output = output.format(
+        nb_tests=recap['nb_tests'],
+        nb_tests_ok=recap['nb_tests_ok'],
+        nb_tests_ko=recap['nb_tests_ko'],
+        test_failed=recap['test_failed']
+    )
+
+    with open('tests_api.log', 'a', encoding='utf-8') as file:
+        file.write(formatted_output)
+    
+    print(formatted_output)
+    recap = {
+        'nb_tests': 0,
+        'nb_tests_ok': 0,
+        'nb_tests_ko': 0,
+        'test_failed': []
+    }
+
+>>>>>>> 8077ed306938fb2de1de3635e365cfe191a4b091
 
 def test_airports_api():
     """Test la route /airports"""
