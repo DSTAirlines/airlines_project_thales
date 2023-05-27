@@ -103,7 +103,7 @@ def static_data(query: DataStatic):
     Retourne les données statiques de la base de données
     ---
     tags:
-        - static_data
+        - Static Datas
     parameters:
         - name: category
           in: query
@@ -332,7 +332,7 @@ def statistic_data(query: DataStatistic):
     Retourne les données agrégées de la base de données, filtrées par date et par catégorie
     ---
     tags:
-        - statistic_data
+        - Statistic Datas
     parameters:
         - name: type_data
           in: query
@@ -614,6 +614,7 @@ def statistic_data(query: DataStatistic):
             raise BadRequest("Le champ elements_statistic est obligatoire")
         try:
             list_elements = query.elements_statistic.split(',')
+            list_elements = [x.strip().upper() for x in list_elements]
         except ValueError:
             raise BadRequest("Le champ elements_statistic est invalide")
 
