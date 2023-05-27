@@ -258,7 +258,6 @@ test_airports_api()
 # Appel de l'API pour les positions de vol d'un appareil en particulier (saisie du callsign)
 test_flight_positons_api()
 
-
 # RECAP TESTS
 # --------------------------------------
 recap_tests()

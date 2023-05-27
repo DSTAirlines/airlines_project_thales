@@ -542,8 +542,6 @@ def recap_tests():
         'nb_tests_ko': 0,
         'test_failed': []
     }
-
->>>>>>> 8077ed306938fb2de1de3635e365cfe191a4b091
     
 def test_airports_api():
     """Test la route /airports"""
