@@ -498,6 +498,11 @@ response_content = {response_content}
     with open('tests_api.log', 'a', encoding='utf-8') as file:
         file.write(formatted_output)
 
+
+###############################################################################
+################## TEST de L'API - DONNEES DYNAMIQUES #########################
+###############################################################################
+
 def recap_tests():
     """
     Récapitulatif des tests
@@ -537,5 +542,187 @@ def recap_tests():
         'nb_tests_ko': 0,
         'test_failed': []
     }
+    
+def test_airports_api():
+    """Test la route /airports"""
+    url = f"{BASE_URL}airports"
+
+    headers = {
+        'Content-Type': 'application/json'
+    }
+
+    # test de l'API avec un aéroport de départ fixé, ici CDG (Charles de Gaulles)
+    params = {
+        'airport': 'CDG',
+    }
+
+    r = requests.get(f"{url}", headers=headers, params=params)
+
+    status_code = r.status_code
+    response_content = r.text
+    try:
+        dict_response = json.loads(response_content)
+        json_response = json.dumps(dict_response, ensure_ascii=False, indent=2)
+    except json.JSONDecodeError:
+        json_response = "Invalid JSON response: " + response_content
+
+    if status_code == 200:
+        test_status = "SUCCES"
+    else:
+        test_status = "FAIL"
+
+    output = '''
+    ============================
+    GET /airports
+    ============================
+
+    | airport = CDG
+
+    | expected result = 200
+    | actual result = {status_code}
+
+    ############################
+    ==>  {test_status}
+    ############################
+
+    '''
+    if CONTENT_LOG == '1':
+        output += '''
+    response_content = {response_content}
+
+    '''
+        output +='''
+    -----------------------------
+'''
+    formatted_output = output.format(
+        status_code=status_code,
+        test_status=test_status,
+        response_content=json_response
+    )
+
+    print(formatted_output)
+
+    with open('./tests/tests_api.log', 'a', encoding='utf-8') as file:
+        file.write(formatted_output)
 
 
+def test_flight_positons_api():
+    """Test la route /flight/positions"""
+    url = f"{BASE_URL}flight/positions"
+
+    headers = {
+        'Content-Type': 'application/json'
+    }
+
+    r = requests.get(f"{url}", headers=headers)
+
+    status_code = r.status_code
+    response_content = r.text
+    try:
+        dict_response = json.loads(response_content)
+        json_response = json.dumps(dict_response, ensure_ascii=False, indent=2)
+    except json.JSONDecodeError:
+        json_response = "Invalid JSON response: " + response_content
+
+    # On a pas forcément de callsign valide au moment du test, donc on test l'echec de l'appel à l'API comme un succès.
+    if status_code == 400:
+        test_status = "SUCCES"
+    else:
+        test_status = "FAIL"
+
+    output = '''
+    ============================
+    GET /flight/positions
+    ============================
+
+    | callsign = None
+
+    | expected result = 400
+    | actual result = {status_code}
+
+    ############################
+    ==>  {test_status}
+    ############################
+
+    '''
+    if CONTENT_LOG == '1':
+        output += '''
+    response_content = {response_content}
+
+    '''
+        output +='''
+    -----------------------------
+'''
+    formatted_output = output.format(
+        status_code=status_code,
+        test_status=test_status,
+        response_content=json_response
+    )
+
+    print(formatted_output)
+
+    with open('./tests/tests_api.log', 'a', encoding='utf-8') as file:
+        file.write(formatted_output)
+
+# Vols en direct de la carte de l'Europe (Map Live)
+def test_flights_api():
+    """Test de la route /flights"""
+
+    url = f"{BASE_URL}flights"
+
+    headers = {
+        'Content-Type': 'application/json'
+    }
+
+    params = {
+        'dep_airport': 'CDG'
+    }
+
+    r = requests.get(f"{url}", headers=headers, params=params)
+
+    status_code = r.status_code
+    response_content = r.text
+    try:
+        dict_response = json.loads(response_content)
+        json_response = json.dumps(dict_response, ensure_ascii=False, indent=2)
+    except json.JSONDecodeError:
+        json_response = "Invalid JSON response: " + response_content
+
+    if status_code == 200:
+        test_status = "SUCCES"
+    else:
+        test_status = "FAIL"
+
+    output = '''
+    ============================
+    GET /flights
+    ============================
+
+    | airport = CDG
+
+    | expected result = 200
+    | actual result = {status_code}
+
+    ############################
+    ==>  {test_status}
+    ############################
+
+    '''
+    if CONTENT_LOG == '1':
+        output += '''
+    response_content = {response_content}
+
+    '''
+        output +='''
+    -----------------------------
+    '''
+    formatted_output = output.format(
+        status_code=status_code,
+        test_status=test_status,
+        response_content=json_response
+    )
+
+    print(formatted_output)
+
+    with open('./tests/tests_api.log', 'a', encoding='utf-8') as file:
+        file.write(formatted_output)

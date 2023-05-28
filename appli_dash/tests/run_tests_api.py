@@ -249,6 +249,16 @@ test_admin('airports', 'DELETE', 404, 'INCORRECT DATA - METHOD DELETE', id=iata_
 
 
 # --------------------------------------
+# TEST DYNAMIC DATAS
+# --------------------------------------
+
+# Appel de l'API pour les aéroports les plus desservis
+test_airports_api()
+
+# Appel de l'API pour les positions de vol d'un appareil en particulier (saisie du callsign)
+test_flight_positons_api()
+
 # RECAP TESTS
 # --------------------------------------
 recap_tests()
+
