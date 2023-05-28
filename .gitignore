@@ -12,3 +12,5 @@ venv/*
 # Ignorer les sous-dossiers data
 lufthansa_api/src/*/
 init_db/data_csv_init/*
+
+json_traitement.py
