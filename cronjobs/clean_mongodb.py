@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 from datetime import datetime, timedelta
+import time
 import sys
 from pathlib import Path
 from pprint import pprint
@@ -24,16 +25,21 @@ COLLECTIONS_TO_CLEAN = [MONGO_COL_OPENSKY, MONGO_COL_AIRLABS, MONGO_COL_STATS]
 client = get_connection()
 db = client[MONGO_DB_NAME]
 
-# Calculer la date limite (10 jours avant aujourd'hui)
-date_limit = datetime.now() - timedelta(days=10)
+# Time Unix actuel
+current_unix_time = time.time()
+# Nombre de secondes dans 7 jours
+seconds_in_seven_days = timedelta(days=7).total_seconds()
+# Time Unix limite
+date_limit = round(current_unix_time - seconds_in_seven_days)
+
 
 # Supprimer les documents de plus de 10 jours dans chaque collection
 for collection_name in COLLECTIONS_TO_CLEAN:
     collection = db[collection_name]
     if collection_name != MONGO_COL_STATS:
-        result = collection.delete_many({"datatime": {"$lt": date_limit}})
+        result = collection.delete_many({"time": {"$lt": date_limit}})
     else:
-        result = collection.delete_many({"datetime_start:": {"$lt": date_limit}})
+        result = collection.delete_many({"time_start": {"$lt": date_limit}})
     print(f"{result.deleted_count} documents supprimés de la collection {collection_name}")
 
 # Fermer la connexion à MongoDB
