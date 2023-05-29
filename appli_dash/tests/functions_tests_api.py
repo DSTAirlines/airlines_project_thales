@@ -566,33 +566,44 @@ def test_airports_api():
     except json.JSONDecodeError:
         json_response = "Invalid JSON response: " + response_content
 
+    recap['nb_tests'] += 1
     if status_code == 200:
         test_status = "SUCCES"
+        recap['nb_tests_ok'] += 1
     else:
         test_status = "FAIL"
+        recap['nb_tests_ko'] += 1
+        recap['test_failed'].append(
+            {
+                "airport": 'CDG',
+                "code_expected": 200,
+                "status_code": status_code,
+                "response_content": response_content
+            }
+        )
 
     output = '''
-    ============================
-    GET /airports
-    ============================
+============================
+GET /airports
+============================
 
-    | airport = CDG
+| airport = CDG
 
-    | expected result = 200
-    | actual result = {status_code}
+| expected result = 200
+| actual result = {status_code}
 
-    ############################
-    ==>  {test_status}
-    ############################
+############################
+==>  {test_status}
+############################
 
-    '''
+'''
     if CONTENT_LOG == '1':
         output += '''
-    response_content = {response_content}
+response_content = {response_content}
 
-    '''
+'''
         output +='''
-    -----------------------------
+-------------------------------------------------------------------------------------
 '''
     formatted_output = output.format(
         status_code=status_code,
@@ -600,9 +611,7 @@ def test_airports_api():
         response_content=json_response
     )
 
-    print(formatted_output)
-
-    with open('./tests/tests_api.log', 'a', encoding='utf-8') as file:
+    with open('tests_api.log', 'a', encoding='utf-8') as file:
         file.write(formatted_output)
 
 
@@ -625,33 +634,43 @@ def test_flight_positons_api():
         json_response = "Invalid JSON response: " + response_content
 
     # On a pas forcément de callsign valide au moment du test, donc on test l'echec de l'appel à l'API comme un succès.
+    recap['nb_tests'] += 1
     if status_code == 400:
         test_status = "SUCCES"
+        recap['nb_tests_ok'] += 1
     else:
         test_status = "FAIL"
+        recap['nb_tests_ko'] += 1
+        recap['test_failed'].append(
+            {
+                "code_expected": 400,
+                "status_code": status_code,
+                "response_content": response_content
+            }
+        )
 
     output = '''
-    ============================
-    GET /flight/positions
-    ============================
+============================
+GET /flight/positions
+============================
 
-    | callsign = None
+| callsign = None
 
-    | expected result = 400
-    | actual result = {status_code}
+| expected result = 400
+| actual result = {status_code}
 
-    ############################
-    ==>  {test_status}
-    ############################
+############################
+==>  {test_status}
+############################
 
-    '''
+'''
     if CONTENT_LOG == '1':
         output += '''
-    response_content = {response_content}
+response_content = {response_content}
 
-    '''
+'''
         output +='''
-    -----------------------------
+-------------------------------------------------------------------------------------
 '''
     formatted_output = output.format(
         status_code=status_code,
@@ -659,15 +678,14 @@ def test_flight_positons_api():
         response_content=json_response
     )
 
-    print(formatted_output)
-
-    with open('./tests/tests_api.log', 'a', encoding='utf-8') as file:
+    with open('tests_api.log', 'a', encoding='utf-8') as file:
         file.write(formatted_output)
 
 # Vols en direct de la carte de l'Europe (Map Live)
 def test_flights_api():
     """Test de la route /flights"""
-
+    
+    global recap
     url = f"{BASE_URL}flights"
 
     headers = {
@@ -688,41 +706,50 @@ def test_flights_api():
     except json.JSONDecodeError:
         json_response = "Invalid JSON response: " + response_content
 
+    recap['nb_tests'] += 1
     if status_code == 200:
         test_status = "SUCCES"
+        recap['nb_tests_ok'] += 1
     else:
         test_status = "FAIL"
+        recap['nb_tests_ko'] += 1
+        recap['test_failed'].append(
+            {
+                "dep_airport": 'CDG',
+                "code_expected": 200,
+                "status_code": status_code,
+                "response_content": response_content
+            }
+        )
 
     output = '''
-    ============================
-    GET /flights
-    ============================
+============================
+GET /flights
+============================
 
-    | airport = CDG
+| airport = CDG
 
-    | expected result = 200
-    | actual result = {status_code}
+| expected result = 200
+| actual result = {status_code}
 
-    ############################
-    ==>  {test_status}
-    ############################
+############################
+==>  {test_status}
+############################
 
-    '''
+'''
     if CONTENT_LOG == '1':
         output += '''
-    response_content = {response_content}
+response_content = {response_content}
 
-    '''
+'''
         output +='''
-    -----------------------------
-    '''
+-------------------------------------------------------------------------------------
+'''
     formatted_output = output.format(
         status_code=status_code,
         test_status=test_status,
         response_content=json_response
     )
 
-    print(formatted_output)
-
-    with open('./tests/tests_api.log', 'a', encoding='utf-8') as file:
+    with open('tests_api.log', 'a', encoding='utf-8') as file:
         file.write(formatted_output)
