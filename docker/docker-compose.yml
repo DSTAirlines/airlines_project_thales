@@ -31,12 +31,14 @@ services:
     networks:
       - dst_network
   
-  cronjobs:
+  api:
     build: ./api
     container_name: api
     restart: always
     env_file:
       - .env
+    volumes:
+      - ./data_statistics:/app/data_statistics
     depends_on:
       - mongodb
     networks:
