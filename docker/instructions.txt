@@ -27,16 +27,26 @@
 # Utilisation
 ##################################################################
 
-Dans le dossier contenant le docker-compose.yml :
+Dans le dossier contenant le docker-compose.yml, les éléments suivants doivent être présents :
 
-- un fichier /init_mongodb/mongo-init.js doit être présent
-    * permet la création de la base userLiveAirlines
+    - un fichier /init_mongodb/mongo-init.js
+        * permet la création de la base userLiveAirlines
 
-- un dossier /mongo-data/ doit être présent
-    - il sera vide avant le 1er lancement
-    - puis il sera alimenté par les enregistrements successifs de la base MongoDB
+    - un dossier /mongo-data/
+        * il sera vide avant le 1er lancement
+        * puis il sera alimenté par les enregistrements successifs de la base MongoDB
+    
+    - un fichier /data_statistics/data.json
+        * enregistrement de la collection des données agrégées des 7 derniers jours
+          (permet de disposer de données pour le dashbord dash lors de l'initialisation des containers)
 
-- fichier .env.example
+
+##################################################################
+# Fichier .env.example
+##################################################################
+
+Présence d'un fichier d'exemple pour définir votre fichier .env
+
     * ensemble des variables d'environnement à définir OBLIGATOIREMENT
     * modifier les valeurs illustratives par les valeur réelles
     * renommer le fichier en .env
