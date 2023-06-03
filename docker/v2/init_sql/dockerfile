@@ -1,0 +1,6 @@
+FROM mysql:5.7
+COPY ./sql_files/ /docker-entrypoint-initdb.d/
+COPY ./data_cvs_init/ /var/lib/mysql-files/data_csv_init/
+COPY entrypoint.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/entrypoint.sh
+ENTRYPOINT ["entrypoint.sh"]

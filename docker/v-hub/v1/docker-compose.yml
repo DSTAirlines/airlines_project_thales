@@ -1,0 +1,69 @@
+version: "3.9"
+
+services:
+
+  mongodb:
+    image: mongo:latest
+    container_name: mongodb
+    restart: always
+    env_file:
+      - .env
+    volumes:
+      - mongo_data:/data/db
+      - ./init_mongodb/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js
+    ports:
+      - 27017:27017
+    networks:
+      - dst_network
+
+  mysql:
+    image: kopatik/mysql-v1:latest
+    container_name: mysql
+    restart: always
+    command: 
+      - "--local-infile=1"
+    env_file:
+      - .env
+    volumes:
+      - mysql_data:/var/lib/mysql
+    ports:
+      - "3306:3306"
+    networks:
+      - dst_network
+  
+  api:
+    image: kopatik/api-v1:latest
+    container_name: api
+    restart: always
+    env_file:
+      - .env
+    volumes:
+      - ./data_statistics:/app/data_statistics
+    depends_on:
+      - mongodb
+    networks:
+      - dst_network
+
+  dash:
+    image: kopatik/dash-v1:latest
+    container_name: dash
+    env_file:
+      - .env
+    ports:
+      - "8050:8050"
+    volumes:
+      - logs:/app/tests/logs/
+    networks:
+      - dst_network
+    depends_on:
+      - mongodb
+      - mysql
+
+volumes:
+  logs:
+  mongo_data:
+  mysql_data:
+
+networks:
+  dst_network:
+    driver: bridge

@@ -1,0 +1,48 @@
+##################################################################
+# Composition
+##################################################################
+
+4 containers :
+
+    - mongodb
+        * Données dynamiques base de données MongoDB
+
+    - mysql
+        * Données statiques base de données MySQL
+
+    - api
+        * Appels aux API 
+            * OpenSky : toutes les 5 min
+            * Airlabs : toutes les heures
+        * Opérations sur les data :
+            * Insert des data statistiques à l'initialisation de la base de données
+            * Aggrégation 1 fois par jour des données
+            * suppression des données de plus de 7 jours
+
+    - dash
+        * dashbord de l'application
+
+
+##################################################################
+# Utilisation
+##################################################################
+
+Dans le dossier contenant le docker-compose.yml, les éléments suivants doivent être présents :
+
+    - un fichier /init_mongodb/mongo-init.js
+        * permet la création de la base userLiveAirlines
+    
+    - un fichier /data_statistics/data.json
+        * enregistrement de la collection des données agrégées des 7 derniers jours
+          (permet de disposer de données pour le dashbord dash lors de l'initialisation des containers)
+
+
+##################################################################
+# Fichier .env.example
+##################################################################
+
+Présence d'un fichier d'exemple pour définir votre fichier .env
+
+    * ensemble des variables d'environnement à définir OBLIGATOIREMENT
+    * modifier les valeurs illustratives par les valeur réelles
+    * renommer le fichier en .env

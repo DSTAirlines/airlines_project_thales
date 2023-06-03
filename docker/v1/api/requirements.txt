@@ -1,0 +1,5 @@
+python-dotenv==1.0.0
+requests==2.30.0
+pymongo==4.3.3
+pytz==2023.3
+schedule
