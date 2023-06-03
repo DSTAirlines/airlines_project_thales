@@ -10,7 +10,7 @@
     - mysql
         * Données statiques base de données MySQL
 
-    - api
+    - Airflow
         * Appels aux API 
             * OpenSky : toutes les 5 min
             * Airlabs : toutes les heures
@@ -24,21 +24,37 @@
 
 
 ##################################################################
-# Utilisation
+# Structure des fichiers à respecter
 ##################################################################
 
-Dans le dossier contenant le docker-compose.yml, les éléments suivants doivent être présents :
-
-    - un fichier /init_mongodb/mongo-init.js
-        * permet la création de la base userLiveAirlines
-
-    - un dossier /mongo-data/
-        * il sera vide avant le 1er lancement
-        * puis il sera alimenté par les enregistrements successifs de la base MongoDB
-    
-    - un fichier /data_statistics/data.json
-        * enregistrement de la collection des données agrégées des 7 derniers jours
-          (permet de disposer de données pour le dashbord dash lors de l'initialisation des containers)
+    │   .dockerignore
+    │   .env
+    │   docker-compose.yaml
+    │   setup.sh
+    |
+    ├───airflow
+    │   │   .env
+    │   │
+    │   ├───dags
+    │   │       my_dag.py
+    │   │
+    │   ├───functions
+    │   │       clean_mongodb.py
+    │   │       connection_mongodb.py
+    │   │       cron_airlabs.py
+    │   │       cron_opensky.py
+    │   │       init_mongo.py
+    │   │       pipeline_aggregate.py
+    │   │       utilities_live_api.py
+    │   │
+    │   ├───logs
+    │   └───plugins
+    |
+    ├───data_statistics
+    │       data.json
+    │
+    └───init_mongodb
+            mongo-init.js
 
 
 ##################################################################
@@ -50,3 +66,27 @@ Présence d'un fichier d'exemple pour définir votre fichier .env
     * ensemble des variables d'environnement à définir OBLIGATOIREMENT
     * modifier les valeurs illustratives par les valeur réelles
     * renommer le fichier en .env
+
+Remarque :
+
+    * un fichier .env est aussi présent dans le dossier Airflow 
+    * usage interne - ne rien écrire dessus
+
+
+##################################################################
+# Usage
+##################################################################
+
+    * Se placer dans le dossier où se trouve le docker-compose.yaml
+
+    * Lancer la commande suivante pour lancer le script automatiquement :
+    ATTENTION : cela supprimera les containers, images et volumes présents sur votre machine
+        sh ./setup.sh 
+
+    Si vous préférez lancer les containers manuellement, les 2 commandes 
+    obligatoires sont les suivantes : 
+        docker-compose up airflow-init 
+        docker-compose up -d 
+
+    * Accès à l'interface graphique d'airflow pour gérer vos DAG :
+        localhost:8080  
