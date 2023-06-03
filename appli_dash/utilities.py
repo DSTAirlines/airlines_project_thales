@@ -312,11 +312,11 @@ def create_markers_tooltips(static_data, dynamic_data):
     print(f"MAP LIVE - STEP 2 : Création des markers et tooltips")
     print(f"MAP LIVE - STEP 2 - len de dynamic_data {len(dynamic_data)}")
 
-    if dynamic_data is not None or static_data is not None:
+    if dynamic_data is not None and static_data is not None:
         callsigns = [list(d.keys())[0] for d in dynamic_data if list(d.keys())[0] is not None]
         print(f"MAP LIVE - STEP 2 - len de callsigns {len(callsigns)}")
 
-        static_data_dict = {k: v for dic in static_data for k, v in dic.items()}
+        static_data_dict = {k: v for dic in static_data if dic is not None for k, v in dic.items()}
         dynamic_data_dict = {k: v for dic in dynamic_data if dic is not None for k, v in dic.items()}
 
         for callsign in callsigns:
@@ -504,7 +504,7 @@ def create_dropdown_stats(id, label, options_dict):
     ])
 
 
-def create_dropdown_callsign(id, label, options_dict=None):
+def create_dropdown_callsign(id, label, options_dict=None, multi=False):
     """
     Création de l'affichage des dropdowns de stats du bloc 2
     Args:
@@ -522,7 +522,7 @@ def create_dropdown_callsign(id, label, options_dict=None):
         html.P(label, style={'marginTop': '8px', 'marginBottom': '4px'}, className='font-weight-bold'),
         dcc.Dropdown(
             id=id,
-            multi=False,
+            multi=multi,
             value=None,
             options=options,
             style={'width': '100%', 'fontSize': '12px'}
