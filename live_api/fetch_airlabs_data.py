@@ -121,8 +121,9 @@ def lauch_script(init=False, cron=False):
             airlabs_id = collection_airlabs.insert_one(match_copy).inserted_id
 
             # Mettre à jour les document opensky avec le champ airlabs_id
+            # {"callsign": callsign, "time": {"$gt": max_time_airlabs}},
             collection_opensky.update_many(
-                {"callsign": callsign, "time": {"$gt": max_time_airlabs}},
+                {"callsign": callsign, "airlabs_id": None},
                 {"$set": {"airlabs_id": airlabs_id}}
             )
 
