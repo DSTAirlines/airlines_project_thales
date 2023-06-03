@@ -441,9 +441,23 @@ def get_table_callsign(df, dep_iata, arr_iata, callsign):
     cond2 = (df['arr_iata'] == arr_iata)
     cond3 = (df['callsign'] == callsign)
     df = df[cond1 & cond2 & cond3]
-    
+    df = df.sort_values(by=['datetime_start'], ascending=True).reset_index(drop=True)
+
+    if len(df) > 1:
+        i_to_del = []
+        for i in range(len(df) - 1):
+            time_dep1 = df.loc[i, 'datetime_start']
+            time_arr1 = df.loc[i, 'datetime_end']
+            time_dep2 = df.loc[i+1, 'datetime_start']
+            time_arr2 = df.loc[i+1, 'datetime_end']
+            if (time_dep2 - time_arr1).seconds < 1500:
+                i_to_del.append(i)
+                df.loc[i+1, 'datetime_start'] = df.loc[i, 'datetime_start']
+        if len(i_to_del) > 0:
+            df = df.drop(index=i_to_del).reset_index(drop=True)
+
     cols = [
-        'datetime_start', 'datetime_end', 
+        'callsign', 'datetime_start', 'datetime_end', 
         'airline_iata', 'airline_icao', 'airline_name',
         'aircraft_name', 'aircraft_iata', 'aircraft_icao',
         'dep_city_name', 'dep_country_name',
@@ -462,9 +476,12 @@ def get_table_callsign(df, dep_iata, arr_iata, callsign):
     df['arr'] = df['arr_city_name'] +' - '+ df['arr_country_name']
     df['appareil'] = df['aircraft_name'] + ' (' + df['aircraft_iata'] + ' / ' + df['aircraft_icao'] + ')'
 
-    df = df[['datetime_start', 'datetime_end', 'travel_time', 'airline', 'dep', 'arr', 'appareil']]
+    df = df[['callsign', 'datetime_start', 'datetime_end', 'travel_time', 'airline', 'dep', 'arr', 'appareil']]
     df = df.sort_values(by=['datetime_start'])
-    df.columns = ['Départ', 'Arrivée', 'Temps de Trajet', 'Compagnie', 'Ville Depart', 'Ville Arrivée', 'Appareil']
+    df.columns = ['N° de vol', 'Départ', 'Arrivée', 'Temps de Trajet', 'Compagnie', 'Ville Depart', 'Ville Arrivée', 'Appareil']
+    if len(df) == 0:
+        for col in df.columns:
+            df.loc[0, col] = "-" if col != 'N° de vol' else callsign
     return df
 
 # Liste de tous les aéroports en base de données SQL pour dropdown de la Map stat
