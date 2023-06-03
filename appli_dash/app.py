@@ -173,7 +173,7 @@ def display_stats_page(df):
                 html.P('Trouver un vol', style={'marginTop': '2rem', 'textTransform': 'underline', 'fontSize': '1.2rem', 'fontWeight': 'bold'}),
                 create_dropdown_callsign('dropdown-callsign-dep', 'Aéroport de départ', dic_callsign_dep_airports),
                 create_dropdown_callsign('dropdown-callsign-arr', 'Aéroport d\'arrivée'),
-                create_dropdown_callsign('dropdown-callsign-num', 'Numero de vol'),
+                create_dropdown_callsign('dropdown-callsign-num', 'Numero de vol', multi=True),
             ],
             className='d-block',
             style={"height": "45vh"}
@@ -197,7 +197,7 @@ def display_stats_page(df):
                                         go.Scatter(x=dates_str, y=stats_by_day['callsign'], 
                                             name='Vols', yaxis='y1', mode='lines+markers', marker=dict(color='blue'), fill='tozeroy'),
                                         go.Scatter(x=dates_str, y=stats_by_day['airline_iata'], 
-                                            name='Compagnies', yaxis='y2', mode='lines+markers', marker=dict(color='green')),
+                                            name='Compagnies', yaxis='y2', mode='lines+markers', marker=dict(color='indianred')),
                                         go.Scatter(x=dates_str, y=stats_by_day['dep_iata'], 
                                             name='Aéroports de départ', yaxis='y2', mode='lines+markers', marker=dict(color='red')),
                                         go.Scatter(x=dates_str, y=stats_by_day['arr_iata'], 
@@ -759,21 +759,40 @@ def update_flight_numbers(depart, arrivee):
     flight_numbers = get_dropdowns_flight_numbers(global_statistics_df, depart, arrivee)
     return [{"label": i, "value": i} for i in flight_numbers], False
 
-# callback affichage table résultats
-# ----------------------------------
+# # callback affichage table résultats
+# # ----------------------------------
+# @app.callback(
+#     Output("result-callsign", "children"),
+#     Input("dropdown-callsign-dep", "value"),
+#     Input("dropdown-callsign-arr", "value"),
+#     Input("dropdown-callsign-num", "value"),
+# )
+# def create_table_callsign(depart, arrivee, callsign):
+#     global global_statistics_df
+#     if depart is None or arrivee is None or callsign is None:
+#         return ""
+#     df = get_table_callsign(global_statistics_df, depart, arrivee, callsign)
+#     flight_numbers = get_dropdowns_flight_numbers(global_statistics_df, depart, arrivee)
+#     return dbc.Table.from_dataframe(df, striped=True, bordered=True, hover=True)
+
 @app.callback(
     Output("result-callsign", "children"),
     Input("dropdown-callsign-dep", "value"),
     Input("dropdown-callsign-arr", "value"),
     Input("dropdown-callsign-num", "value"),
 )
-def create_table_callsign(depart, arrivee, callsign):
+def create_table_callsign(depart, arrivee, callsigns):
     global global_statistics_df
-    if depart is None or arrivee is None or callsign is None:
+    if depart is None or arrivee is None or callsigns is None:
         return ""
-    df = get_table_callsign(global_statistics_df, depart, arrivee, callsign)
-    flight_numbers = get_dropdowns_flight_numbers(global_statistics_df, depart, arrivee)
-    return dbc.Table.from_dataframe(df, striped=True, bordered=True, hover=True)
+    dfs = [get_table_callsign(global_statistics_df, depart, arrivee, callsign) for callsign in callsigns]
+    # Combiner tous les dataframes ensemble
+    if len(dfs) != 0:
+        df = pd.concat(dfs)
+        flight_numbers = get_dropdowns_flight_numbers(global_statistics_df, depart, arrivee)
+        if len(df) != 0:
+            return dbc.Table.from_dataframe(df, striped=True, bordered=True, hover=True)
+    return ""
 
 ################################################################################################
 ## CALLBACK PAGE MAP STAT
