@@ -6,6 +6,7 @@ from pprint import pprint
 import pandas as pd
 import numpy as np
 import re
+from time import sleep
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
@@ -48,17 +49,9 @@ def get_data_initial():
         Array: Liste de dict des données initiales
     """
 
-    # Connexion à MongoDB
-    client = connection_mongodb()
-    db = client[MONGO_DB_NAME]
-    opensky_collection = db[MONGO_COL_OPENSKY]
-
-    # Recherche du "time" le plus récent
-    max_time_result = opensky_collection.find().sort("time", -1).limit(1)
-    max_time = max_time_result[0]["time"]
-
-    # Recherche des documents avec "time" = max_time
-    opensky_data = list(opensky_collection.find({"time": max_time}))
+    # Appel API OpenSky
+    opensky_data = query_opensky_api()
+    sleep(1)
 
     # Appel API Airlabs
     airlabs_data = query_airlabs_api()
@@ -102,11 +95,10 @@ def get_sql_data(df):
     Args:
         df (DataFrame): df de la fonction get_data_statistics
     Returns:
-        _type_: _description_
+        DataFrame: df avec les données statiques SQL
     """
     list_dep_iata = df['dep_iata'].dropna().unique().tolist()
     list_arr_iata = df['arr_iata'].dropna().unique().tolist()
-    # list_arr = list(set(list_arr_iata) | set(list_dep_iata))
     list_airline_iata = df['airline_iata'].dropna().unique().tolist()
     list_aircraft_icao = df['aircraft_icao'].dropna().unique().tolist()
 
@@ -157,6 +149,7 @@ def get_sql_data(df):
 
 
 def convert_time_unix_utc_to_datetime_fr(time_unix_utc):
+    """ Convertir le temps unix UTC en datetime FR"""
     from datetime import datetime
     import pytz
     utc_datetime = datetime.utcfromtimestamp(time_unix_utc)
@@ -168,6 +161,8 @@ def convert_time_unix_utc_to_datetime_fr(time_unix_utc):
 
 
 def validate_date(input_date):
+    """ Valider la date entrée par l'utilisateur """
+
     # Vérifier le pattern
     if not re.match(r'\d{4}-\d{2}-\d{2}', input_date):
         return "date_incorrect_format"
@@ -205,7 +200,6 @@ def get_data_statistics(date_data=None):
     cursor = data.find()
     df_temp = pd.DataFrame(list(cursor))
 
-    # Fermer la connexion
     client.close()
 
     if date_data is not None:
@@ -280,13 +274,14 @@ def get_drop_dic_individual_stats(value_col, label_col, df):
 
 
 def get_data_one_element(value_col, label_col, df):
-    """_summary_
-
+    """
+    Récupère les données statistique d'un élément (un aéroport, une compagnie aérienne, un avion)
+    puis effectue une agrégation journalière des données
+    pour affichage dans une table
     Args:
         value_col (str): Value recherchée (code iata généralement)
         label_col (str): Nom de la colonne du dataframe correspondant
         df (DataFrame): Df des données globales
-        dic_countries (dict, optional): Pour les aircrafts seulement (Defaults to None)
     Returns:
         dict: dict pour affichage des résultats dans une table
     """
@@ -387,7 +382,7 @@ def get_dropdown_callsigns_aiprorts_dep(df):
 
 def get_dropdown_callsigns_aiprorts_arr(df, dep_iata):
     """
-    Obtenir les airports d'arrivée correspondant à l'airports d'origine sélectionné
+    Obtenir les airports d'arrivée correspondant à l'airport d'origine sélectionné
     Args:
         df (DataFrame): DF des données globales de stats
         dep_iata (str): code IATA de l'airports d'origine
@@ -525,50 +520,35 @@ def get_datas(dep_airport):
 
     pipeline = [
         {
-            "$match": 
-            {
+            "$match": {
                 "dep_iata": dep_airport,
                 "arr_iata": {"$nin": [dep_airport, None]},
-                
             }
         },
         {
-            "$group":
-            {
-                '_id':'$callsign',
-                'arr_airport': 
-                {
-                    '$addToSet':'$arr_iata'
-                }
+            "$group": {
+                "_id": "$callsign",
+                "arr_airport": {"$addToSet": "$arr_iata"},
             }
         },
         {
-            "$unwind":
-            {
-                'path': "$arr_airport",
-                'preserveNullAndEmptyArrays': True
-            }
-
-        },
-        {
-            "$group":
-            {
-                '_id':'$arr_airport',
-                'count': {
-                    '$count': {}
-                }
-            }
-        },
-
-        {
-            "$sort": 
-            {
-                'count': -1
+            "$unwind": {
+                "path": "$arr_airport",
+                "preserveNullAndEmptyArrays": True,
             }
         },
         {
-            '$limit':15
-        }
+            "$group": {
+                "_id": "$arr_airport",
+                'count': { '$count': {} }
+            }
+        },
+        {
+            "$sort": {"count": -1},
+        },
+        {
+            "$limit": 15,
+        },
     ]
 
     airports_without_coordinates = list(datas_collection.aggregate(pipeline))
