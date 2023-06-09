@@ -138,5 +138,3 @@ def lauch_script(init=False, cron=False):
 
     # On ferme la connexion
     client.close()
-
-# lauch_script()
