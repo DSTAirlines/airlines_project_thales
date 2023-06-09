@@ -53,7 +53,10 @@ echo "Création des dossiers /dags /logs /plugins /functions..."
 mkdir airflow
 mkdir ./airflow/dags ./airflow/logs ./airflow/plugins ./airflow/functions
 echo "Ajout des variables d'environnement Airflow..."
-printf "AIRFLOW_UID=$(id -u)\nAIRFLOW_GID=0\n" >> ./.env
+new_airflow_uid=$(id -u)
+new_airflow_gid=0
+sed -i "s/^AIRFLOW_UID=.*/AIRFLOW_UID=${new_airflow_uid}/" ./.env
+sed -i "s/^AIRFLOW_GID=.*/AIRFLOW_GID=${new_airflow_gid}/" ./.env
 echo ""
 
 # Initialisation Airflow
