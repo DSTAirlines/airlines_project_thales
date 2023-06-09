@@ -707,7 +707,7 @@ def test_flights_api():
     status_code = r.status_code
     response_content = r.text
     try:
-        dict_response = json.loads(response_content)
+        dict_response = r.json()
         json_response = json.dumps(dict_response, ensure_ascii=False, indent=2)
     except json.JSONDecodeError:
         json_response = "Invalid JSON response: " + response_content
