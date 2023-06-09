@@ -52,7 +52,7 @@ dic_var_stats = {
     'departure_airport': 'dep_iata',
     'arrival_airport': 'arr_iata',
     'airline': 'airline_iata',
-    'aircraft': 'aircraft_icao',
+    'aircraft': 'aircraft_iata',
     'country': 'country_iso2',
     'city': 'city_iata'
 }
@@ -129,7 +129,7 @@ def static_data(query: DataStatic):
             Chaque catégorie possède un seul identifiant :
             - `airports` :    airport_iata  (exemple : 'CDG')
             - `airlines` :    airline_iata  (exemple : 'AF')
-            - `aircrafts` :   aircraft_icao  (exemple : 'AA')
+            - `aircrafts` :   aircraft_iata  (exemple : 'AAA')
             - `countries` :   country_iso2  (exemple : 'FR')
             - `cities` :      city_iata  (exemple : 'PAR')
           required: false
@@ -359,7 +359,7 @@ def statistic_data(query: DataStatistic):
             - `departure_airport` :    dep_iata  (exemple : 'CDG')
             - `arrival_airport` :    arr_iata  (exemple : 'CDG')
             - `airline` :    airline_iata  (exemple : 'AF')
-            - `aircraft` :   aircraft_icao  (exemple : 'AA')
+            - `aircraft` :   aircraft_iata  (exemple : 'AAA')
             - `country` :   country_iso2  (exemple : 'FR')
             - `city` :      city_iata  (exemple : 'PAR')
           required: True

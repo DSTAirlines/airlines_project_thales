@@ -649,7 +649,7 @@ def get_static_data_api(table, elements=[]):
     dic_primary_keys = {
         "airports": "airport_iata",
         "airlines": "airline_iata",
-        "aircrafts": "aircraft_iaco",
+        "aircrafts": "aircraft_iata",
         "countries": "country_iso2",
         "cities": "city_iata",
     }

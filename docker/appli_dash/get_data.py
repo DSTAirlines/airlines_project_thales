@@ -117,7 +117,6 @@ def get_sql_data(df):
     """
     list_dep_iata = df['dep_iata'].dropna().unique().tolist()
     list_arr_iata = df['arr_iata'].dropna().unique().tolist()
-    # list_arr = list(set(list_arr_iata) | set(list_dep_iata))
     list_airline_iata = df['airline_iata'].dropna().unique().tolist()
     list_aircraft_icao = df['aircraft_icao'].dropna().unique().tolist()
 
@@ -668,7 +667,7 @@ def get_static_data_api(table, elements=[]):
     dic_primary_keys = {
         "airports": "airport_iata",
         "airlines": "airline_iata",
-        "aircrafts": "aircraft_iaco",
+        "aircrafts": "aircraft_iata",
         "countries": "country_iso2",
         "cities": "city_iata",
     }
