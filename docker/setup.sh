@@ -49,13 +49,9 @@ if [ -d "$airflow_folder" ]; then
 else
   echo "- Le dossier $airflow_folder n'existe pas"
 fi
-echo "Création des dossiers /dags /logs /plugins.."
+echo "Création des dossiers /dags /logs /plugins /functions..."
 mkdir airflow
-mkdir ./airflow/dags ./airflow/logs ./airflow/plugins
-echo "Copie du fichier DAG dans le dossier /dags..."
-cp my_dag.py ./airflow/dags
-echo  "Copie du dossier /functions dans le dossier /airflow..."
-cp -r functions ./airflow/functions
+mkdir ./airflow/dags ./airflow/logs ./airflow/plugins ./airflow/functions
 echo "Ajout des variables d'environnement Airflow..."
 printf "AIRFLOW_UID=$(id -u)\nAIRFLOW_GID=0\n" >> ./.env
 echo ""
@@ -67,6 +63,10 @@ echo "# Initialisation Airflow..."
 echo "########################################################################"
 echo ""
 docker-compose up airflow-init
+echo "Copie du fichier DAG dans le dossier /dags..."
+cp my_dag.py ./airflow/dags
+echo  "Copie du dossier /functions dans le dossier /airflow..."
+cp -r functions/* ./airflow/functions/
 
 # Build et lancement des containers
 echo ""
