@@ -443,7 +443,7 @@ def display_page(pathname):
     if pathname == "/liveMap":
         return dcc.Location(pathname="/live-map", id="mapLive")
     if pathname == "/live-map":
-        print("MAP LIVE - STEP 1 : Initialisation des données static et dynamic")
+        print("MAP LIVE - Initialisation des données static et dynamic")
         if global_data_static is None or global_data_dynamic is None:
             global_data_static, global_data_dynamic = initialize_data()
         markers_tooltips = create_markers_tooltips(global_data_static, global_data_dynamic)
@@ -484,8 +484,7 @@ def display_page(pathname):
 def update_map(n_intervals, data_dyn, data_stat, filters, pathname):
     global global_data_dynamic
     global global_n_intervals_map
-    print("MAP LIVE - STEP 3 - Update map")
-    print(f"MAP LIVE - STEP 3 - n_intervals: {n_intervals}")
+    print(f"MAP LIVE - Update map - n_intervals: {n_intervals}")
 
     if pathname == "/live-map":
         global_n_intervals_map = n_intervals
