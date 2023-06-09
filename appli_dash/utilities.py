@@ -123,9 +123,6 @@ def initialize_data():
     Returns:
         Array: 2 arrays (statique & dynamiques) de dict avec infos des vols en direct
     """
-    
-    # Appel API AirLabs
-    airlabs_api()
 
     dataDynamic = []
     dataStatic = []
