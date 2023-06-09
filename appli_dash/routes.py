@@ -1732,32 +1732,32 @@ def get_flights(query: Flight):
           in: query
           description: |
             Callsign de l'appareil
+            Exemple: AFR1234
           required: false
-          example: AFR1234
         - name: dep_airport
           in: query
           description: |
             Aéroport de départ de l'aéronef
+            Exemple: CDG
           required: false
-          example: CDG, LAX ...
         - name: arr_airport
           in: query
           description: |
             Aéroport d'arrivé de l'aéronef
+            Example: BDO
           required: false
-          example: LHR, DXB ...
         - name: airline
           in: query
           description: |
             Compagnie aérienne de l'aéronef
+            Exemple: Air France
           required: false
-          example: Air France, Emirates Airline ...
         - name: country
           in: query
           description: |
             Pays d'origine de l'aéronef (en anglais)
+            Exemple: France
           required: false
-          example: France, United Kingdom ...
     responses:
         200:
             description: |
@@ -1793,7 +1793,7 @@ def get_flights(query: Flight):
 @validate()
 def get_positions(query: Callsign):
     """
-    Retourne les positions d'un vol
+    Retourne les positions d'un vol du jour
     ---
     tags:
         - Dynamic datas
@@ -1802,8 +1802,8 @@ def get_positions(query: Callsign):
           in: query
           description: |
             Callsign de l'appareil
+            Exemple: AFR1234
           required: true
-          example: AFR1234
     responses:
         200:
             description: |
@@ -1854,8 +1854,8 @@ def get_airports(query: Airport):
           in: query
           description: |
             Aéroport de départ
+            Exemple: CDG
           required: true
-          example: CDG, LHR ...
     responses:
         200:
             description: |
