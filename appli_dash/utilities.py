@@ -1,5 +1,5 @@
 import sys
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 import pandas as pd
 from dash import html
@@ -43,6 +43,13 @@ def datetime_refresh(nb_planes, n_intervals=False, date_time=''):
     if n_intervals:
         txt_refresh = "Nb de refresh autorisé dépassé"
     else:
+        if "UTC" not in refresh_time:
+            now_utc = datetime.now(timezone.utc)
+            now_utc_str = now_utc.strftime("%H")
+            now_local = now_utc.astimezone()
+            now_local_str = now_local.strftime("%H")
+            if now_utc_str == now_local_str:
+                refresh_time += " UTC"
         txt_refresh = f"Last update : {refresh_time} ({nb_planes} vols)"
 
     return html.Div(
@@ -174,7 +181,6 @@ def initialize_data():
             dataDynamic.append(flight_dynamic)
 
         except Exception as ex:
-            # print(ex)
             continue
 
     return dataStatic, dataDynamic
@@ -214,7 +220,6 @@ def get_data_live(data):
             dataDynamicUpdated.append(flight_dynamic)
 
         except Exception as ex:
-            # print(ex)
             continue
 
     return dataDynamicUpdated
@@ -310,11 +315,10 @@ def create_markers_tooltips(static_data, dynamic_data):
     icon_url = "assets/img/plane.svg"
 
     print(f"MAP LIVE - STEP 2 : Création des markers et tooltips")
-    print(f"MAP LIVE - STEP 2 - len de dynamic_data {len(dynamic_data)}")
 
     if dynamic_data is not None and static_data is not None:
         callsigns = [list(d.keys())[0] for d in dynamic_data if list(d.keys())[0] is not None]
-        print(f"MAP LIVE - STEP 2 - len de callsigns {len(callsigns)}")
+        print(f"MAP LIVE - STEP 2 - Nombre de callsigns : {len(callsigns)}")
 
         static_data_dict = {k: v for dic in static_data if dic is not None for k, v in dic.items()}
         dynamic_data_dict = {k: v for dic in dynamic_data if dic is not None for k, v in dic.items()}
@@ -373,11 +377,10 @@ def create_markers_tooltips(static_data, dynamic_data):
                 )
             )
 
-        print(f"MAP LIVE - STEP 2 - len de markers {len(markers)}")
         return markers
 
     return []
-        
+
 
 def get_from_airports(global_data_static):
     """
@@ -404,11 +407,12 @@ def get_arr_airports(global_data_static):
     """
     airports = [{'label': airport[next(iter(airport))]['airport_arr_sql']['airport_name'], 
                  'value' : airport[next(iter(airport))]['airport_arr_sql']['airport_name']} for airport in global_data_static]
-    
+
     airports = list({airport['label']: airport for airport in airports}.values())
     airports = sorted(airports, key=lambda x: x['label'])
     return airports
-    
+
+
 def get_countries(global_data_static):
     """
     Méthode qui renvoie une liste de dictionnaire des pays de départ 
@@ -419,11 +423,12 @@ def get_countries(global_data_static):
     """
     countries = [{'label': country[next(iter(country))]['airport_dep_sql']['country_name'], 
                   'value' : country[next(iter(country))]['airport_dep_sql']['country_name']} for country in global_data_static]
-    
+
     countries = list({country['label']: country for country in countries}.values())
     countries = sorted(countries, key=lambda x: x['label'])
     return countries
-    
+
+
 def get_airlines(global_data_static):
     """
     Méthode qui renvoie un dictionnaire des compagnies aériennes 
@@ -438,8 +443,8 @@ def get_airlines(global_data_static):
     airlines = list({airline['label']: airline for airline in airlines}.values())
     airlines = sorted(airlines, key=lambda x: x['label'])
     return airlines 
-    
-    
+
+
 def get_filtered_flights(filters, static_flights, dynamic_flights):
 
     """
@@ -472,13 +477,13 @@ def get_filtered_flights(filters, static_flights, dynamic_flights):
         for dynamic_flight in dynamic_flights:
             if next(iter(dynamic_flight)) in [next(iter(f_flight)) for f_flight in filtered_static_flights]:
                 filtered_dynamic_flights.append(dynamic_flight)
-    
+
         print('static_flights : ', len(filtered_static_flights), 'dynamic_flights : ', len(filtered_dynamic_flights))
 
     else:
         filtered_static_flights = static_flights
         filtered_dynamic_flights = dynamic_flights
-    
+
     return filtered_static_flights, filtered_dynamic_flights
 
 
@@ -569,7 +574,7 @@ def create_markers():
             AND airport_longitude BETWEEN -11.360649771804841 AND 32.017698096436696 
             ORDER BY airport_name;
         """
-    
+
     with engine.connect() as conn:
         query = conn.execute(text(sql))
         airports = query.all()
@@ -578,7 +583,7 @@ def create_markers():
     icon_url = "assets/img/dot.svg"
 
     for airport in airports:
-        
+
         name = airport[AIRPORT_NAME_INDEX]
         iata = airport[AIRPORT_IATA_INDEX]
         latitude = airport[AIRPORT_LATITUDE_INDEX]
@@ -617,7 +622,7 @@ def create_patterns(airports):
 
     patterns = dict(offset='20', endOffset='20', repeat='15', dash=dict(pixelSize=10, pathOptions=dict(color='red', weight=2))),
     multi_pattern =[]
-    
+
     dep_airport = airports.pop(0)
     for airport in airports:
         positions = [[dep_airport['airport_latitude'], dep_airport['airport_longitude']], [airport['airport_latitude'], airport['airport_longitude']]]
@@ -625,6 +630,7 @@ def create_patterns(airports):
         multi_pattern.append(pattern)
 
     return multi_pattern
+
 
 def create_flight_markers(flight_positions):
     """
@@ -635,9 +641,9 @@ def create_flight_markers(flight_positions):
     marker = dict(rotate=True, markerOptions=dict(icon=dict(iconUrl=iconUrl, iconAnchor=[15, 15])))
     patterns = [dict(repeat='10', dash=dict(pixelSize=5, pathOptions=dict(color='blue', weight=2))),
                 dict(offset='10', endOffset='10', repeat='15%', marker=marker)]
-    
+
     positions = [[flight_position['latitude'], flight_position['longitude']] for flight_position in flight_positions]
-   
+
     rotated_markers = dl.PolylineDecorator(positions=positions, patterns=patterns)
 
     return rotated_markers
@@ -658,10 +664,8 @@ def decode_credentials(credentials):
     """
     return base64.b64decode(bytes(credentials, 'utf-8')).decode('utf-8').split(':')
 
+
 def get_encoded_credentials_admin():
     username = os.environ.get('ADMIN_LOGIN_API')
     password = os.environ.get('ADMIN_PASSWORD_API')
     return encode_credentials(username, password)
-
-# header_authorization_admin = get_encoded_credentials_admin()
-# print(header_authorization_admin)
