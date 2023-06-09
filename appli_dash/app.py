@@ -108,7 +108,7 @@ def display_map(markers_tooltips, nb_planes):
             ),
             dcc.Interval(
                 id='refreshData',
-                interval=30*1000,
+                interval=20*1000,
                 n_intervals=1
             )
         ]
@@ -217,7 +217,6 @@ def display_stats_page(df):
                                         yaxis2={'title': 'Autres variables', 'overlaying': 'y', 'side': 'right', 'gridcolor': '#e3e3e3', 'titlefont': {'color': 'green'}, 'tickfont': {'color': 'green'}},
                                         legend={'x': 0.2, 'y': 1.1, 'orientation': 'h', 'font': {'size': 12}},
                                         plot_bgcolor='rgba(237, 248, 251, 0.9)',
-                                        # plot_bgcolor='rgba(27, 25, 25, 0.9)',
                                         paper_bgcolor='rgba(255, 255, 255, 0.1)'
                                     )
                                 },
@@ -230,7 +229,6 @@ def display_stats_page(df):
                                 create_cards_stats('Aéroports Départ', synthese_values[2]),
                                 create_cards_stats('Aéroports Arrivée', synthese_values[3]),
                             ],
-                            # style={"height": "6vh"}
                         ),
                     ],
                     style={"height": "49vh"},
@@ -250,7 +248,6 @@ def display_stats_page(df):
                     ]),
                     html.Div(id='resultDropdown', style={'marginTop': '1.5rem'}),
                 ],
-                # className='bg-light pl-3'
                 className='bg-dark text-white pl-3'
                 )
             ],
@@ -297,17 +294,6 @@ def display_stat_map(markers):
                               "display": "flex", 'justifyContent':'center', 'alignItems':'center', 'backgroundColor':'#ECEFF1'}, 
                      children=[
                 html.Div(nav(), className="marges-navbar-map", style={'display': 'inline-block', 'width': '10%'}),
-                # html.Div(className="mx-3 py-2", style={'display': 'inline-block'}, children=[
-                #     dcc.Store(id='date_stat', storage_type='memory'),
-                #     dbc.Label('Date :', html_for='date', style={'display':'block'}),
-                #     dcc.DatePickerSingle(id='date_picker', 
-                #                          month_format='DD-MM-YYYY',
-                #                          display_format='DD/MM/YYYY',
-                #                          clearable=True,
-                #                          min_date_allowed = date(2023, 1, 1), max_date_allowed = date(2023, 6, 30), 
-                #                          initial_visible_month = date.today(),
-                #                          style={'zIndex':100000, 'position':'relative'})
-                # ]),
                 html.Div(className="mx-3", style={'display': 'inline-block', 'width': '15%'}, children=[
                     dcc.Store(id='dep_airport_data', storage_type='memory'),
                     dbc.Label("Aéroport de départ :", html_for='arrival_airport'),
@@ -465,8 +451,6 @@ def display_page(pathname):
         print("MAP LIVE - STEP 1 : Initialisation des données static et dynamic")
         if global_data_static is None or global_data_dynamic is None:
             global_data_static, global_data_dynamic = initialize_data()
-        print(f"MAP LIVE - STEP 1 - len de global_data_static : {len(global_data_static)}")
-        print(f"MAP LIVE - STEP 1 - len de global_data_dynamic : {len(global_data_dynamic)}")
         markers_tooltips = create_markers_tooltips(global_data_static, global_data_dynamic)
         nb_planes = len(global_data_dynamic)
         return display_map(markers_tooltips, nb_planes)
@@ -487,7 +471,6 @@ def display_page(pathname):
 
     else:
         return index_page
-            
 
 
 ################################################################################################
@@ -508,12 +491,6 @@ def update_map(n_intervals, data_dyn, data_stat, filters, pathname):
     print("MAP LIVE - STEP 3 - Update map")
     print(f"MAP LIVE - STEP 3 - n_intervals: {n_intervals}")
 
-    # if global_n_intervals_map is None:
-    #     global_n_intervals_map = n_intervals
-    # else:
-        # if global_n_intervals_map != n_intervals:
-    # if pathname == "/liveMap":
-    #     return dash.no_update, dash.no_update
     if pathname == "/live-map":
         global_n_intervals_map = n_intervals
         old_data_dyn = global_data_dynamic
@@ -521,7 +498,7 @@ def update_map(n_intervals, data_dyn, data_stat, filters, pathname):
             old_data_dyn = get_data_live(data_dyn)
 
         # Ajout d'une sécutité en cas d'oubli de fermeture du script
-        if n_intervals <= 15:
+        if n_intervals <= 30:
         
             # Script d'update
             static_datas, datas_dyn = get_filtered_flights(filters, data_stat, old_data_dyn)
@@ -544,18 +521,6 @@ def update_map(n_intervals, data_dyn, data_stat, filters, pathname):
             ], old_data_dyn
     else:
         return [], None
-
-
-# Callback pour mettre à jour l'intervalle du refresh en fonction de la page affichée
-@app.callback(
-    Output('refreshData', 'interval'),
-    [Input('url', 'pathname')]
-)
-def update_interval(pathname):
-    if pathname == "/live-map":
-        return 30 * 1000 
-    else:
-        return 60 * 60 * 1000
 
 
 ################################################################################################
@@ -582,7 +547,7 @@ def filters(from_airport, arr_airport, company, state, flight_number):
     Return:
         filters: le dictionnaire des filtres
     """
-    
+
     filters = {
         'from_airport': from_airport,
         'arr_airport': arr_airport,
@@ -592,6 +557,7 @@ def filters(from_airport, arr_airport, company, state, flight_number):
     }
 
     return filters
+
 
 ################################################################################################
 ## CALLBACK PAGE LIVE MAP - BOUTON FILTRE
@@ -625,9 +591,8 @@ def filter_button(click, static_data, dynamic_data, filters, date_time):
         date_time = date_time.strip('Last update : ')
         date_time = re.sub('\(.*?\)', '', date_time)
         nb_planes = len(filtered_dynamic_flights)
-        
-        return [datetime_refresh(nb_planes, date_time=date_time), dl.TileLayer(), *filtered_markers_tooltips]
 
+        return [datetime_refresh(nb_planes, date_time=date_time), dl.TileLayer(), *filtered_markers_tooltips]
 
 
 ################################################################################################
@@ -744,6 +709,7 @@ def update_arrivee(depart):
     arrivee_options = [{"label": name, "value": iata} for iata, name in dic_airport_arr.items()]
     return arrivee_options, False
 
+
 # callback dropdown flight_numbers
 # --------------------------------
 @app.callback(
@@ -759,22 +725,9 @@ def update_flight_numbers(depart, arrivee):
     flight_numbers = get_dropdowns_flight_numbers(global_statistics_df, depart, arrivee)
     return [{"label": i, "value": i} for i in flight_numbers], False
 
-# # callback affichage table résultats
-# # ----------------------------------
-# @app.callback(
-#     Output("result-callsign", "children"),
-#     Input("dropdown-callsign-dep", "value"),
-#     Input("dropdown-callsign-arr", "value"),
-#     Input("dropdown-callsign-num", "value"),
-# )
-# def create_table_callsign(depart, arrivee, callsign):
-#     global global_statistics_df
-#     if depart is None or arrivee is None or callsign is None:
-#         return ""
-#     df = get_table_callsign(global_statistics_df, depart, arrivee, callsign)
-#     flight_numbers = get_dropdowns_flight_numbers(global_statistics_df, depart, arrivee)
-#     return dbc.Table.from_dataframe(df, striped=True, bordered=True, hover=True)
 
+# callback affichage table résultats
+# ----------------------------------
 @app.callback(
     Output("result-callsign", "children"),
     Input("dropdown-callsign-dep", "value"),
@@ -786,7 +739,6 @@ def create_table_callsign(depart, arrivee, callsigns):
     if depart is None or arrivee is None or callsigns is None:
         return ""
     dfs = [get_table_callsign(global_statistics_df, depart, arrivee, callsign) for callsign in callsigns]
-    # Combiner tous les dataframes ensemble
     if len(dfs) != 0:
         df = pd.concat(dfs)
         flight_numbers = get_dropdowns_flight_numbers(global_statistics_df, depart, arrivee)
@@ -794,17 +746,10 @@ def create_table_callsign(depart, arrivee, callsigns):
             return dbc.Table.from_dataframe(df, striped=True, bordered=True, hover=True)
     return ""
 
+
 ################################################################################################
 ## CALLBACK PAGE MAP STAT
 ################################################################################################
-
-# # Callback du DatePicker
-# @app.callback(
-#     Output('date_stat', 'data'),
-#     Input('date_picker', 'date'))
-# def update_date(date_value):
-#     return date_value
-    
 
 # Callback du dropdown aéroport de départ de la page Map stat
 @app.callback(
@@ -819,7 +764,7 @@ def update_dep_airport(airport):
     Input('flight_number_stat', 'value'))
 def update_flight_number(flight_number):
     return flight_number
-    
+
 # Callback du bouton 'ROUTES', qui permet d'afficher les routes d'un aéroport de départ, et d'un vol en particulier
 @app.callback(
         Output("mapStat", "children"),
@@ -834,7 +779,6 @@ def routes_button(click, airport, flight_number):
     Retourne les routes concernant un aéroport de départ, ainsi que les routes pour un vol
     Args:
         click: event click sur le bouton 'ROUTES'
-        date: date à entrer pour afficher les routes pour le jour en question
         airport: aéroport de départ
         flight_number: numéro de vol, de l'avion en question
     Return:
@@ -843,7 +787,7 @@ def routes_button(click, airport, flight_number):
 
     if click is None:
         raise PreventUpdate
-    
+
     else:
         markers = create_markers()
         children = [dl.TileLayer(), *markers]
@@ -853,7 +797,7 @@ def routes_button(click, airport, flight_number):
             polyline = create_patterns(airports)
 
             children = children + [*polyline]
-        
+
         if flight_number is not None and flight_number:
             flight_positions = get_flight_positions(flight_number)
             flight_markers = create_flight_markers(flight_positions)
@@ -861,7 +805,7 @@ def routes_button(click, airport, flight_number):
             children = children + [flight_markers]
     
     print("Mise à jour de la Map Stat réussie.")
-    
+
     return children
 
 
