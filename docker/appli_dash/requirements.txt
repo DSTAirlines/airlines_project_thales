@@ -1,0 +1,21 @@
+dash==2.9.3
+dash-bootstrap-components==1.4.1
+dash-extensions==1.0.0
+dash-leaflet==0.1.23
+dash-table==5.0.0
+flasgger==0.9.7.1
+Flask==2.3.2
+Flask-JWT-Extended==4.4.4
+Flask-Pydantic==0.11.0
+numpy==1.24.3
+pandas==2.0.1
+pydantic==1.10.7
+python-dotenv==1.0.0
+requests==2.30.0
+mysql-connector-python==8.0.33
+# mysqlclient==2.1.1
+pymongo==4.3.3
+PyMySQL==1.0.3
+pytz==2023.3
+SQLAlchemy==1.4.48
+Werkzeug==2.3.4
