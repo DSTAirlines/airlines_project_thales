@@ -5,6 +5,7 @@ import itertools
 import random, json, os, sys
 from pathlib import Path
 import dotenv
+from datetime import datetime, timezone
 dotenv.load_dotenv()
 
 # Ajout du path du projet
@@ -43,8 +44,15 @@ try:
 except FileNotFoundError:
     pass
 
+now_utc = datetime.now(timezone.utc)
+now_utc_str = now_utc.strftime("%H")
+now_local = now_utc.astimezone()
+now_local_str = now_local.strftime("%H")
+
 today = datetime.today()
 datetime_str = today.strftime("%Y-%m-%d %H:%M:%S")
+if now_utc_str == now_local_str:
+    datetime_str += " UTC"
 insert_datetime = f'''
 ####################################################
 #  Tests réalisés le {datetime_str}
@@ -514,15 +522,14 @@ def recap_tests():
 |    Récapitulatif des tests
 ===========================================
 | Nombre de tests effectués : {nb_tests}
-| Nombre de tests réussis : {nb_tests_ok}
-| Nombre de tests échoués : {nb_tests_ko}
+| Nombre de tests réussis   : {nb_tests_ok}
+| Nombre de tests échoués   : {nb_tests_ko}
 '''
     if recap['nb_tests_ko'] > 0:
         output += '''
 | Tests échoués : {test_failed}
 '''
-    output += '''
-===========================================
+    output += '''===========================================
 '''
 
     formatted_output = output.format(
