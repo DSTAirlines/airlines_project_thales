@@ -68,7 +68,7 @@ recap = {
 }
 
 
-with open('tests_api.log', 'a', encoding='utf-8') as file:
+with open('logs/tests_api.log', 'a', encoding='utf-8') as file:
     file.write(insert_datetime)
 
 
@@ -167,8 +167,8 @@ def test_get_static(category, code_expected, elements_static=None):
     status_code = r.status_code
     response_content = r.text
     try:
-        dict_response = json.loads(response_content)
-        json_response = json.dumps(dict_response, ensure_ascii=False)
+        dict_response = r.json()
+        json_response = json.dumps(dict_response, ensure_ascii=False, indent=2)
     except json.JSONDecodeError:
         json_response = "Invalid JSON response: " + response_content
 
@@ -221,7 +221,7 @@ response_content = {response_content}
         response_content=json_response
     )
 
-    with open('tests_api.log', 'a', encoding='utf-8') as file:
+    with open('logs/tests_api.log', 'a', encoding='utf-8') as file:
         file.write(formatted_output)
 
 
@@ -249,7 +249,7 @@ def test_get_statistic(type_data, elements_statistic, code_expected, date_data=N
     status_code = r.status_code
     response_content = r.text
     try:
-        dict_response = json.loads(response_content)
+        dict_response = r.json()
         json_response = json.dumps(dict_response, ensure_ascii=False, indent=2)
     except json.JSONDecodeError:
         json_response = "Invalid JSON response: " + response_content
@@ -306,7 +306,7 @@ response_content = {response_content}
         response_content=json_response
     )
 
-    with open('tests_api.log', 'a', encoding='utf-8') as file:
+    with open('logs/tests_api.log', 'a', encoding='utf-8') as file:
         file.write(formatted_output)
 
 
@@ -355,8 +355,8 @@ response_content = {response_content}
     status_code = req.status_code
     response_content = req.text
     try:
-        dict_response = json.loads(response_content)
-        json_response = json.dumps(dict_response, ensure_ascii=False)
+        dict_response = req.json()
+        json_response = json.dumps(dict_response, ensure_ascii=False, indent=2)
     except json.JSONDecodeError:
         json_response = "Invalid JSON response: " + response_content
 
@@ -384,7 +384,7 @@ response_content = {response_content}
         test_status=test_status
     )
 
-    with open('tests_api.log', 'a') as file:
+    with open('logs/tests_api.log', 'a') as file:
         file.write(formatted_output)
     return formatted_output
 
@@ -445,8 +445,8 @@ def test_admin(table, method, code_expected, titre, id=None, data=None):
     status_code = r.status_code
     response_content = r.text
     try:
-        dict_response = json.loads(response_content)
-        json_response = json.dumps(dict_response, ensure_ascii=False)
+        dict_response = r.json()
+        json_response = json.dumps(dict_response, ensure_ascii=False, indent=2)
     except json.JSONDecodeError:
         json_response = "Invalid JSON response: " + response_content
 
@@ -503,7 +503,7 @@ response_content = {response_content}
         test_status=test_status
     )
 
-    with open('tests_api.log', 'a', encoding='utf-8') as file:
+    with open('logs/tests_api.log', 'a', encoding='utf-8') as file:
         file.write(formatted_output)
 
 
@@ -511,45 +511,6 @@ response_content = {response_content}
 ################## TEST de L'API - DONNEES DYNAMIQUES #########################
 ###############################################################################
 
-def recap_tests():
-    """
-    Récapitulatif des tests
-    """
-
-    global recap
-    output = '''
-===========================================
-|    Récapitulatif des tests
-===========================================
-| Nombre de tests effectués : {nb_tests}
-| Nombre de tests réussis   : {nb_tests_ok}
-| Nombre de tests échoués   : {nb_tests_ko}
-'''
-    if recap['nb_tests_ko'] > 0:
-        output += '''
-| Tests échoués : {test_failed}
-'''
-    output += '''===========================================
-'''
-
-    formatted_output = output.format(
-        nb_tests=recap['nb_tests'],
-        nb_tests_ok=recap['nb_tests_ok'],
-        nb_tests_ko=recap['nb_tests_ko'],
-        test_failed=recap['test_failed']
-    )
-
-    with open('tests_api.log', 'a', encoding='utf-8') as file:
-        file.write(formatted_output)
-    
-    print(formatted_output)
-    recap = {
-        'nb_tests': 0,
-        'nb_tests_ok': 0,
-        'nb_tests_ko': 0,
-        'test_failed': []
-    }
-    
 def test_airports_api():
     """Test la route /airports"""
     url = f"{BASE_URL}airports"
@@ -568,7 +529,7 @@ def test_airports_api():
     status_code = r.status_code
     response_content = r.text
     try:
-        dict_response = json.loads(response_content)
+        dict_response = r.json()
         json_response = json.dumps(dict_response, ensure_ascii=False, indent=2)
     except json.JSONDecodeError:
         json_response = "Invalid JSON response: " + response_content
@@ -618,7 +579,7 @@ response_content = {response_content}
         response_content=json_response
     )
 
-    with open('tests_api.log', 'a', encoding='utf-8') as file:
+    with open('logs/tests_api.log', 'a', encoding='utf-8') as file:
         file.write(formatted_output)
 
 
@@ -635,7 +596,7 @@ def test_flight_positons_api():
     status_code = r.status_code
     response_content = r.text
     try:
-        dict_response = json.loads(response_content)
+        dict_response = r.json()
         json_response = json.dumps(dict_response, ensure_ascii=False, indent=2)
     except json.JSONDecodeError:
         json_response = "Invalid JSON response: " + response_content
@@ -685,7 +646,7 @@ response_content = {response_content}
         response_content=json_response
     )
 
-    with open('tests_api.log', 'a', encoding='utf-8') as file:
+    with open('logs/tests_api.log', 'a', encoding='utf-8') as file:
         file.write(formatted_output)
 
 # Vols en direct de la carte de l'Europe (Map Live)
@@ -708,7 +669,7 @@ def test_flights_api():
     status_code = r.status_code
     response_content = r.text
     try:
-        dict_response = dict_response = r.json()
+        dict_response = r.json()
         json_response = json.dumps(dict_response, ensure_ascii=False, indent=2)
     except json.JSONDecodeError:
         json_response = "Invalid JSON response: " + response_content
@@ -749,8 +710,7 @@ GET /flights
 response_content = {response_content}
 
 '''
-        output +='''
--------------------------------------------------------------------------------------
+        output +='''-------------------------------------------------------------------------------------
 '''
     formatted_output = output.format(
         status_code=status_code,
@@ -758,5 +718,50 @@ response_content = {response_content}
         response_content=json_response
     )
 
-    with open('tests_api.log', 'a', encoding='utf-8') as file:
+    with open('logs/tests_api.log', 'a', encoding='utf-8') as file:
         file.write(formatted_output)
+
+
+
+#############################################################################
+## RECAP DES TESTS EFFECTUES
+#############################################################################
+
+def recap_tests():
+    """
+    Récapitulatif des tests
+    """
+
+    global recap
+    output = '''
+===========================================
+|    Récapitulatif des tests
+===========================================
+| Nombre de tests effectués : {nb_tests}
+| Nombre de tests réussis   : {nb_tests_ok}
+| Nombre de tests échoués   : {nb_tests_ko}
+'''
+    if recap['nb_tests_ko'] > 0:
+        output += '''
+| Tests échoués : {test_failed}
+'''
+    output += '''===========================================
+'''
+
+    formatted_output = output.format(
+        nb_tests=recap['nb_tests'],
+        nb_tests_ok=recap['nb_tests_ok'],
+        nb_tests_ko=recap['nb_tests_ko'],
+        test_failed=recap['test_failed']
+    )
+
+    with open('logs/tests_api.log', 'a', encoding='utf-8') as file:
+        file.write(formatted_output)
+    
+    print(formatted_output)
+    recap = {
+        'nb_tests': 0,
+        'nb_tests_ok': 0,
+        'nb_tests_ko': 0,
+        'test_failed': []
+    }

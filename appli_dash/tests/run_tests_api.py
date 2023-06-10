@@ -22,8 +22,8 @@ test_get_static('airports', 200, elements_static="CDG,BOD")
 test_get_static('aeroports', 400)
 
 # INCORRECT DATA - ELEMENT_NOT_FOUND
-iata_available = get_random_available_element('airlines')
-test_get_static('airlines', 404, elements_static=iata_available)
+iata_available1 = get_random_available_element('airlines')
+test_get_static('airlines', 404, elements_static=iata_available1)
 
 
 
@@ -50,8 +50,8 @@ test_get_statistic("arrival_airport", "CDG,BDO", 400, date_data=date_out_str)
 test_get_statistic("airline", "AFR", 400, date_data="02-12-2022")
 
 # INCORRECT DATA - ELEMENT_NOT_FOUND (elements_statistic)
-iata_available = get_random_available_element('airlines')
-test_get_statistic("airline", iata_available, 404, date_data=None)
+iata_available2 = get_random_available_element('airlines')
+test_get_statistic("airline", iata_available2, 404, date_data=None)
 
 
 
@@ -102,9 +102,9 @@ data = {
 test_admin('airlines', 'POST', 400, 'INCORRECT DATA - METHOD POST - Test 1', data=data)
 
 # INCORRECT DATA - METHOD POST - Test 2
-iata_available = get_random_available_element('airlines')
+iata_available3 = get_random_available_element('airlines')
 data = {
-    'airline_iata': iata_available,
+    'airline_iata': iata_available3,
     'airline_icao': 'ZZZ',
     'airline_bad_field': 'Test Airline Bad Field'
 }
@@ -114,10 +114,10 @@ test_admin('airlines', 'POST', 400, 'INCORRECT DATA - METHOD POST - Test 2', dat
 data = {
     'airline_name': 'Test Airline New Name'
 }
-test_admin('airlines', 'PUT', 404, 'INCORRECT DATA - METHOD PUT', id=iata_available, data=data)
+test_admin('airlines', 'PUT', 404, 'INCORRECT DATA - METHOD PUT', id=iata_available3, data=data)
 
 # INCORRECT DATA - METHOD DELETE
-test_admin('airlines', 'DELETE', 404, 'INCORRECT DATA - METHOD DELETE', id=iata_available)
+test_admin('airlines', 'DELETE', 404, 'INCORRECT DATA - METHOD DELETE', id=iata_available3)
 
 
 
@@ -155,9 +155,9 @@ data = {
 test_admin('aircrafts', 'POST', 400, 'INCORRECT DATA - METHOD POST - Test 1', data=data)
 
 # INCORRECT DATA - METHOD POST - Test 2
-iata_available = get_random_available_element('aircrafts')
+iata_available4 = get_random_available_element('aircrafts')
 data = {
-    'aircraft_iata': iata_available,
+    'aircraft_iata': iata_available4,
     'aircraft_icao': 'ZZZ',
     'aircraft_bad_field': 'Test Bad Field'
 }
@@ -167,10 +167,10 @@ test_admin('aircrafts', 'POST', 400, 'INCORRECT DATA - METHOD POST - Test 2', da
 data = {
     'aircraft_name': 'Test Aircraft New Name'
 }
-test_admin('aircrafts', 'PUT', 404, 'INCORRECT DATA - METHOD PUT', id=iata_available, data=data)
+test_admin('aircrafts', 'PUT', 404, 'INCORRECT DATA - METHOD PUT', id=iata_available4, data=data)
 
 # INCORRECT DATA - METHOD DELETE
-test_admin('aircrafts', 'DELETE', 404, 'INCORRECT DATA - METHOD DELETE', id=iata_available)
+test_admin('aircrafts', 'DELETE', 404, 'INCORRECT DATA - METHOD DELETE', id=iata_available4)
 
 
 
@@ -221,9 +221,9 @@ data = {
 test_admin('airports', 'POST', 400, 'INCORRECT DATA - METHOD POST - Test 1', data=data)
 
 # INCORRECT DATA - METHOD POST - Test 2
-iata_available = get_random_available_element('airports')
+iata_available5 = get_random_available_element('airports')
 data = {
-    'airport_iata': iata_available,
+    'airport_iata': iata_available5,
     'airport_icao': 'AAAA',
     'fk_city_iata': 'PAR',
     'airport_bad_field': 'Airport Bad Field'
@@ -234,7 +234,7 @@ test_admin('airports', 'POST', 400, 'INCORRECT DATA - METHOD POST - Test 2', dat
 data = {
     'airport_name': 'Test Airport New Name'
 }
-test_admin('airports', 'PUT', 404, 'INCORRECT DATA - METHOD PUT - Test 1', id=iata_available, data=data)
+test_admin('airports', 'PUT', 404, 'INCORRECT DATA - METHOD PUT - Test 1', id=iata_available5, data=data)
 
 # INCORRECT DATA - METHOD PUT - Test 2
 city_iata_available = get_random_available_element('cities')
@@ -242,10 +242,10 @@ data = {
     'fk_city_iata': city_iata_available,
     'airport_name': 'Test Airport New Name'
 }
-test_admin('airports', 'PUT', 404, 'INCORRECT DATA - METHOD PUT - Test 2', id=iata_available, data=data)
+test_admin('airports', 'PUT', 404, 'INCORRECT DATA - METHOD PUT - Test 2', id=iata_available5, data=data)
 
 # INCORRECT DATA - METHOD DELETE
-test_admin('airports', 'DELETE', 404, 'INCORRECT DATA - METHOD DELETE', id=iata_available)
+test_admin('airports', 'DELETE', 404, 'INCORRECT DATA - METHOD DELETE', id=iata_available5)
 
 
 # --------------------------------------
