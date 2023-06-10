@@ -20,7 +20,7 @@
             * suppression des données de plus de 7 jours
 
     - dash
-        * dashbord de l'application
+        * dashboard de l'application
 
 
 ##################################################################
