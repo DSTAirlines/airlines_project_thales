@@ -1,0 +1,3025 @@
+
+####################################################
+#  Test réalisés le 2023-05-27 17:43:23
+####################################################
+
+============================
+   GET /static_data
+============================
+
+| category = airports
+| elements_static = CDG,BOD
+
+
+| expected result = 200
+| actual result = 200
+
+############################
+==>  SUCCES
+############################
+
+
+-----------------------------
+
+============================
+   GET /static_data
+============================
+
+| category = aeroports
+| elements_static = None
+
+
+| expected result = 400
+| actual result = 400
+
+############################
+==>  SUCCES
+############################
+
+
+-----------------------------
+
+============================
+   GET /static_data
+============================
+
+| category = airlines
+| elements_static = 26
+
+
+| expected result = 404
+| actual result = 404
+
+############################
+==>  SUCCES
+############################
+
+
+-----------------------------
+
+============================
+   GET /static_data
+============================
+
+| type_data = departure_airport
+| elements_statistic = CDG,BDO
+| date_data = 2023-05-26
+
+
+| expected result = 200
+| actual result = 200
+
+############################
+==>  SUCCES
+############################
+
+
+-----------------------------
+
+============================
+   GET /static_data
+============================
+
+| type_data = aeroport_de_depart
+| elements_statistic = CDG
+| date_data = None
+
+
+| expected result = 400
+| actual result = 400
+
+############################
+==>  SUCCES
+############################
+
+
+-----------------------------
+
+============================
+   GET /static_data
+============================
+
+| type_data = arrival_airport
+| elements_statistic = CDG,BDO
+| date_data = 2023-05-07
+
+
+| expected result = 400
+| actual result = 400
+
+############################
+==>  SUCCES
+############################
+
+
+-----------------------------
+
+============================
+   GET /static_data
+============================
+
+| type_data = airline
+| elements_statistic = AFR
+| date_data = 02-12-2022
+
+
+| expected result = 400
+| actual result = 400
+
+############################
+==>  SUCCES
+############################
+
+
+-----------------------------
+
+============================
+   GET /static_data
+============================
+
+| type_data = airline
+| elements_statistic = ZG
+| date_data = None
+
+
+| expected result = 404
+| actual result = 404
+
+############################
+==>  SUCCES
+############################
+
+
+-----------------------------
+
+============================
+   Authentification test
+============================
+
+request done at "/login"
+| username =     ADMIN_USERNAME
+| password =     ADMIN_PASSWORD
+
+expected result = 200
+actual result = 200
+
+############################
+==>  SUCCES
+############################
+
+response_content = {"access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTY4NTIwMjI0MSwianRpIjoiYjA4MjFhODYtYzBmYS00NWQxLThhM2QtNGFmOWQyZDAwMmQ2IiwidHlwZSI6ImFjY2VzcyIsInN1YiI6IkFkbWluQVBJMDU3ODQ1IiwibmJmIjoxNjg1MjAyMjQxLCJleHAiOjE2ODUyMDQwNDF9.YnLmoSX_S9t3pDXmwijSxRa-SmoOf7zLi8qaWYpMmcA"}
+
+-----------------------------
+
+============================
+   Authentification test
+============================
+
+request done at "/login"
+| username =     FALSE_USERNAME
+| password =     FALSE_PASSWORD
+
+expected result = 401
+actual result = 401
+
+############################
+==>  SUCCES
+############################
+
+response_content = {"error": "L'utilisateur Admin n'est pas authentifi�"}
+
+-----------------------------
+
+============================
+   POST airlines
+============================
+TEST = CORRECT DATA - METHOD POST
+
+request done at "/airlines"
+data send = {'airline_iata': '39', 'airline_icao': 'ZZZ', 'airline_name': 'Test Airline Name'}
+
+| expected result = 201
+| actual result = 201
+
+############################
+==>  SUCCES
+############################
+
+response_content = {"airline_iata": "39", "airline_icao": "ZZZ", "airline_name": "Test Airline Name"}
+
+-------------------------------------------------------------------------------------
+
+============================
+   PUT airlines
+============================
+TEST = CORRECT DATA - METHOD PUT
+
+request done at "/airlines/39"
+data send = {'airline_name': 'Test Airline New Name'}
+
+| expected result = 200
+| actual result = 200
+
+############################
+==>  SUCCES
+############################
+
+response_content = {"airline_name": "Test Airline New Name"}
+
+-------------------------------------------------------------------------------------
+
+============================
+   DELETE airlines
+============================
+TEST = CORRECT DATA - METHOD DELETE
+
+request done at "/airlines/39"
+data send = None
+
+| expected result = 204
+| actual result = 204
+
+############################
+==>  SUCCES
+############################
+
+-------------------------------------------------------------------------------------
+
+============================
+   POST airlines
+============================
+TEST = INCORRECT DATA - METHOD POST - Test 1
+
+request done at "/airlines"
+data send = {'airline_iata': 'TI', 'airline_icao': 'ZZZ', 'airline_name': 'Test Airline Name'}
+
+| expected result = 400
+| actual result = 400
+
+############################
+==>  SUCCES
+############################
+
+response_content = {"error": "La valeur TI existe déjà comme clé primaire airline_iata de la table airlines"}
+
+-------------------------------------------------------------------------------------
+
+============================
+   POST airlines
+============================
+TEST = INCORRECT DATA - METHOD POST - Test 2
+
+request done at "/airlines"
+data send = {'airline_iata': '92', 'airline_icao': 'ZZZ', 'airline_bad_field': 'Test Airline Bad Field'}
+
+| expected result = 400
+| actual result = 400
+
+############################
+==>  SUCCES
+############################
+
+response_content = {"error": "Les données sont invalides (Les champs à renseigner sont : airline_iata, airline_icao, airline_name)"}
+
+-------------------------------------------------------------------------------------
+
+============================
+   PUT airlines
+============================
+TEST = INCORRECT DATA - METHOD PUT
+
+request done at "/airlines/92"
+data send = {'airline_name': 'Test Airline New Name'}
+
+| expected result = 404
+| actual result = 404
+
+############################
+==>  SUCCES
+############################
+
+response_content = {"error": "Aucun enregistrement trouvé avec ce code IATA"}
+
+-------------------------------------------------------------------------------------
+
+============================
+   DELETE airlines
+============================
+TEST = INCORRECT DATA - METHOD DELETE
+
+request done at "/airlines/92"
+data send = None
+
+| expected result = 404
+| actual result = 404
+
+############################
+==>  SUCCES
+############################
+
+-------------------------------------------------------------------------------------
+
+============================
+   POST aircrafts
+============================
+TEST = CORRECT DATA - METHOD POST
+
+request done at "/aircrafts"
+data send = {'aircraft_iata': '0QI', 'aircraft_icao': 'ZZZZ', 'aircraft_name': 'Test Aircraft Name', 'aircraft_wiki_link': '/wiki/Test Aircraft Name'}
+
+| expected result = 201
+| actual result = 201
+
+############################
+==>  SUCCES
+############################
+
+response_content = {"aircraft_iata": "0QI", "aircraft_icao": "ZZZZ", "aircraft_name": "Test Aircraft Name", "aircraft_wiki_link": "/wiki/Test Aircraft Name"}
+
+-------------------------------------------------------------------------------------
+
+============================
+   PUT aircrafts
+============================
+TEST = CORRECT DATA - METHOD PUT
+
+request done at "/aircrafts/0QI"
+data send = {'aircraft_icao': 'BBBB'}
+
+| expected result = 200
+| actual result = 200
+
+############################
+==>  SUCCES
+############################
+
+response_content = {"aircraft_icao": "BBBB"}
+
+-------------------------------------------------------------------------------------
+
+============================
+   DELETE aircrafts
+============================
+TEST = CORRECT DATA - METHOD DELETE
+
+request done at "/aircrafts/0QI"
+data send = None
+
+| expected result = 204
+| actual result = 204
+
+############################
+==>  SUCCES
+############################
+
+-------------------------------------------------------------------------------------
+
+============================
+   POST aircrafts
+============================
+TEST = INCORRECT DATA - METHOD POST - Test 1
+
+request done at "/aircrafts"
+data send = {'aircraft_iata': '73E', 'aircraft_icao': 'ZZZ', 'aircraft_name': 'Test Aircraft Name'}
+
+| expected result = 400
+| actual result = 400
+
+############################
+==>  SUCCES
+############################
+
+response_content = {"error": "La longueur du champ aircraft_icao n'est pas conforme à la longueur autorisée"}
+
+-------------------------------------------------------------------------------------
+
+============================
+   POST aircrafts
+============================
+TEST = INCORRECT DATA - METHOD POST - Test 2
+
+request done at "/aircrafts"
+data send = {'aircraft_iata': 'V5B', 'aircraft_icao': 'ZZZ', 'aircraft_bad_field': 'Test Bad Field'}
+
+| expected result = 400
+| actual result = 400
+
+############################
+==>  SUCCES
+############################
+
+response_content = {"error": "Les données sont invalides (Les champs à renseigner sont : aircraft_iata, aircraft_icao, aircraft_name, aircraft_wiki_link)"}
+
+-------------------------------------------------------------------------------------
+
+============================
+   PUT aircrafts
+============================
+TEST = INCORRECT DATA - METHOD PUT
+
+request done at "/aircrafts/V5B"
+data send = {'aircraft_name': 'Test Aircraft New Name'}
+
+| expected result = 404
+| actual result = 404
+
+############################
+==>  SUCCES
+############################
+
+response_content = {"error": "Aucun enregistrement trouvé avec ce code IATA"}
+
+-------------------------------------------------------------------------------------
+
+============================
+   DELETE aircrafts
+============================
+TEST = INCORRECT DATA - METHOD DELETE
+
+request done at "/aircrafts/V5B"
+data send = None
+
+| expected result = 404
+| actual result = 404
+
+############################
+==>  SUCCES
+############################
+
+-------------------------------------------------------------------------------------
+
+============================
+   POST airports
+============================
+TEST = CORRECT DATA - METHOD POST
+
+request done at "/airports"
+data send = {'airport_iata': 'OWX', 'airport_icao': 'AAAA', 'fk_city_iata': 'PAR', 'airport_name': 'Airport Test Name', 'airport_utc_offset_str': '+01:00', 'airport_utc_offset_min': 60, 'airport_timezone_id': 'Europe/Paris', 'airport_latitude': 49.0097, 'airport_longitude': 2.5478, 'airport_wiki_link': '/appli_dash/woki/blalala'}
+
+| expected result = 201
+| actual result = 201
+
+############################
+==>  SUCCES
+############################
+
+response_content = {"airport_iata": "OWX", "airport_icao": "AAAA", "airport_latitude": 49.0097, "airport_longitude": 2.5478, "airport_name": "Airport Test Name", "airport_timezone_id": "Europe/Paris", "airport_utc_offset_min": 60, "airport_utc_offset_str": "+01:00", "airport_wiki_link": "/appli_dash/woki/blalala", "fk_city_iata": "PAR"}
+
+-------------------------------------------------------------------------------------
+
+============================
+   PUT airports
+============================
+TEST = CORRECT DATA - METHOD PUT
+
+request done at "/airports/OWX"
+data send = {'airport_icao': 'BBBB'}
+
+| expected result = 200
+| actual result = 200
+
+############################
+==>  SUCCES
+############################
+
+response_content = {"airport_icao": "BBBB", "fk_city_iata": "PAR"}
+
+-------------------------------------------------------------------------------------
+
+============================
+   DELETE airports
+============================
+TEST = CORRECT DATA - METHOD DELETE
+
+request done at "/airports/OWX"
+data send = None
+
+| expected result = 204
+| actual result = 204
+
+############################
+==>  SUCCES
+############################
+
+-------------------------------------------------------------------------------------
+
+============================
+   POST airports
+============================
+TEST = INCORRECT DATA - METHOD POST - Test 1
+
+request done at "/airports"
+data send = {'airport_iata': 'SVJ', 'airport_icao': 'AAAA', 'fk_city_iata': 'PAR', 'airport_name': 'Airport Test Name', 'airport_utc_offset_str': '+01:00', 'airport_utc_offset_min': 60, 'airport_timezone_id': 'Europe/Paris', 'airport_latitude': 49.0097, 'airport_longitude': 2.5478, 'airport_wiki_link': '/appli_dash/woki/blalala'}
+
+| expected result = 400
+| actual result = 400
+
+############################
+==>  SUCCES
+############################
+
+response_content = {"error": "La valeur SVJ existe déjà comme clé primaire airport_iata de la table airports"}
+
+-------------------------------------------------------------------------------------
+
+============================
+   POST airports
+============================
+TEST = INCORRECT DATA - METHOD POST - Test 2
+
+request done at "/airports"
+data send = {'airport_iata': 'QFZ', 'airport_icao': 'AAAA', 'fk_city_iata': 'PAR', 'airport_bad_field': 'Airport Bad Field'}
+
+| expected result = 400
+| actual result = 400
+
+############################
+==>  SUCCES
+############################
+
+response_content = {"error": "Les données sont invalides (Les champs à renseigner sont : airport_iata, airport_icao, fk_city_iata, airport_name, airport_utc_offset_str, airport_utc_offset_min, airport_timezone_id, airport_latitude, airport_longitude, airport_wiki_link)"}
+
+-------------------------------------------------------------------------------------
+
+============================
+   PUT airports
+============================
+TEST = INCORRECT DATA - METHOD PUT - Test 1
+
+request done at "/airports/QFZ"
+data send = {'airport_name': 'Test Airport New Name'}
+
+| expected result = 404
+| actual result = 404
+
+############################
+==>  SUCCES
+############################
+
+response_content = {"error": "Aucun enregistrement trouvé avec ce code IATA"}
+
+-------------------------------------------------------------------------------------
+
+============================
+   PUT airports
+============================
+TEST = INCORRECT DATA - METHOD PUT - Test 2
+
+request done at "/airports/QFZ"
+data send = {'fk_city_iata': 'UPQ', 'airport_name': 'Test Airport New Name'}
+
+| expected result = 404
+| actual result = 404
+
+############################
+==>  SUCCES
+############################
+
+response_content = {"error": "Aucun enregistrement trouvé avec ce code IATA"}
+
+-------------------------------------------------------------------------------------
+
+============================
+   DELETE airports
+============================
+TEST = INCORRECT DATA - METHOD DELETE
+
+request done at "/airports/QFZ"
+data send = None
+
+| expected result = 404
+| actual result = 404
+
+############################
+==>  SUCCES
+############################
+
+-------------------------------------------------------------------------------------
+
+===========================================
+|    Récapitulatif des tests
+===========================================
+| Nombre de tests effectués : 32
+| Nombre de tests réussis : 32
+| Nombre de tests échoués : 0
+| Tests échoués : []
+===========================================
+
+####################################################
+#  Tests réalisés le 2023-06-10 11:07:58
+####################################################
+
+####################################################
+#  Tests réalisés le 2023-06-10 11:10:19
+####################################################
+
+============================
+   GET /static_data
+============================
+
+| category = airports
+| elements_static = CDG,BOD
+
+
+| expected result = 200
+| actual result = 200
+
+############################
+==>  SUCCES
+############################
+
+
+-----------------------------
+
+============================
+   GET /static_data
+============================
+
+| category = aeroports
+| elements_static = None
+
+
+| expected result = 400
+| actual result = 400
+
+############################
+==>  SUCCES
+############################
+
+
+-----------------------------
+
+============================
+   GET /static_data
+============================
+
+| category = airlines
+| elements_static = 26
+
+
+| expected result = 404
+| actual result = 404
+
+############################
+==>  SUCCES
+############################
+
+
+-----------------------------
+
+============================
+   GET /static_data
+============================
+
+| type_data = departure_airport
+| elements_statistic = CDG,BDO
+| date_data = 2023-06-09
+
+
+| expected result = 200
+| actual result = 200
+
+############################
+==>  SUCCES
+############################
+
+
+-----------------------------
+
+============================
+   GET /static_data
+============================
+
+| type_data = aeroport_de_depart
+| elements_statistic = CDG
+| date_data = None
+
+
+| expected result = 400
+| actual result = 400
+
+############################
+==>  SUCCES
+############################
+
+
+-----------------------------
+
+============================
+   GET /static_data
+============================
+
+| type_data = arrival_airport
+| elements_statistic = CDG,BDO
+| date_data = 2023-05-21
+
+
+| expected result = 400
+| actual result = 400
+
+############################
+==>  SUCCES
+############################
+
+
+-----------------------------
+
+============================
+   GET /static_data
+============================
+
+| type_data = airline
+| elements_statistic = AFR
+| date_data = 02-12-2022
+
+
+| expected result = 400
+| actual result = 400
+
+############################
+==>  SUCCES
+############################
+
+
+-----------------------------
+
+============================
+   GET /static_data
+============================
+
+| type_data = airline
+| elements_statistic = 0E
+| date_data = None
+
+
+| expected result = 404
+| actual result = 200
+
+############################
+==>  FAIL
+############################
+
+
+-----------------------------
+
+============================
+   Authentification test
+============================
+
+request done at "/login"
+| username =     ADMIN_USERNAME
+| password =     ADMIN_PASSWORD
+
+expected result = 200
+actual result = 200
+
+############################
+==>  SUCCES
+############################
+
+response_content = {
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTY4NjM4ODI0OSwianRpIjoiMWFiN2M3YjEtMWRhNC00NDUwLWE4NTAtMDU5Nzg5MzM1NzUxIiwidHlwZSI6ImFjY2VzcyIsInN1YiI6IkFkbWluQVBJMDU3ODQ1IiwibmJmIjoxNjg2Mzg4MjQ5LCJleHAiOjE2ODYzOTAwNDl9.zymM4UWkxxAj0qvUANRu4emTAV0PRvHPaSWaeH009uk"
+}
+
+-----------------------------
+
+============================
+   Authentification test
+============================
+
+request done at "/login"
+| username =     FALSE_USERNAME
+| password =     FALSE_PASSWORD
+
+expected result = 401
+actual result = 401
+
+############################
+==>  SUCCES
+############################
+
+response_content = {
+  "error": "L'utilisateur Admin n'est pas authentifi�"
+}
+
+-----------------------------
+
+============================
+   POST airlines
+============================
+TEST = CORRECT DATA - METHOD POST
+
+request done at "/airlines"
+data send = {'airline_iata': 'XH', 'airline_icao': 'ZZZ', 'airline_name': 'Test Airline Name'}
+
+| expected result = 201
+| actual result = 201
+
+############################
+==>  SUCCES
+############################
+
+response_content = {
+  "airline_iata": "XH",
+  "airline_icao": "ZZZ",
+  "airline_name": "Test Airline Name"
+}
+
+-------------------------------------------------------------------------------------
+
+============================
+   PUT airlines
+============================
+TEST = CORRECT DATA - METHOD PUT
+
+request done at "/airlines/XH"
+data send = {'airline_name': 'Test Airline New Name'}
+
+| expected result = 200
+| actual result = 200
+
+############################
+==>  SUCCES
+############################
+
+response_content = {
+  "airline_name": "Test Airline New Name"
+}
+
+-------------------------------------------------------------------------------------
+
+============================
+   DELETE airlines
+============================
+TEST = CORRECT DATA - METHOD DELETE
+
+request done at "/airlines/XH"
+data send = None
+
+| expected result = 204
+| actual result = 204
+
+############################
+==>  SUCCES
+############################
+
+-------------------------------------------------------------------------------------
+
+============================
+   POST airlines
+============================
+TEST = INCORRECT DATA - METHOD POST - Test 1
+
+request done at "/airlines"
+data send = {'airline_iata': 'IY', 'airline_icao': 'ZZZ', 'airline_name': 'Test Airline Name'}
+
+| expected result = 400
+| actual result = 400
+
+############################
+==>  SUCCES
+############################
+
+response_content = {
+  "error": "La valeur IY existe déjà comme clé primaire airline_iata de la table airlines"
+}
+
+-------------------------------------------------------------------------------------
+
+============================
+   POST airlines
+============================
+TEST = INCORRECT DATA - METHOD POST - Test 2
+
+request done at "/airlines"
+data send = {'airline_iata': 'Y0', 'airline_icao': 'ZZZ', 'airline_bad_field': 'Test Airline Bad Field'}
+
+| expected result = 400
+| actual result = 400
+
+############################
+==>  SUCCES
+############################
+
+response_content = {
+  "error": "Les données sont invalides (Les champs à renseigner sont : airline_iata, airline_icao, airline_name)"
+}
+
+-------------------------------------------------------------------------------------
+
+============================
+   PUT airlines
+============================
+TEST = INCORRECT DATA - METHOD PUT
+
+request done at "/airlines/Y0"
+data send = {'airline_name': 'Test Airline New Name'}
+
+| expected result = 404
+| actual result = 404
+
+############################
+==>  SUCCES
+############################
+
+response_content = {
+  "error": "Aucun enregistrement trouvé avec ce code IATA"
+}
+
+-------------------------------------------------------------------------------------
+
+============================
+   DELETE airlines
+============================
+TEST = INCORRECT DATA - METHOD DELETE
+
+request done at "/airlines/Y0"
+data send = None
+
+| expected result = 404
+| actual result = 404
+
+############################
+==>  SUCCES
+############################
+
+-------------------------------------------------------------------------------------
+
+============================
+   POST aircrafts
+============================
+TEST = CORRECT DATA - METHOD POST
+
+request done at "/aircrafts"
+data send = {'aircraft_iata': 'HTE', 'aircraft_icao': 'ZZZZ', 'aircraft_name': 'Test Aircraft Name', 'aircraft_wiki_link': '/wiki/Test Aircraft Name'}
+
+| expected result = 201
+| actual result = 201
+
+############################
+==>  SUCCES
+############################
+
+response_content = {
+  "aircraft_iata": "HTE",
+  "aircraft_icao": "ZZZZ",
+  "aircraft_name": "Test Aircraft Name",
+  "aircraft_wiki_link": "/wiki/Test Aircraft Name"
+}
+
+-------------------------------------------------------------------------------------
+
+============================
+   PUT aircrafts
+============================
+TEST = CORRECT DATA - METHOD PUT
+
+request done at "/aircrafts/HTE"
+data send = {'aircraft_icao': 'BBBB'}
+
+| expected result = 200
+| actual result = 200
+
+############################
+==>  SUCCES
+############################
+
+response_content = {
+  "aircraft_icao": "BBBB"
+}
+
+-------------------------------------------------------------------------------------
+
+============================
+   DELETE aircrafts
+============================
+TEST = CORRECT DATA - METHOD DELETE
+
+request done at "/aircrafts/HTE"
+data send = None
+
+| expected result = 204
+| actual result = 204
+
+############################
+==>  SUCCES
+############################
+
+-------------------------------------------------------------------------------------
+
+============================
+   POST aircrafts
+============================
+TEST = INCORRECT DATA - METHOD POST - Test 1
+
+request done at "/aircrafts"
+data send = {'aircraft_iata': '717', 'aircraft_icao': 'ZZZ', 'aircraft_name': 'Test Aircraft Name'}
+
+| expected result = 400
+| actual result = 400
+
+############################
+==>  SUCCES
+############################
+
+response_content = {
+  "error": "La longueur du champ aircraft_icao n'est pas conforme à la longueur autorisée"
+}
+
+-------------------------------------------------------------------------------------
+
+============================
+   POST aircrafts
+============================
+TEST = INCORRECT DATA - METHOD POST - Test 2
+
+request done at "/aircrafts"
+data send = {'aircraft_iata': 'II5', 'aircraft_icao': 'ZZZ', 'aircraft_bad_field': 'Test Bad Field'}
+
+| expected result = 400
+| actual result = 400
+
+############################
+==>  SUCCES
+############################
+
+response_content = {
+  "error": "Les données sont invalides (Les champs à renseigner sont : aircraft_iata, aircraft_icao, aircraft_name, aircraft_wiki_link)"
+}
+
+-------------------------------------------------------------------------------------
+
+============================
+   PUT aircrafts
+============================
+TEST = INCORRECT DATA - METHOD PUT
+
+request done at "/aircrafts/II5"
+data send = {'aircraft_name': 'Test Aircraft New Name'}
+
+| expected result = 404
+| actual result = 404
+
+############################
+==>  SUCCES
+############################
+
+response_content = {
+  "error": "Aucun enregistrement trouvé avec ce code IATA"
+}
+
+-------------------------------------------------------------------------------------
+
+============================
+   DELETE aircrafts
+============================
+TEST = INCORRECT DATA - METHOD DELETE
+
+request done at "/aircrafts/II5"
+data send = None
+
+| expected result = 404
+| actual result = 404
+
+############################
+==>  SUCCES
+############################
+
+-------------------------------------------------------------------------------------
+
+============================
+   POST airports
+============================
+TEST = CORRECT DATA - METHOD POST
+
+request done at "/airports"
+data send = {'airport_iata': 'FVP', 'airport_icao': 'AAAA', 'fk_city_iata': 'PAR', 'airport_name': 'Airport Test Name', 'airport_utc_offset_str': '+01:00', 'airport_utc_offset_min': 60, 'airport_timezone_id': 'Europe/Paris', 'airport_latitude': 49.0097, 'airport_longitude': 2.5478, 'airport_wiki_link': '/appli_dash/woki/blalala'}
+
+| expected result = 201
+| actual result = 201
+
+############################
+==>  SUCCES
+############################
+
+response_content = {
+  "airport_iata": "FVP",
+  "airport_icao": "AAAA",
+  "airport_latitude": 49.0097,
+  "airport_longitude": 2.5478,
+  "airport_name": "Airport Test Name",
+  "airport_timezone_id": "Europe/Paris",
+  "airport_utc_offset_min": 60,
+  "airport_utc_offset_str": "+01:00",
+  "airport_wiki_link": "/appli_dash/woki/blalala",
+  "fk_city_iata": "PAR"
+}
+
+-------------------------------------------------------------------------------------
+
+============================
+   PUT airports
+============================
+TEST = CORRECT DATA - METHOD PUT
+
+request done at "/airports/FVP"
+data send = {'airport_icao': 'BBBB'}
+
+| expected result = 200
+| actual result = 200
+
+############################
+==>  SUCCES
+############################
+
+response_content = {
+  "airport_icao": "BBBB",
+  "fk_city_iata": "PAR"
+}
+
+-------------------------------------------------------------------------------------
+
+============================
+   DELETE airports
+============================
+TEST = CORRECT DATA - METHOD DELETE
+
+request done at "/airports/FVP"
+data send = None
+
+| expected result = 204
+| actual result = 204
+
+############################
+==>  SUCCES
+############################
+
+-------------------------------------------------------------------------------------
+
+============================
+   POST airports
+============================
+TEST = INCORRECT DATA - METHOD POST - Test 1
+
+request done at "/airports"
+data send = {'airport_iata': 'TGZ', 'airport_icao': 'AAAA', 'fk_city_iata': 'PAR', 'airport_name': 'Airport Test Name', 'airport_utc_offset_str': '+01:00', 'airport_utc_offset_min': 60, 'airport_timezone_id': 'Europe/Paris', 'airport_latitude': 49.0097, 'airport_longitude': 2.5478, 'airport_wiki_link': '/appli_dash/woki/blalala'}
+
+| expected result = 400
+| actual result = 400
+
+############################
+==>  SUCCES
+############################
+
+response_content = {
+  "error": "La valeur TGZ existe déjà comme clé primaire airport_iata de la table airports"
+}
+
+-------------------------------------------------------------------------------------
+
+============================
+   POST airports
+============================
+TEST = INCORRECT DATA - METHOD POST - Test 2
+
+request done at "/airports"
+data send = {'airport_iata': 'BQR', 'airport_icao': 'AAAA', 'fk_city_iata': 'PAR', 'airport_bad_field': 'Airport Bad Field'}
+
+| expected result = 400
+| actual result = 400
+
+############################
+==>  SUCCES
+############################
+
+response_content = {
+  "error": "Les données sont invalides (Les champs à renseigner sont : airport_iata, airport_icao, fk_city_iata, airport_name, airport_utc_offset_str, airport_utc_offset_min, airport_timezone_id, airport_latitude, airport_longitude, airport_wiki_link)"
+}
+
+-------------------------------------------------------------------------------------
+
+============================
+   PUT airports
+============================
+TEST = INCORRECT DATA - METHOD PUT - Test 1
+
+request done at "/airports/BQR"
+data send = {'airport_name': 'Test Airport New Name'}
+
+| expected result = 404
+| actual result = 404
+
+############################
+==>  SUCCES
+############################
+
+response_content = {
+  "error": "Aucun enregistrement trouvé avec ce code IATA"
+}
+
+-------------------------------------------------------------------------------------
+
+============================
+   PUT airports
+============================
+TEST = INCORRECT DATA - METHOD PUT - Test 2
+
+request done at "/airports/BQR"
+data send = {'fk_city_iata': 'UXR', 'airport_name': 'Test Airport New Name'}
+
+| expected result = 404
+| actual result = 404
+
+############################
+==>  SUCCES
+############################
+
+response_content = {
+  "error": "Aucun enregistrement trouvé avec ce code IATA"
+}
+
+-------------------------------------------------------------------------------------
+
+============================
+   DELETE airports
+============================
+TEST = INCORRECT DATA - METHOD DELETE
+
+request done at "/airports/BQR"
+data send = None
+
+| expected result = 404
+| actual result = 404
+
+############################
+==>  SUCCES
+############################
+
+-------------------------------------------------------------------------------------
+
+============================
+GET /airports
+============================
+
+| airport = CDG
+
+| expected result = 200
+| actual result = 200
+
+############################
+==>  SUCCES
+############################
+
+
+============================
+GET /flight/positions
+============================
+
+| callsign = None
+
+| expected result = 400
+| actual result = 400
+
+############################
+==>  SUCCES
+############################
+
+
+============================
+GET /flights
+============================
+
+| airport = CDG
+
+| expected result = 200
+| actual result = 200
+
+############################
+==>  SUCCES
+############################
+
+
+===========================================
+|    Récapitulatif des tests
+===========================================
+| Nombre de tests effectués : 35
+| Nombre de tests réussis   : 34
+| Nombre de tests échoués   : 1
+
+| Tests échoués : [{'type_data': 'airline', 'elements_statistic': '0E', 'date_data': None, 'code_expected': 404, 'status_code': 200, 'response_content': '[\n  {\n    "aircraft_flag": "RU",\n    "aircraft_iata": "GJ6",\n    "aircraft_icao": "GLF6",\n    "aircraft_name": "Gulfstream Aerospace G650",\n    "aircraft_reg_number": "RA-11005",\n    "aircraft_wiki_link": "/wiki/Gulfstream_G650",\n    "airline_iata": "0E",\n    "airline_icao": null,\n    "airline_name": null,\n    "arr_airport_latitude": 40.9769,\n    "arr_airport_longitude": 28.815,\n    "arr_airport_name": "Istanbul New Airport",\n    "arr_airport_timezone_id": "Europe/Istanbul",\n    "arr_airport_utc_offset_min": 180.0,\n    "arr_airport_utc_offset_str": "+03:00",\n    "arr_airport_wiki_link": "/wiki/Istanbul_Atat%C3%BCrk_Airport",\n    "arr_city_name": "Istanbul",\n    "arr_country_flag": "//upload.wikimedia.org/wikipedia/commons/thumb/b/b4/Flag_of_Turkey.svg/23px-Flag_of_Turkey.svg.png",\n    "arr_country_iso2": "TR",\n    "arr_country_iso3": "TUR",\n    "arr_country_name": "Turkey",\n    "arr_country_wiki_link": "/wiki/Turkey",\n    "arr_fk_city_iata": "IST",\n    "arr_iata": "ISL",\n    "arr_icao": "LTBA",\n    "callsign": "NWC9005",\n    "count": 7,\n    "datetime_end": "2023-06-05T16:23:02",\n    "datetime_start": "2023-06-05T15:53:02",\n    "dep_airport_latitude": 55.5917,\n    "dep_airport_longitude": 37.2614,\n    "dep_airport_name": "Vnukovo International Airport",\n    "dep_airport_timezone_id": "Europe/Moscow",\n    "dep_airport_utc_offset_min": 180.0,\n    "dep_airport_utc_offset_str": "+03:00",\n    "dep_airport_wiki_link": "/wiki/Vnukovo_International_Airport",\n    "dep_city_name": "Moscow",\n    "dep_country_flag": "//upload.wikimedia.org/wikipedia/en/thumb/f/f3/Flag_of_Russia.svg/23px-Flag_of_Russia.svg.png",\n    "dep_country_iso2": "RU",\n    "dep_country_iso3": "RUS",\n    "dep_country_name": "Russian Federation",\n    "dep_country_wiki_link": "/wiki/Russia",\n    "dep_fk_city_iata": "MOW",\n    "dep_iata": "VKO",\n    "dep_icao": "UUWW",\n    "time_end": 1685974982,\n    "time_start": 1685973182\n  },\n  {\n    "aircraft_flag": "RU",\n    "aircraft_iata": "GJ6",\n    "aircraft_icao": "GLF6",\n    "aircraft_name": "Gulfstream Aerospace G650",\n    "aircraft_reg_number": "RA-11005",\n    "aircraft_wiki_link": "/wiki/Gulfstream_G650",\n    "airline_iata": "0E",\n    "airline_icao": null,\n    "airline_name": null,\n    "arr_airport_latitude": null,\n    "arr_airport_longitude": null,\n    "arr_airport_name": null,\n    "arr_airport_timezone_id": null,\n    "arr_airport_utc_offset_min": null,\n    "arr_airport_utc_offset_str": null,\n    "arr_airport_wiki_link": null,\n    "arr_city_name": null,\n    "arr_country_flag": null,\n    "arr_country_iso2": null,\n    "arr_country_iso3": null,\n    "arr_country_name": null,\n    "arr_country_wiki_link": null,\n    "arr_fk_city_iata": null,\n    "arr_iata": null,\n    "arr_icao": null,\n    "callsign": "NWC9005",\n    "count": 8,\n    "datetime_end": "2023-06-06T18:08:02",\n    "datetime_start": "2023-06-06T17:33:02",\n    "dep_airport_latitude": 37.2506,\n    "dep_airport_longitude": 27.6644,\n    "dep_airport_name": "Milas\\u2013Bodrum Airport",\n    "dep_airport_timezone_id": "Europe/Istanbul",\n    "dep_airport_utc_offset_min": 180.0,\n    "dep_airport_utc_offset_str": "+03:00",\n    "dep_airport_wiki_link": "/wiki/Milas%E2%80%93Bodrum_Airport",\n    "dep_city_name": "Bodrum",\n    "dep_country_flag": "//upload.wikimedia.org/wikipedia/commons/thumb/b/b4/Flag_of_Turkey.svg/23px-Flag_of_Turkey.svg.png",\n    "dep_country_iso2": "TR",\n    "dep_country_iso3": "TUR",\n    "dep_country_name": "Turkey",\n    "dep_country_wiki_link": "/wiki/Turkey",\n    "dep_fk_city_iata": "BJV",\n    "dep_iata": "BJV",\n    "dep_icao": "LTFE",\n    "time_end": 1686067682,\n    "time_start": 1686065582\n  },\n  {\n    "aircraft_flag": "RU",\n    "aircraft_iata": "CCX",\n    "aircraft_icao": "GLEX",\n    "aircraft_name": "Bombardier BD-700 Global Express/Global 500",\n    "aircraft_reg_number": "RA-67241",\n    "aircraft_wiki_link": "/wiki/Bombardier_Global_Express",\n    "airline_iata": "0E",\n    "airline_icao": null,\n    "airline_name": null,\n    "arr_airport_latitude": 40.9769,\n    "arr_airport_longitude": 28.815,\n    "arr_airport_name": "Istanbul New Airport",\n    "arr_airport_timezone_id": "Europe/Istanbul",\n    "arr_airport_utc_offset_min": 180.0,\n    "arr_airport_utc_offset_str": "+03:00",\n    "arr_airport_wiki_link": "/wiki/Istanbul_Atat%C3%BCrk_Airport",\n    "arr_city_name": "Istanbul",\n    "arr_country_flag": "//upload.wikimedia.org/wikipedia/commons/thumb/b/b4/Flag_of_Turkey.svg/23px-Flag_of_Turkey.svg.png",\n    "arr_country_iso2": "TR",\n    "arr_country_iso3": "TUR",\n    "arr_country_name": "Turkey",\n    "arr_country_wiki_link": "/wiki/Turkey",\n    "arr_fk_city_iata": "IST",\n    "arr_iata": "ISL",\n    "arr_icao": "LTBA",\n    "callsign": "NWC9021",\n    "count": 8,\n    "datetime_end": "2023-06-07T13:48:02",\n    "datetime_start": "2023-06-07T13:13:02",\n    "dep_airport_latitude": 55.5917,\n    "dep_airport_longitude": 37.2614,\n    "dep_airport_name": "Vnukovo International Airport",\n    "dep_airport_timezone_id": "Europe/Moscow",\n    "dep_airport_utc_offset_min": 180.0,\n    "dep_airport_utc_offset_str": "+03:00",\n    "dep_airport_wiki_link": "/wiki/Vnukovo_International_Airport",\n    "dep_city_name": "Moscow",\n    "dep_country_flag": "//upload.wikimedia.org/wikipedia/en/thumb/f/f3/Flag_of_Russia.svg/23px-Flag_of_Russia.svg.png",\n    "dep_country_iso2": "RU",\n    "dep_country_iso3": "RUS",\n    "dep_country_name": "Russian Federation",\n    "dep_country_wiki_link": "/wiki/Russia",\n    "dep_fk_city_iata": "MOW",\n    "dep_iata": "VKO",\n    "dep_icao": "UUWW",\n    "time_end": 1686138482,\n    "time_start": 1686136382\n  },\n  {\n    "aircraft_flag": "RU",\n    "aircraft_iata": "CCX",\n    "aircraft_icao": "GLEX",\n    "aircraft_name": "Bombardier BD-700 Global Express/Global 500",\n    "aircraft_reg_number": "RA-67241",\n    "aircraft_wiki_link": "/wiki/Bombardier_Global_Express",\n    "airline_iata": "0E",\n    "airline_icao": null,\n    "airline_name": null,\n    "arr_airport_latitude": 55.5917,\n    "arr_airport_longitude": 37.2614,\n    "arr_airport_name": "Vnukovo International Airport",\n    "arr_airport_timezone_id": "Europe/Moscow",\n    "arr_airport_utc_offset_min": 180.0,\n    "arr_airport_utc_offset_str": "+03:00",\n    "arr_airport_wiki_link": "/wiki/Vnukovo_International_Airport",\n    "arr_city_name": "Moscow",\n    "arr_country_flag": "//upload.wikimedia.org/wikipedia/en/thumb/f/f3/Flag_of_Russia.svg/23px-Flag_of_Russia.svg.png",\n    "arr_country_iso2": "RU",\n    "arr_country_iso3": "RUS",\n    "arr_country_name": "Russian Federation",\n    "arr_country_wiki_link": "/wiki/Russia",\n    "arr_fk_city_iata": "MOW",\n    "arr_iata": "VKO",\n    "arr_icao": "UUWW",\n    "callsign": "NWC9022",\n    "count": 6,\n    "datetime_end": "2023-06-07T15:48:02",\n    "datetime_start": "2023-06-07T15:13:02",\n    "dep_airport_latitude": 40.9769,\n    "dep_airport_longitude": 28.815,\n    "dep_airport_name": "Istanbul New Airport",\n    "dep_airport_timezone_id": "Europe/Istanbul",\n    "dep_airport_utc_offset_min": 180.0,\n    "dep_airport_utc_offset_str": "+03:00",\n    "dep_airport_wiki_link": "/wiki/Istanbul_Atat%C3%BCrk_Airport",\n    "dep_city_name": "Istanbul",\n    "dep_country_flag": "//upload.wikimedia.org/wikipedia/commons/thumb/b/b4/Flag_of_Turkey.svg/23px-Flag_of_Turkey.svg.png",\n    "dep_country_iso2": "TR",\n    "dep_country_iso3": "TUR",\n    "dep_country_name": "Turkey",\n    "dep_country_wiki_link": "/wiki/Turkey",\n    "dep_fk_city_iata": "IST",\n    "dep_iata": "ISL",\n    "dep_icao": "LTBA",\n    "time_end": 1686145682,\n    "time_start": 1686143582\n  },\n  {\n    "aircraft_flag": "RU",\n    "aircraft_iata": "DF7",\n    "aircraft_icao": "FA7X",\n    "aircraft_name": "Dassault Falcon 7X",\n    "aircraft_reg_number": "RA-09604",\n    "aircraft_wiki_link": "/wiki/Dassault_Falcon_7X",\n    "airline_iata": "0E",\n    "airline_icao": null,\n    "airline_name": null,\n    "arr_airport_latitude": 32.0072,\n    "arr_airport_longitude": 34.8806,\n    "arr_airport_name": "Ben Gurion Airport",\n    "arr_airport_timezone_id": "Asia/Jerusalem",\n    "arr_airport_utc_offset_min": 120.0,\n    "arr_airport_utc_offset_str": "+02:00",\n    "arr_airport_wiki_link": "/wiki/Ben_Gurion_Airport",\n    "arr_city_name": "Tel Aviv-Yafo",\n    "arr_country_flag": "//upload.wikimedia.org/wikipedia/commons/thumb/d/d4/Flag_of_Israel.svg/21px-Flag_of_Israel.svg.png",\n    "arr_country_iso2": "IL",\n    "arr_country_iso3": "ISR",\n    "arr_country_name": "Israel",\n    "arr_country_wiki_link": "/wiki/Israel",\n    "arr_fk_city_iata": "TLV",\n    "arr_iata": "TLV",\n    "arr_icao": "LLBG",\n    "callsign": "NWC9001",\n    "count": 4,\n    "datetime_end": "2023-06-09T20:53:02",\n    "datetime_start": "2023-06-09T20:38:02",\n    "dep_airport_latitude": 55.5917,\n    "dep_airport_longitude": 37.2614,\n    "dep_airport_name": "Vnukovo International Airport",\n    "dep_airport_timezone_id": "Europe/Moscow",\n    "dep_airport_utc_offset_min": 180.0,\n    "dep_airport_utc_offset_str": "+03:00",\n    "dep_airport_wiki_link": "/wiki/Vnukovo_International_Airport",\n    "dep_city_name": "Moscow",\n    "dep_country_flag": "//upload.wikimedia.org/wikipedia/en/thumb/f/f3/Flag_of_Russia.svg/23px-Flag_of_Russia.svg.png",\n    "dep_country_iso2": "RU",\n    "dep_country_iso3": "RUS",\n    "dep_country_name": "Russian Federation",\n    "dep_country_wiki_link": "/wiki/Russia",\n    "dep_fk_city_iata": "MOW",\n    "dep_iata": "VKO",\n    "dep_icao": "UUWW",\n    "time_end": 1686336782,\n    "time_start": 1686335882\n  }\n]\n'}]
+===========================================
+
+####################################################
+#  Tests réalisés le 2023-06-10 11:27:53
+####################################################
+
+============================
+   GET /static_data
+============================
+
+| category = airports
+| elements_static = CDG,BOD
+
+
+| expected result = 200
+| actual result = 200
+
+############################
+==>  SUCCES
+############################
+
+
+-----------------------------
+
+============================
+   GET /static_data
+============================
+
+| category = aeroports
+| elements_static = None
+
+
+| expected result = 400
+| actual result = 400
+
+############################
+==>  SUCCES
+############################
+
+
+-----------------------------
+
+============================
+   GET /static_data
+============================
+
+| category = airlines
+| elements_static = 47
+
+
+| expected result = 404
+| actual result = 404
+
+############################
+==>  SUCCES
+############################
+
+
+-----------------------------
+
+============================
+   GET /static_data
+============================
+
+| type_data = departure_airport
+| elements_statistic = CDG,BDO
+| date_data = 2023-06-09
+
+
+| expected result = 200
+| actual result = 200
+
+############################
+==>  SUCCES
+############################
+
+
+-----------------------------
+
+============================
+   GET /static_data
+============================
+
+| type_data = aeroport_de_depart
+| elements_statistic = CDG
+| date_data = None
+
+
+| expected result = 400
+| actual result = 400
+
+############################
+==>  SUCCES
+############################
+
+
+-----------------------------
+
+============================
+   GET /static_data
+============================
+
+| type_data = arrival_airport
+| elements_statistic = CDG,BDO
+| date_data = 2023-05-21
+
+
+| expected result = 400
+| actual result = 400
+
+############################
+==>  SUCCES
+############################
+
+
+-----------------------------
+
+============================
+   GET /static_data
+============================
+
+| type_data = airline
+| elements_statistic = AFR
+| date_data = 02-12-2022
+
+
+| expected result = 400
+| actual result = 400
+
+############################
+==>  SUCCES
+############################
+
+
+-----------------------------
+
+============================
+   GET /static_data
+============================
+
+| type_data = airline
+| elements_statistic = X2
+| date_data = None
+
+
+| expected result = 404
+| actual result = 404
+
+############################
+==>  SUCCES
+############################
+
+
+-----------------------------
+
+============================
+   Authentification test
+============================
+
+request done at "/login"
+| username =     ADMIN_USERNAME
+| password =     ADMIN_PASSWORD
+
+expected result = 200
+actual result = 200
+
+############################
+==>  SUCCES
+############################
+
+response_content = {
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTY4NjM4OTMwMywianRpIjoiZDY0Yzk1NTUtMjNhNS00NjAzLThjYzAtOGZmYzA3M2ZiYjIyIiwidHlwZSI6ImFjY2VzcyIsInN1YiI6IkFkbWluQVBJMDU3ODQ1IiwibmJmIjoxNjg2Mzg5MzAzLCJleHAiOjE2ODYzOTExMDN9.1zXZUqK6UkMqAOV73tUFuwFX5qRi7jHGvtPASZYXryw"
+}
+
+-----------------------------
+
+============================
+   Authentification test
+============================
+
+request done at "/login"
+| username =     FALSE_USERNAME
+| password =     FALSE_PASSWORD
+
+expected result = 401
+actual result = 401
+
+############################
+==>  SUCCES
+############################
+
+response_content = {
+  "error": "L'utilisateur Admin n'est pas authentifi�"
+}
+
+-----------------------------
+
+============================
+   POST airlines
+============================
+TEST = CORRECT DATA - METHOD POST
+
+request done at "/airlines"
+data send = {'airline_iata': '34', 'airline_icao': 'ZZZ', 'airline_name': 'Test Airline Name'}
+
+| expected result = 201
+| actual result = 201
+
+############################
+==>  SUCCES
+############################
+
+response_content = {
+  "airline_iata": "34",
+  "airline_icao": "ZZZ",
+  "airline_name": "Test Airline Name"
+}
+
+-------------------------------------------------------------------------------------
+
+============================
+   PUT airlines
+============================
+TEST = CORRECT DATA - METHOD PUT
+
+request done at "/airlines/34"
+data send = {'airline_name': 'Test Airline New Name'}
+
+| expected result = 200
+| actual result = 200
+
+############################
+==>  SUCCES
+############################
+
+response_content = {
+  "airline_name": "Test Airline New Name"
+}
+
+-------------------------------------------------------------------------------------
+
+============================
+   DELETE airlines
+============================
+TEST = CORRECT DATA - METHOD DELETE
+
+request done at "/airlines/34"
+data send = None
+
+| expected result = 204
+| actual result = 204
+
+############################
+==>  SUCCES
+############################
+
+-------------------------------------------------------------------------------------
+
+============================
+   POST airlines
+============================
+TEST = INCORRECT DATA - METHOD POST - Test 1
+
+request done at "/airlines"
+data send = {'airline_iata': 'FZ', 'airline_icao': 'ZZZ', 'airline_name': 'Test Airline Name'}
+
+| expected result = 400
+| actual result = 400
+
+############################
+==>  SUCCES
+############################
+
+response_content = {
+  "error": "La valeur FZ existe déjà comme clé primaire airline_iata de la table airlines"
+}
+
+-------------------------------------------------------------------------------------
+
+============================
+   POST airlines
+============================
+TEST = INCORRECT DATA - METHOD POST - Test 2
+
+request done at "/airlines"
+data send = {'airline_iata': 'Q0', 'airline_icao': 'ZZZ', 'airline_bad_field': 'Test Airline Bad Field'}
+
+| expected result = 400
+| actual result = 400
+
+############################
+==>  SUCCES
+############################
+
+response_content = {
+  "error": "Les données sont invalides (Les champs à renseigner sont : airline_iata, airline_icao, airline_name)"
+}
+
+-------------------------------------------------------------------------------------
+
+============================
+   PUT airlines
+============================
+TEST = INCORRECT DATA - METHOD PUT
+
+request done at "/airlines/Q0"
+data send = {'airline_name': 'Test Airline New Name'}
+
+| expected result = 404
+| actual result = 404
+
+############################
+==>  SUCCES
+############################
+
+response_content = {
+  "error": "Aucun enregistrement trouvé avec ce code IATA"
+}
+
+-------------------------------------------------------------------------------------
+
+============================
+   DELETE airlines
+============================
+TEST = INCORRECT DATA - METHOD DELETE
+
+request done at "/airlines/Q0"
+data send = None
+
+| expected result = 404
+| actual result = 404
+
+############################
+==>  SUCCES
+############################
+
+-------------------------------------------------------------------------------------
+
+============================
+   POST aircrafts
+============================
+TEST = CORRECT DATA - METHOD POST
+
+request done at "/aircrafts"
+data send = {'aircraft_iata': 'DD7', 'aircraft_icao': 'ZZZZ', 'aircraft_name': 'Test Aircraft Name', 'aircraft_wiki_link': '/wiki/Test Aircraft Name'}
+
+| expected result = 201
+| actual result = 201
+
+############################
+==>  SUCCES
+############################
+
+response_content = {
+  "aircraft_iata": "DD7",
+  "aircraft_icao": "ZZZZ",
+  "aircraft_name": "Test Aircraft Name",
+  "aircraft_wiki_link": "/wiki/Test Aircraft Name"
+}
+
+-------------------------------------------------------------------------------------
+
+============================
+   PUT aircrafts
+============================
+TEST = CORRECT DATA - METHOD PUT
+
+request done at "/aircrafts/DD7"
+data send = {'aircraft_icao': 'BBBB'}
+
+| expected result = 200
+| actual result = 200
+
+############################
+==>  SUCCES
+############################
+
+response_content = {
+  "aircraft_icao": "BBBB"
+}
+
+-------------------------------------------------------------------------------------
+
+============================
+   DELETE aircrafts
+============================
+TEST = CORRECT DATA - METHOD DELETE
+
+request done at "/aircrafts/DD7"
+data send = None
+
+| expected result = 204
+| actual result = 204
+
+############################
+==>  SUCCES
+############################
+
+-------------------------------------------------------------------------------------
+
+============================
+   POST aircrafts
+============================
+TEST = INCORRECT DATA - METHOD POST - Test 1
+
+request done at "/aircrafts"
+data send = {'aircraft_iata': '73S', 'aircraft_icao': 'ZZZ', 'aircraft_name': 'Test Aircraft Name'}
+
+| expected result = 400
+| actual result = 400
+
+############################
+==>  SUCCES
+############################
+
+response_content = {
+  "error": "La longueur du champ aircraft_icao n'est pas conforme à la longueur autorisée"
+}
+
+-------------------------------------------------------------------------------------
+
+============================
+   POST aircrafts
+============================
+TEST = INCORRECT DATA - METHOD POST - Test 2
+
+request done at "/aircrafts"
+data send = {'aircraft_iata': 'RWS', 'aircraft_icao': 'ZZZ', 'aircraft_bad_field': 'Test Bad Field'}
+
+| expected result = 400
+| actual result = 400
+
+############################
+==>  SUCCES
+############################
+
+response_content = {
+  "error": "Les données sont invalides (Les champs à renseigner sont : aircraft_iata, aircraft_icao, aircraft_name, aircraft_wiki_link)"
+}
+
+-------------------------------------------------------------------------------------
+
+============================
+   PUT aircrafts
+============================
+TEST = INCORRECT DATA - METHOD PUT
+
+request done at "/aircrafts/RWS"
+data send = {'aircraft_name': 'Test Aircraft New Name'}
+
+| expected result = 404
+| actual result = 404
+
+############################
+==>  SUCCES
+############################
+
+response_content = {
+  "error": "Aucun enregistrement trouvé avec ce code IATA"
+}
+
+-------------------------------------------------------------------------------------
+
+============================
+   DELETE aircrafts
+============================
+TEST = INCORRECT DATA - METHOD DELETE
+
+request done at "/aircrafts/RWS"
+data send = None
+
+| expected result = 404
+| actual result = 404
+
+############################
+==>  SUCCES
+############################
+
+-------------------------------------------------------------------------------------
+
+============================
+   POST airports
+============================
+TEST = CORRECT DATA - METHOD POST
+
+request done at "/airports"
+data send = {'airport_iata': 'KDF', 'airport_icao': 'AAAA', 'fk_city_iata': 'PAR', 'airport_name': 'Airport Test Name', 'airport_utc_offset_str': '+01:00', 'airport_utc_offset_min': 60, 'airport_timezone_id': 'Europe/Paris', 'airport_latitude': 49.0097, 'airport_longitude': 2.5478, 'airport_wiki_link': '/appli_dash/woki/blalala'}
+
+| expected result = 201
+| actual result = 201
+
+############################
+==>  SUCCES
+############################
+
+response_content = {
+  "airport_iata": "KDF",
+  "airport_icao": "AAAA",
+  "airport_latitude": 49.0097,
+  "airport_longitude": 2.5478,
+  "airport_name": "Airport Test Name",
+  "airport_timezone_id": "Europe/Paris",
+  "airport_utc_offset_min": 60,
+  "airport_utc_offset_str": "+01:00",
+  "airport_wiki_link": "/appli_dash/woki/blalala",
+  "fk_city_iata": "PAR"
+}
+
+-------------------------------------------------------------------------------------
+
+============================
+   PUT airports
+============================
+TEST = CORRECT DATA - METHOD PUT
+
+request done at "/airports/KDF"
+data send = {'airport_icao': 'BBBB'}
+
+| expected result = 200
+| actual result = 200
+
+############################
+==>  SUCCES
+############################
+
+response_content = {
+  "airport_icao": "BBBB",
+  "fk_city_iata": "PAR"
+}
+
+-------------------------------------------------------------------------------------
+
+============================
+   DELETE airports
+============================
+TEST = CORRECT DATA - METHOD DELETE
+
+request done at "/airports/KDF"
+data send = None
+
+| expected result = 204
+| actual result = 204
+
+############################
+==>  SUCCES
+############################
+
+-------------------------------------------------------------------------------------
+
+============================
+   POST airports
+============================
+TEST = INCORRECT DATA - METHOD POST - Test 1
+
+request done at "/airports"
+data send = {'airport_iata': 'LEP', 'airport_icao': 'AAAA', 'fk_city_iata': 'PAR', 'airport_name': 'Airport Test Name', 'airport_utc_offset_str': '+01:00', 'airport_utc_offset_min': 60, 'airport_timezone_id': 'Europe/Paris', 'airport_latitude': 49.0097, 'airport_longitude': 2.5478, 'airport_wiki_link': '/appli_dash/woki/blalala'}
+
+| expected result = 400
+| actual result = 400
+
+############################
+==>  SUCCES
+############################
+
+response_content = {
+  "error": "La valeur LEP existe déjà comme clé primaire airport_iata de la table airports"
+}
+
+-------------------------------------------------------------------------------------
+
+============================
+   POST airports
+============================
+TEST = INCORRECT DATA - METHOD POST - Test 2
+
+request done at "/airports"
+data send = {'airport_iata': 'FJF', 'airport_icao': 'AAAA', 'fk_city_iata': 'PAR', 'airport_bad_field': 'Airport Bad Field'}
+
+| expected result = 400
+| actual result = 400
+
+############################
+==>  SUCCES
+############################
+
+response_content = {
+  "error": "Les données sont invalides (Les champs à renseigner sont : airport_iata, airport_icao, fk_city_iata, airport_name, airport_utc_offset_str, airport_utc_offset_min, airport_timezone_id, airport_latitude, airport_longitude, airport_wiki_link)"
+}
+
+-------------------------------------------------------------------------------------
+
+============================
+   PUT airports
+============================
+TEST = INCORRECT DATA - METHOD PUT - Test 1
+
+request done at "/airports/FJF"
+data send = {'airport_name': 'Test Airport New Name'}
+
+| expected result = 404
+| actual result = 404
+
+############################
+==>  SUCCES
+############################
+
+response_content = {
+  "error": "Aucun enregistrement trouvé avec ce code IATA"
+}
+
+-------------------------------------------------------------------------------------
+
+============================
+   PUT airports
+============================
+TEST = INCORRECT DATA - METHOD PUT - Test 2
+
+request done at "/airports/FJF"
+data send = {'fk_city_iata': 'GJZ', 'airport_name': 'Test Airport New Name'}
+
+| expected result = 404
+| actual result = 404
+
+############################
+==>  SUCCES
+############################
+
+response_content = {
+  "error": "Aucun enregistrement trouvé avec ce code IATA"
+}
+
+-------------------------------------------------------------------------------------
+
+============================
+   DELETE airports
+============================
+TEST = INCORRECT DATA - METHOD DELETE
+
+request done at "/airports/FJF"
+data send = None
+
+| expected result = 404
+| actual result = 404
+
+############################
+==>  SUCCES
+############################
+
+-------------------------------------------------------------------------------------
+
+============================
+GET /airports
+============================
+
+| airport = CDG
+
+| expected result = 200
+| actual result = 200
+
+############################
+==>  SUCCES
+############################
+
+
+============================
+GET /flight/positions
+============================
+
+| callsign = None
+
+| expected result = 400
+| actual result = 400
+
+############################
+==>  SUCCES
+############################
+
+
+============================
+GET /flights
+============================
+
+| airport = CDG
+
+| expected result = 200
+| actual result = 200
+
+############################
+==>  SUCCES
+############################
+
+
+===========================================
+|    Récapitulatif des tests
+===========================================
+| Nombre de tests effectués : 35
+| Nombre de tests réussis   : 35
+| Nombre de tests échoués   : 0
+===========================================
+
+####################################################
+#  Tests réalisés le 2023-06-10 11:40:15
+####################################################
+
+============================
+   GET /static_data
+============================
+
+| category = airports
+| elements_static = CDG,BOD
+
+
+| expected result = 200
+| actual result = 200
+
+############################
+==>  SUCCES
+############################
+
+
+-----------------------------
+
+============================
+   GET /static_data
+============================
+
+| category = aeroports
+| elements_static = None
+
+
+| expected result = 400
+| actual result = 400
+
+############################
+==>  SUCCES
+############################
+
+
+-----------------------------
+
+============================
+   GET /static_data
+============================
+
+| category = airlines
+| elements_static = 85
+
+
+| expected result = 404
+| actual result = 404
+
+############################
+==>  SUCCES
+############################
+
+
+-----------------------------
+
+============================
+   GET /static_data
+============================
+
+| type_data = departure_airport
+| elements_statistic = CDG,BDO
+| date_data = 2023-06-09
+
+
+| expected result = 200
+| actual result = 200
+
+############################
+==>  SUCCES
+############################
+
+
+-----------------------------
+
+============================
+   GET /static_data
+============================
+
+| type_data = aeroport_de_depart
+| elements_statistic = CDG
+| date_data = None
+
+
+| expected result = 400
+| actual result = 400
+
+############################
+==>  SUCCES
+############################
+
+
+-----------------------------
+
+============================
+   GET /static_data
+============================
+
+| type_data = arrival_airport
+| elements_statistic = CDG,BDO
+| date_data = 2023-05-21
+
+
+| expected result = 400
+| actual result = 400
+
+############################
+==>  SUCCES
+############################
+
+
+-----------------------------
+
+============================
+   GET /static_data
+============================
+
+| type_data = airline
+| elements_statistic = AFR
+| date_data = 02-12-2022
+
+
+| expected result = 400
+| actual result = 400
+
+############################
+==>  SUCCES
+############################
+
+
+-----------------------------
+
+============================
+   GET /static_data
+============================
+
+| type_data = airline
+| elements_statistic = 34
+| date_data = None
+
+
+| expected result = 404
+| actual result = 404
+
+############################
+==>  SUCCES
+############################
+
+
+-----------------------------
+
+============================
+   Authentification test
+============================
+
+request done at "/login"
+| username =     ADMIN_USERNAME
+| password =     ADMIN_PASSWORD
+
+expected result = 200
+actual result = 200
+
+############################
+==>  SUCCES
+############################
+
+response_content = {
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTY4NjM5MDA0NSwianRpIjoiMjQ3MTVhYjYtYzhjYy00Y2ZkLWJlYmUtNjdjNWZlYTJjZjI3IiwidHlwZSI6ImFjY2VzcyIsInN1YiI6IkFkbWluQVBJMDU3ODQ1IiwibmJmIjoxNjg2MzkwMDQ1LCJleHAiOjE2ODYzOTE4NDV9.Cr1Ju9laQdcTbNPdj1ly7xq8C8qAwVrQ2L35aCZSigI"
+}
+
+-----------------------------
+
+============================
+   Authentification test
+============================
+
+request done at "/login"
+| username =     FALSE_USERNAME
+| password =     FALSE_PASSWORD
+
+expected result = 401
+actual result = 401
+
+############################
+==>  SUCCES
+############################
+
+response_content = {
+  "error": "L'utilisateur Admin n'est pas authentifi�"
+}
+
+-----------------------------
+
+============================
+   POST airlines
+============================
+TEST = CORRECT DATA - METHOD POST
+
+request done at "/airlines"
+data send = {'airline_iata': '3I', 'airline_icao': 'ZZZ', 'airline_name': 'Test Airline Name'}
+
+| expected result = 201
+| actual result = 201
+
+############################
+==>  SUCCES
+############################
+
+response_content = {
+  "airline_iata": "3I",
+  "airline_icao": "ZZZ",
+  "airline_name": "Test Airline Name"
+}
+
+-------------------------------------------------------------------------------------
+
+============================
+   PUT airlines
+============================
+TEST = CORRECT DATA - METHOD PUT
+
+request done at "/airlines/3I"
+data send = {'airline_name': 'Test Airline New Name'}
+
+| expected result = 200
+| actual result = 200
+
+############################
+==>  SUCCES
+############################
+
+response_content = {
+  "airline_name": "Test Airline New Name"
+}
+
+-------------------------------------------------------------------------------------
+
+============================
+   DELETE airlines
+============================
+TEST = CORRECT DATA - METHOD DELETE
+
+request done at "/airlines/3I"
+data send = None
+
+| expected result = 204
+| actual result = 204
+
+############################
+==>  SUCCES
+############################
+
+-------------------------------------------------------------------------------------
+
+============================
+   POST airlines
+============================
+TEST = INCORRECT DATA - METHOD POST - Test 1
+
+request done at "/airlines"
+data send = {'airline_iata': '2W', 'airline_icao': 'ZZZ', 'airline_name': 'Test Airline Name'}
+
+| expected result = 400
+| actual result = 400
+
+############################
+==>  SUCCES
+############################
+
+response_content = {
+  "error": "La valeur 2W existe déjà comme clé primaire airline_iata de la table airlines"
+}
+
+-------------------------------------------------------------------------------------
+
+============================
+   POST airlines
+============================
+TEST = INCORRECT DATA - METHOD POST - Test 2
+
+request done at "/airlines"
+data send = {'airline_iata': 'U0', 'airline_icao': 'ZZZ', 'airline_bad_field': 'Test Airline Bad Field'}
+
+| expected result = 400
+| actual result = 400
+
+############################
+==>  SUCCES
+############################
+
+response_content = {
+  "error": "Les données sont invalides (Les champs à renseigner sont : airline_iata, airline_icao, airline_name)"
+}
+
+-------------------------------------------------------------------------------------
+
+============================
+   PUT airlines
+============================
+TEST = INCORRECT DATA - METHOD PUT
+
+request done at "/airlines/U0"
+data send = {'airline_name': 'Test Airline New Name'}
+
+| expected result = 404
+| actual result = 404
+
+############################
+==>  SUCCES
+############################
+
+response_content = {
+  "error": "Aucun enregistrement trouvé avec ce code IATA"
+}
+
+-------------------------------------------------------------------------------------
+
+####################################################
+#  Tests réalisés le 2023-06-10 11:41:45
+####################################################
+
+============================
+   GET /static_data
+============================
+
+| category = airports
+| elements_static = CDG,BOD
+
+
+| expected result = 200
+| actual result = 200
+
+############################
+==>  SUCCES
+############################
+
+
+-----------------------------
+
+============================
+   GET /static_data
+============================
+
+| category = aeroports
+| elements_static = None
+
+
+| expected result = 400
+| actual result = 400
+
+############################
+==>  SUCCES
+############################
+
+
+-----------------------------
+
+============================
+   GET /static_data
+============================
+
+| category = airlines
+| elements_static = 75
+
+
+| expected result = 404
+| actual result = 404
+
+############################
+==>  SUCCES
+############################
+
+
+-----------------------------
+
+============================
+   GET /static_data
+============================
+
+| type_data = departure_airport
+| elements_statistic = CDG,BDO
+| date_data = 2023-06-09
+
+
+| expected result = 200
+| actual result = 200
+
+############################
+==>  SUCCES
+############################
+
+
+-----------------------------
+
+============================
+   GET /static_data
+============================
+
+| type_data = aeroport_de_depart
+| elements_statistic = CDG
+| date_data = None
+
+
+| expected result = 400
+| actual result = 400
+
+############################
+==>  SUCCES
+############################
+
+
+-----------------------------
+
+============================
+   GET /static_data
+============================
+
+| type_data = arrival_airport
+| elements_statistic = CDG,BDO
+| date_data = 2023-05-21
+
+
+| expected result = 400
+| actual result = 400
+
+############################
+==>  SUCCES
+############################
+
+
+-----------------------------
+
+============================
+   GET /static_data
+============================
+
+| type_data = airline
+| elements_statistic = AFR
+| date_data = 02-12-2022
+
+
+| expected result = 400
+| actual result = 400
+
+############################
+==>  SUCCES
+############################
+
+
+-----------------------------
+
+============================
+   GET /static_data
+============================
+
+| type_data = airline
+| elements_statistic = 9Y
+| date_data = None
+
+
+| expected result = 404
+| actual result = 404
+
+############################
+==>  SUCCES
+############################
+
+
+-----------------------------
+
+============================
+   Authentification test
+============================
+
+request done at "/login"
+| username =     ADMIN_USERNAME
+| password =     ADMIN_PASSWORD
+
+expected result = 200
+actual result = 200
+
+############################
+==>  SUCCES
+############################
+
+response_content = {
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTY4NjM5MDEzNSwianRpIjoiNTI1MzA1MmYtYTgyMS00MDc2LThjNzgtYmEyMGU5NmIyNTY4IiwidHlwZSI6ImFjY2VzcyIsInN1YiI6IkFkbWluQVBJMDU3ODQ1IiwibmJmIjoxNjg2MzkwMTM1LCJleHAiOjE2ODYzOTE5MzV9.85Y-kuhR4hyYWskMPo74khy6_32KLkLUj4ihoacZq74"
+}
+
+-----------------------------
+
+============================
+   Authentification test
+============================
+
+request done at "/login"
+| username =     FALSE_USERNAME
+| password =     FALSE_PASSWORD
+
+expected result = 401
+actual result = 401
+
+############################
+==>  SUCCES
+############################
+
+response_content = {
+  "error": "L'utilisateur Admin n'est pas authentifi�"
+}
+
+-----------------------------
+
+============================
+   POST airlines
+============================
+TEST = CORRECT DATA - METHOD POST
+
+request done at "/airlines"
+data send = {'airline_iata': 'U0', 'airline_icao': 'ZZZ', 'airline_name': 'Test Airline Name'}
+
+| expected result = 201
+| actual result = 201
+
+############################
+==>  SUCCES
+############################
+
+response_content = {
+  "airline_iata": "U0",
+  "airline_icao": "ZZZ",
+  "airline_name": "Test Airline Name"
+}
+
+-------------------------------------------------------------------------------------
+
+============================
+   PUT airlines
+============================
+TEST = CORRECT DATA - METHOD PUT
+
+request done at "/airlines/U0"
+data send = {'airline_name': 'Test Airline New Name'}
+
+| expected result = 200
+| actual result = 200
+
+############################
+==>  SUCCES
+############################
+
+response_content = {
+  "airline_name": "Test Airline New Name"
+}
+
+-------------------------------------------------------------------------------------
+
+============================
+   DELETE airlines
+============================
+TEST = CORRECT DATA - METHOD DELETE
+
+request done at "/airlines/U0"
+data send = None
+
+| expected result = 204
+| actual result = 204
+
+############################
+==>  SUCCES
+############################
+
+-------------------------------------------------------------------------------------
+
+============================
+   POST airlines
+============================
+TEST = INCORRECT DATA - METHOD POST - Test 1
+
+request done at "/airlines"
+data send = {'airline_iata': 'AW', 'airline_icao': 'ZZZ', 'airline_name': 'Test Airline Name'}
+
+| expected result = 400
+| actual result = 400
+
+############################
+==>  SUCCES
+############################
+
+response_content = {
+  "error": "La valeur AW existe déjà comme clé primaire airline_iata de la table airlines"
+}
+
+-------------------------------------------------------------------------------------
+
+============================
+   POST airlines
+============================
+TEST = INCORRECT DATA - METHOD POST - Test 2
+
+request done at "/airlines"
+data send = {'airline_iata': 'HL', 'airline_icao': 'ZZZ', 'airline_bad_field': 'Test Airline Bad Field'}
+
+| expected result = 400
+| actual result = 400
+
+############################
+==>  SUCCES
+############################
+
+response_content = {
+  "error": "Les données sont invalides (Les champs à renseigner sont : airline_iata, airline_icao, airline_name)"
+}
+
+-------------------------------------------------------------------------------------
+
+============================
+   PUT airlines
+============================
+TEST = INCORRECT DATA - METHOD PUT
+
+request done at "/airlines/HL"
+data send = {'airline_name': 'Test Airline New Name'}
+
+| expected result = 404
+| actual result = 404
+
+############################
+==>  SUCCES
+############################
+
+response_content = {
+  "error": "Aucun enregistrement trouvé avec ce code IATA"
+}
+
+-------------------------------------------------------------------------------------
+
+============================
+   DELETE airlines
+============================
+TEST = INCORRECT DATA - METHOD DELETE
+
+request done at "/airlines/HL"
+data send = None
+
+| expected result = 404
+| actual result = 404
+
+############################
+==>  SUCCES
+############################
+
+-------------------------------------------------------------------------------------
+
+============================
+   POST aircrafts
+============================
+TEST = CORRECT DATA - METHOD POST
+
+request done at "/aircrafts"
+data send = {'aircraft_iata': 'SSC', 'aircraft_icao': 'ZZZZ', 'aircraft_name': 'Test Aircraft Name', 'aircraft_wiki_link': '/wiki/Test Aircraft Name'}
+
+| expected result = 201
+| actual result = 201
+
+############################
+==>  SUCCES
+############################
+
+response_content = {
+  "aircraft_iata": "SSC",
+  "aircraft_icao": "ZZZZ",
+  "aircraft_name": "Test Aircraft Name",
+  "aircraft_wiki_link": "/wiki/Test Aircraft Name"
+}
+
+-------------------------------------------------------------------------------------
+
+============================
+   PUT aircrafts
+============================
+TEST = CORRECT DATA - METHOD PUT
+
+request done at "/aircrafts/SSC"
+data send = {'aircraft_icao': 'BBBB'}
+
+| expected result = 200
+| actual result = 200
+
+############################
+==>  SUCCES
+############################
+
+response_content = {
+  "aircraft_icao": "BBBB"
+}
+
+-------------------------------------------------------------------------------------
+
+============================
+   DELETE aircrafts
+============================
+TEST = CORRECT DATA - METHOD DELETE
+
+request done at "/aircrafts/SSC"
+data send = None
+
+| expected result = 204
+| actual result = 204
+
+############################
+==>  SUCCES
+############################
+
+-------------------------------------------------------------------------------------
+
+============================
+   POST aircrafts
+============================
+TEST = INCORRECT DATA - METHOD POST - Test 1
+
+request done at "/aircrafts"
+data send = {'aircraft_iata': 'CCJ', 'aircraft_icao': 'ZZZ', 'aircraft_name': 'Test Aircraft Name'}
+
+| expected result = 400
+| actual result = 400
+
+############################
+==>  SUCCES
+############################
+
+response_content = {
+  "error": "La longueur du champ aircraft_icao n'est pas conforme à la longueur autorisée"
+}
+
+-------------------------------------------------------------------------------------
+
+============================
+   POST aircrafts
+============================
+TEST = INCORRECT DATA - METHOD POST - Test 2
+
+request done at "/aircrafts"
+data send = {'aircraft_iata': 'CDS', 'aircraft_icao': 'ZZZ', 'aircraft_bad_field': 'Test Bad Field'}
+
+| expected result = 400
+| actual result = 400
+
+############################
+==>  SUCCES
+############################
+
+response_content = {
+  "error": "Les données sont invalides (Les champs à renseigner sont : aircraft_iata, aircraft_icao, aircraft_name, aircraft_wiki_link)"
+}
+
+-------------------------------------------------------------------------------------
+
+============================
+   PUT aircrafts
+============================
+TEST = INCORRECT DATA - METHOD PUT
+
+request done at "/aircrafts/CDS"
+data send = {'aircraft_name': 'Test Aircraft New Name'}
+
+| expected result = 404
+| actual result = 404
+
+############################
+==>  SUCCES
+############################
+
+response_content = {
+  "error": "Aucun enregistrement trouvé avec ce code IATA"
+}
+
+-------------------------------------------------------------------------------------
+
+============================
+   DELETE aircrafts
+============================
+TEST = INCORRECT DATA - METHOD DELETE
+
+request done at "/aircrafts/CDS"
+data send = None
+
+| expected result = 404
+| actual result = 404
+
+############################
+==>  SUCCES
+############################
+
+-------------------------------------------------------------------------------------
+
+============================
+   POST airports
+============================
+TEST = CORRECT DATA - METHOD POST
+
+request done at "/airports"
+data send = {'airport_iata': 'KQC', 'airport_icao': 'AAAA', 'fk_city_iata': 'PAR', 'airport_name': 'Airport Test Name', 'airport_utc_offset_str': '+01:00', 'airport_utc_offset_min': 60, 'airport_timezone_id': 'Europe/Paris', 'airport_latitude': 49.0097, 'airport_longitude': 2.5478, 'airport_wiki_link': '/appli_dash/woki/blalala'}
+
+| expected result = 201
+| actual result = 201
+
+############################
+==>  SUCCES
+############################
+
+response_content = {
+  "airport_iata": "KQC",
+  "airport_icao": "AAAA",
+  "airport_latitude": 49.0097,
+  "airport_longitude": 2.5478,
+  "airport_name": "Airport Test Name",
+  "airport_timezone_id": "Europe/Paris",
+  "airport_utc_offset_min": 60,
+  "airport_utc_offset_str": "+01:00",
+  "airport_wiki_link": "/appli_dash/woki/blalala",
+  "fk_city_iata": "PAR"
+}
+
+-------------------------------------------------------------------------------------
+
+============================
+   PUT airports
+============================
+TEST = CORRECT DATA - METHOD PUT
+
+request done at "/airports/KQC"
+data send = {'airport_icao': 'BBBB'}
+
+| expected result = 200
+| actual result = 200
+
+############################
+==>  SUCCES
+############################
+
+response_content = {
+  "airport_icao": "BBBB",
+  "fk_city_iata": "PAR"
+}
+
+-------------------------------------------------------------------------------------
+
+============================
+   DELETE airports
+============================
+TEST = CORRECT DATA - METHOD DELETE
+
+request done at "/airports/KQC"
+data send = None
+
+| expected result = 204
+| actual result = 204
+
+############################
+==>  SUCCES
+############################
+
+-------------------------------------------------------------------------------------
+
+============================
+   POST airports
+============================
+TEST = INCORRECT DATA - METHOD POST - Test 1
+
+request done at "/airports"
+data send = {'airport_iata': 'KSI', 'airport_icao': 'AAAA', 'fk_city_iata': 'PAR', 'airport_name': 'Airport Test Name', 'airport_utc_offset_str': '+01:00', 'airport_utc_offset_min': 60, 'airport_timezone_id': 'Europe/Paris', 'airport_latitude': 49.0097, 'airport_longitude': 2.5478, 'airport_wiki_link': '/appli_dash/woki/blalala'}
+
+| expected result = 400
+| actual result = 400
+
+############################
+==>  SUCCES
+############################
+
+response_content = {
+  "error": "La valeur KSI existe déjà comme clé primaire airport_iata de la table airports"
+}
+
+-------------------------------------------------------------------------------------
+
+============================
+   POST airports
+============================
+TEST = INCORRECT DATA - METHOD POST - Test 2
+
+request done at "/airports"
+data send = {'airport_iata': 'FHV', 'airport_icao': 'AAAA', 'fk_city_iata': 'PAR', 'airport_bad_field': 'Airport Bad Field'}
+
+| expected result = 400
+| actual result = 400
+
+############################
+==>  SUCCES
+############################
+
+response_content = {
+  "error": "Les données sont invalides (Les champs à renseigner sont : airport_iata, airport_icao, fk_city_iata, airport_name, airport_utc_offset_str, airport_utc_offset_min, airport_timezone_id, airport_latitude, airport_longitude, airport_wiki_link)"
+}
+
+-------------------------------------------------------------------------------------
+
+============================
+   PUT airports
+============================
+TEST = INCORRECT DATA - METHOD PUT - Test 1
+
+request done at "/airports/FHV"
+data send = {'airport_name': 'Test Airport New Name'}
+
+| expected result = 404
+| actual result = 404
+
+############################
+==>  SUCCES
+############################
+
+response_content = {
+  "error": "Aucun enregistrement trouvé avec ce code IATA"
+}
+
+-------------------------------------------------------------------------------------
+
+============================
+   PUT airports
+============================
+TEST = INCORRECT DATA - METHOD PUT - Test 2
+
+request done at "/airports/FHV"
+data send = {'fk_city_iata': 'OSU', 'airport_name': 'Test Airport New Name'}
+
+| expected result = 404
+| actual result = 404
+
+############################
+==>  SUCCES
+############################
+
+response_content = {
+  "error": "Aucun enregistrement trouvé avec ce code IATA"
+}
+
+-------------------------------------------------------------------------------------
+
+============================
+   DELETE airports
+============================
+TEST = INCORRECT DATA - METHOD DELETE
+
+request done at "/airports/FHV"
+data send = None
+
+| expected result = 404
+| actual result = 404
+
+############################
+==>  SUCCES
+############################
+
+-------------------------------------------------------------------------------------
+
+============================
+GET /airports
+============================
+
+| airport = CDG
+
+| expected result = 200
+| actual result = 200
+
+############################
+==>  SUCCES
+############################
+
+
+============================
+GET /flight/positions
+============================
+
+| callsign = None
+
+| expected result = 400
+| actual result = 400
+
+############################
+==>  SUCCES
+############################
+
+
+============================
+GET /flights
+============================
+
+| airport = CDG
+
+| expected result = 200
+| actual result = 200
+
+############################
+==>  SUCCES
+############################
+
+
+===========================================
+|    Récapitulatif des tests
+===========================================
+| Nombre de tests effectués : 35
+| Nombre de tests réussis   : 35
+| Nombre de tests échoués   : 0
+===========================================

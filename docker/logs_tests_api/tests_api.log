@@ -1,6 +1,6 @@
 
 ####################################################
-#  Tests réalisés le 2023-06-08 13:51:47
+#  Tests réalisés le 2023-06-10 09:51:30 UTC
 ####################################################
 
 ============================
@@ -44,7 +44,7 @@
 ============================
 
 | category = airlines
-| elements_static = 96
+| elements_static = 55
 
 
 | expected result = 404
@@ -63,7 +63,7 @@
 
 | type_data = departure_airport
 | elements_statistic = CDG,BDO
-| date_data = 2023-06-07
+| date_data = 2023-06-09
 
 
 | expected result = 200
@@ -101,7 +101,7 @@
 
 | type_data = arrival_airport
 | elements_statistic = CDG,BDO
-| date_data = 2023-05-19
+| date_data = 2023-05-21
 
 
 | expected result = 400
@@ -138,7 +138,7 @@
 ============================
 
 | type_data = airline
-| elements_statistic = YF
+| elements_statistic = EF
 | date_data = None
 
 
@@ -167,7 +167,9 @@ actual result = 200
 ==>  SUCCES
 ############################
 
-response_content = {"access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTY4NjIzMjMxNCwianRpIjoiZjY0OWFkZjctMzllYi00MjU3LTk0ZmMtZDdjOTA1NWEwYTg2IiwidHlwZSI6ImFjY2VzcyIsInN1YiI6IkFkbWluQVBJMDU3ODQ1IiwibmJmIjoxNjg2MjMyMzE0LCJleHAiOjE2ODYyMzQxMTR9.Dlc1T6H7TNcl3KcJjra3WMDf7E-lXjR2NKN4Mw7ct-s"}
+response_content = {
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTY4NjM5MDY5NiwianRpIjoiMDhlMzRjMjMtZWYxZC00MTQ0LWJmZTQtNzM1OGI3ZTY4Y2VkIiwidHlwZSI6ImFjY2VzcyIsInN1YiI6IkFkbWluQVBJMDU3ODQ1IiwibmJmIjoxNjg2MzkwNjk2LCJleHAiOjE2ODYzOTI0OTZ9.ryyS1ja-hzaFWskTrU0_dFfPOUwjoUYUpfhayApwRNA"
+}
 
 -----------------------------
 
@@ -186,7 +188,9 @@ actual result = 401
 ==>  SUCCES
 ############################
 
-response_content = {"error": "L'utilisateur Admin n'est pas authentifié"}
+response_content = {
+  "error": "L'utilisateur Admin n'est pas authentifié"
+}
 
 -----------------------------
 
@@ -196,7 +200,7 @@ response_content = {"error": "L'utilisateur Admin n'est pas authentifié"}
 TEST = CORRECT DATA - METHOD POST
 
 request done at "/airlines"
-data send = {'airline_iata': 'M1', 'airline_icao': 'ZZZ', 'airline_name': 'Test Airline Name'}
+data send = {'airline_iata': 'N3', 'airline_icao': 'ZZZ', 'airline_name': 'Test Airline Name'}
 
 | expected result = 201
 | actual result = 201
@@ -205,7 +209,11 @@ data send = {'airline_iata': 'M1', 'airline_icao': 'ZZZ', 'airline_name': 'Test 
 ==>  SUCCES
 ############################
 
-response_content = {"airline_iata": "M1", "airline_icao": "ZZZ", "airline_name": "Test Airline Name"}
+response_content = {
+  "airline_iata": "N3",
+  "airline_icao": "ZZZ",
+  "airline_name": "Test Airline Name"
+}
 
 -------------------------------------------------------------------------------------
 
@@ -214,7 +222,7 @@ response_content = {"airline_iata": "M1", "airline_icao": "ZZZ", "airline_name":
 ============================
 TEST = CORRECT DATA - METHOD PUT
 
-request done at "/airlines/M1"
+request done at "/airlines/N3"
 data send = {'airline_name': 'Test Airline New Name'}
 
 | expected result = 200
@@ -224,7 +232,9 @@ data send = {'airline_name': 'Test Airline New Name'}
 ==>  SUCCES
 ############################
 
-response_content = {"airline_name": "Test Airline New Name"}
+response_content = {
+  "airline_name": "Test Airline New Name"
+}
 
 -------------------------------------------------------------------------------------
 
@@ -233,7 +243,7 @@ response_content = {"airline_name": "Test Airline New Name"}
 ============================
 TEST = CORRECT DATA - METHOD DELETE
 
-request done at "/airlines/M1"
+request done at "/airlines/N3"
 data send = None
 
 | expected result = 204
@@ -251,7 +261,7 @@ data send = None
 TEST = INCORRECT DATA - METHOD POST - Test 1
 
 request done at "/airlines"
-data send = {'airline_iata': 'SS', 'airline_icao': 'ZZZ', 'airline_name': 'Test Airline Name'}
+data send = {'airline_iata': 'GG', 'airline_icao': 'ZZZ', 'airline_name': 'Test Airline Name'}
 
 | expected result = 400
 | actual result = 400
@@ -260,7 +270,9 @@ data send = {'airline_iata': 'SS', 'airline_icao': 'ZZZ', 'airline_name': 'Test 
 ==>  SUCCES
 ############################
 
-response_content = {"error": "La valeur SS existe déjà comme clé primaire airline_iata de la table airlines"}
+response_content = {
+  "error": "La valeur GG existe déjà comme clé primaire airline_iata de la table airlines"
+}
 
 -------------------------------------------------------------------------------------
 
@@ -270,7 +282,7 @@ response_content = {"error": "La valeur SS existe déjà comme clé primaire air
 TEST = INCORRECT DATA - METHOD POST - Test 2
 
 request done at "/airlines"
-data send = {'airline_iata': '00', 'airline_icao': 'ZZZ', 'airline_bad_field': 'Test Airline Bad Field'}
+data send = {'airline_iata': '0Q', 'airline_icao': 'ZZZ', 'airline_bad_field': 'Test Airline Bad Field'}
 
 | expected result = 400
 | actual result = 400
@@ -279,7 +291,9 @@ data send = {'airline_iata': '00', 'airline_icao': 'ZZZ', 'airline_bad_field': '
 ==>  SUCCES
 ############################
 
-response_content = {"error": "Les données sont invalides (Les champs à renseigner sont : airline_iata, airline_icao, airline_name)"}
+response_content = {
+  "error": "Les données sont invalides (Les champs à renseigner sont : airline_iata, airline_icao, airline_name)"
+}
 
 -------------------------------------------------------------------------------------
 
@@ -288,7 +302,7 @@ response_content = {"error": "Les données sont invalides (Les champs à renseig
 ============================
 TEST = INCORRECT DATA - METHOD PUT
 
-request done at "/airlines/00"
+request done at "/airlines/0Q"
 data send = {'airline_name': 'Test Airline New Name'}
 
 | expected result = 404
@@ -298,7 +312,9 @@ data send = {'airline_name': 'Test Airline New Name'}
 ==>  SUCCES
 ############################
 
-response_content = {"error": "Aucun enregistrement trouvé avec ce code IATA"}
+response_content = {
+  "error": "Aucun enregistrement trouvé avec ce code IATA"
+}
 
 -------------------------------------------------------------------------------------
 
@@ -307,7 +323,7 @@ response_content = {"error": "Aucun enregistrement trouvé avec ce code IATA"}
 ============================
 TEST = INCORRECT DATA - METHOD DELETE
 
-request done at "/airlines/00"
+request done at "/airlines/0Q"
 data send = None
 
 | expected result = 404
@@ -325,7 +341,7 @@ data send = None
 TEST = CORRECT DATA - METHOD POST
 
 request done at "/aircrafts"
-data send = {'aircraft_iata': '0C6', 'aircraft_icao': 'ZZZZ', 'aircraft_name': 'Test Aircraft Name', 'aircraft_wiki_link': '/wiki/Test Aircraft Name'}
+data send = {'aircraft_iata': 'DWG', 'aircraft_icao': 'ZZZZ', 'aircraft_name': 'Test Aircraft Name', 'aircraft_wiki_link': '/wiki/Test Aircraft Name'}
 
 | expected result = 201
 | actual result = 201
@@ -334,7 +350,12 @@ data send = {'aircraft_iata': '0C6', 'aircraft_icao': 'ZZZZ', 'aircraft_name': '
 ==>  SUCCES
 ############################
 
-response_content = {"aircraft_iata": "0C6", "aircraft_icao": "ZZZZ", "aircraft_name": "Test Aircraft Name", "aircraft_wiki_link": "/wiki/Test Aircraft Name"}
+response_content = {
+  "aircraft_iata": "DWG",
+  "aircraft_icao": "ZZZZ",
+  "aircraft_name": "Test Aircraft Name",
+  "aircraft_wiki_link": "/wiki/Test Aircraft Name"
+}
 
 -------------------------------------------------------------------------------------
 
@@ -343,7 +364,7 @@ response_content = {"aircraft_iata": "0C6", "aircraft_icao": "ZZZZ", "aircraft_n
 ============================
 TEST = CORRECT DATA - METHOD PUT
 
-request done at "/aircrafts/0C6"
+request done at "/aircrafts/DWG"
 data send = {'aircraft_icao': 'BBBB'}
 
 | expected result = 200
@@ -353,7 +374,9 @@ data send = {'aircraft_icao': 'BBBB'}
 ==>  SUCCES
 ############################
 
-response_content = {"aircraft_icao": "BBBB"}
+response_content = {
+  "aircraft_icao": "BBBB"
+}
 
 -------------------------------------------------------------------------------------
 
@@ -362,7 +385,7 @@ response_content = {"aircraft_icao": "BBBB"}
 ============================
 TEST = CORRECT DATA - METHOD DELETE
 
-request done at "/aircrafts/0C6"
+request done at "/aircrafts/DWG"
 data send = None
 
 | expected result = 204
@@ -380,7 +403,7 @@ data send = None
 TEST = INCORRECT DATA - METHOD POST - Test 1
 
 request done at "/aircrafts"
-data send = {'aircraft_iata': '32F', 'aircraft_icao': 'ZZZ', 'aircraft_name': 'Test Aircraft Name'}
+data send = {'aircraft_iata': '74U', 'aircraft_icao': 'ZZZ', 'aircraft_name': 'Test Aircraft Name'}
 
 | expected result = 400
 | actual result = 400
@@ -389,7 +412,9 @@ data send = {'aircraft_iata': '32F', 'aircraft_icao': 'ZZZ', 'aircraft_name': 'T
 ==>  SUCCES
 ############################
 
-response_content = {"error": "La longueur du champ aircraft_icao n'est pas conforme à la longueur autorisée"}
+response_content = {
+  "error": "La longueur du champ aircraft_icao n'est pas conforme à la longueur autorisée"
+}
 
 -------------------------------------------------------------------------------------
 
@@ -399,7 +424,7 @@ response_content = {"error": "La longueur du champ aircraft_icao n'est pas confo
 TEST = INCORRECT DATA - METHOD POST - Test 2
 
 request done at "/aircrafts"
-data send = {'aircraft_iata': 'IYL', 'aircraft_icao': 'ZZZ', 'aircraft_bad_field': 'Test Bad Field'}
+data send = {'aircraft_iata': 'LTO', 'aircraft_icao': 'ZZZ', 'aircraft_bad_field': 'Test Bad Field'}
 
 | expected result = 400
 | actual result = 400
@@ -408,7 +433,9 @@ data send = {'aircraft_iata': 'IYL', 'aircraft_icao': 'ZZZ', 'aircraft_bad_field
 ==>  SUCCES
 ############################
 
-response_content = {"error": "Les données sont invalides (Les champs à renseigner sont : aircraft_iata, aircraft_icao, aircraft_name, aircraft_wiki_link)"}
+response_content = {
+  "error": "Les données sont invalides (Les champs à renseigner sont : aircraft_iata, aircraft_icao, aircraft_name, aircraft_wiki_link)"
+}
 
 -------------------------------------------------------------------------------------
 
@@ -417,7 +444,7 @@ response_content = {"error": "Les données sont invalides (Les champs à renseig
 ============================
 TEST = INCORRECT DATA - METHOD PUT
 
-request done at "/aircrafts/IYL"
+request done at "/aircrafts/LTO"
 data send = {'aircraft_name': 'Test Aircraft New Name'}
 
 | expected result = 404
@@ -427,7 +454,9 @@ data send = {'aircraft_name': 'Test Aircraft New Name'}
 ==>  SUCCES
 ############################
 
-response_content = {"error": "Aucun enregistrement trouvé avec ce code IATA"}
+response_content = {
+  "error": "Aucun enregistrement trouvé avec ce code IATA"
+}
 
 -------------------------------------------------------------------------------------
 
@@ -436,7 +465,7 @@ response_content = {"error": "Aucun enregistrement trouvé avec ce code IATA"}
 ============================
 TEST = INCORRECT DATA - METHOD DELETE
 
-request done at "/aircrafts/IYL"
+request done at "/aircrafts/LTO"
 data send = None
 
 | expected result = 404
@@ -454,7 +483,7 @@ data send = None
 TEST = CORRECT DATA - METHOD POST
 
 request done at "/airports"
-data send = {'airport_iata': 'FML', 'airport_icao': 'AAAA', 'fk_city_iata': 'PAR', 'airport_name': 'Airport Test Name', 'airport_utc_offset_str': '+01:00', 'airport_utc_offset_min': 60, 'airport_timezone_id': 'Europe/Paris', 'airport_latitude': 49.0097, 'airport_longitude': 2.5478, 'airport_wiki_link': '/appli_dash/woki/blalala'}
+data send = {'airport_iata': 'HXA', 'airport_icao': 'AAAA', 'fk_city_iata': 'PAR', 'airport_name': 'Airport Test Name', 'airport_utc_offset_str': '+01:00', 'airport_utc_offset_min': 60, 'airport_timezone_id': 'Europe/Paris', 'airport_latitude': 49.0097, 'airport_longitude': 2.5478, 'airport_wiki_link': '/appli_dash/woki/blalala'}
 
 | expected result = 201
 | actual result = 201
@@ -463,7 +492,18 @@ data send = {'airport_iata': 'FML', 'airport_icao': 'AAAA', 'fk_city_iata': 'PAR
 ==>  SUCCES
 ############################
 
-response_content = {"airport_iata": "FML", "airport_icao": "AAAA", "airport_latitude": 49.0097, "airport_longitude": 2.5478, "airport_name": "Airport Test Name", "airport_timezone_id": "Europe/Paris", "airport_utc_offset_min": 60, "airport_utc_offset_str": "+01:00", "airport_wiki_link": "/appli_dash/woki/blalala", "fk_city_iata": "PAR"}
+response_content = {
+  "airport_iata": "HXA",
+  "airport_icao": "AAAA",
+  "airport_latitude": 49.0097,
+  "airport_longitude": 2.5478,
+  "airport_name": "Airport Test Name",
+  "airport_timezone_id": "Europe/Paris",
+  "airport_utc_offset_min": 60,
+  "airport_utc_offset_str": "+01:00",
+  "airport_wiki_link": "/appli_dash/woki/blalala",
+  "fk_city_iata": "PAR"
+}
 
 -------------------------------------------------------------------------------------
 
@@ -472,7 +512,7 @@ response_content = {"airport_iata": "FML", "airport_icao": "AAAA", "airport_lati
 ============================
 TEST = CORRECT DATA - METHOD PUT
 
-request done at "/airports/FML"
+request done at "/airports/HXA"
 data send = {'airport_icao': 'BBBB'}
 
 | expected result = 200
@@ -482,7 +522,10 @@ data send = {'airport_icao': 'BBBB'}
 ==>  SUCCES
 ############################
 
-response_content = {"airport_icao": "BBBB", "fk_city_iata": "PAR"}
+response_content = {
+  "airport_icao": "BBBB",
+  "fk_city_iata": "PAR"
+}
 
 -------------------------------------------------------------------------------------
 
@@ -491,7 +534,7 @@ response_content = {"airport_icao": "BBBB", "fk_city_iata": "PAR"}
 ============================
 TEST = CORRECT DATA - METHOD DELETE
 
-request done at "/airports/FML"
+request done at "/airports/HXA"
 data send = None
 
 | expected result = 204
@@ -509,7 +552,7 @@ data send = None
 TEST = INCORRECT DATA - METHOD POST - Test 1
 
 request done at "/airports"
-data send = {'airport_iata': 'TAW', 'airport_icao': 'AAAA', 'fk_city_iata': 'PAR', 'airport_name': 'Airport Test Name', 'airport_utc_offset_str': '+01:00', 'airport_utc_offset_min': 60, 'airport_timezone_id': 'Europe/Paris', 'airport_latitude': 49.0097, 'airport_longitude': 2.5478, 'airport_wiki_link': '/appli_dash/woki/blalala'}
+data send = {'airport_iata': 'AZP', 'airport_icao': 'AAAA', 'fk_city_iata': 'PAR', 'airport_name': 'Airport Test Name', 'airport_utc_offset_str': '+01:00', 'airport_utc_offset_min': 60, 'airport_timezone_id': 'Europe/Paris', 'airport_latitude': 49.0097, 'airport_longitude': 2.5478, 'airport_wiki_link': '/appli_dash/woki/blalala'}
 
 | expected result = 400
 | actual result = 400
@@ -518,7 +561,9 @@ data send = {'airport_iata': 'TAW', 'airport_icao': 'AAAA', 'fk_city_iata': 'PAR
 ==>  SUCCES
 ############################
 
-response_content = {"error": "La valeur TAW existe déjà comme clé primaire airport_iata de la table airports"}
+response_content = {
+  "error": "La valeur AZP existe déjà comme clé primaire airport_iata de la table airports"
+}
 
 -------------------------------------------------------------------------------------
 
@@ -528,7 +573,7 @@ response_content = {"error": "La valeur TAW existe déjà comme clé primaire ai
 TEST = INCORRECT DATA - METHOD POST - Test 2
 
 request done at "/airports"
-data send = {'airport_iata': 'UAF', 'airport_icao': 'AAAA', 'fk_city_iata': 'PAR', 'airport_bad_field': 'Airport Bad Field'}
+data send = {'airport_iata': 'IQE', 'airport_icao': 'AAAA', 'fk_city_iata': 'PAR', 'airport_bad_field': 'Airport Bad Field'}
 
 | expected result = 400
 | actual result = 400
@@ -537,7 +582,9 @@ data send = {'airport_iata': 'UAF', 'airport_icao': 'AAAA', 'fk_city_iata': 'PAR
 ==>  SUCCES
 ############################
 
-response_content = {"error": "Les données sont invalides (Les champs à renseigner sont : airport_iata, airport_icao, fk_city_iata, airport_name, airport_utc_offset_str, airport_utc_offset_min, airport_timezone_id, airport_latitude, airport_longitude, airport_wiki_link)"}
+response_content = {
+  "error": "Les données sont invalides (Les champs à renseigner sont : airport_iata, airport_icao, fk_city_iata, airport_name, airport_utc_offset_str, airport_utc_offset_min, airport_timezone_id, airport_latitude, airport_longitude, airport_wiki_link)"
+}
 
 -------------------------------------------------------------------------------------
 
@@ -546,7 +593,7 @@ response_content = {"error": "Les données sont invalides (Les champs à renseig
 ============================
 TEST = INCORRECT DATA - METHOD PUT - Test 1
 
-request done at "/airports/UAF"
+request done at "/airports/IQE"
 data send = {'airport_name': 'Test Airport New Name'}
 
 | expected result = 404
@@ -556,7 +603,9 @@ data send = {'airport_name': 'Test Airport New Name'}
 ==>  SUCCES
 ############################
 
-response_content = {"error": "Aucun enregistrement trouvé avec ce code IATA"}
+response_content = {
+  "error": "Aucun enregistrement trouvé avec ce code IATA"
+}
 
 -------------------------------------------------------------------------------------
 
@@ -565,8 +614,8 @@ response_content = {"error": "Aucun enregistrement trouvé avec ce code IATA"}
 ============================
 TEST = INCORRECT DATA - METHOD PUT - Test 2
 
-request done at "/airports/UAF"
-data send = {'fk_city_iata': 'EEC', 'airport_name': 'Test Airport New Name'}
+request done at "/airports/IQE"
+data send = {'fk_city_iata': 'EZN', 'airport_name': 'Test Airport New Name'}
 
 | expected result = 404
 | actual result = 404
@@ -575,7 +624,9 @@ data send = {'fk_city_iata': 'EEC', 'airport_name': 'Test Airport New Name'}
 ==>  SUCCES
 ############################
 
-response_content = {"error": "Aucun enregistrement trouvé avec ce code IATA"}
+response_content = {
+  "error": "Aucun enregistrement trouvé avec ce code IATA"
+}
 
 -------------------------------------------------------------------------------------
 
@@ -584,7 +635,7 @@ response_content = {"error": "Aucun enregistrement trouvé avec ce code IATA"}
 ============================
 TEST = INCORRECT DATA - METHOD DELETE
 
-request done at "/airports/UAF"
+request done at "/airports/IQE"
 data send = None
 
 | expected result = 404
