@@ -498,9 +498,14 @@ def update_map(n_intervals, data_dyn, data_stat, filters, pathname):
 
         # Ajout d'une sécutité en cas d'oubli de fermeture du script
         if n_intervals <= 30:
-        
-            # Script d'update
-            static_datas, datas_dyn = get_filtered_flights(filters, data_stat, old_data_dyn)
+            if data_stat is None and global_data_static is None:
+                static_datas, datas_dyn = initialize_data()
+                global_data_static = static_datas
+            else:
+                if data_stat is None:
+                    data_stat = global_data_static
+                # Script d'update
+                static_datas, datas_dyn = get_filtered_flights(filters, data_stat, old_data_dyn)
 
             markers_tooltips = create_markers_tooltips(static_datas, datas_dyn)
             nb_planes = len(markers_tooltips)
