@@ -1,6 +1,5 @@
 #!/bin/bash
 
-# docker-compose down --volumes --rmi all
 # Arrêt des containers en fonctionnement
 echo ""
 echo "########################################################################"
