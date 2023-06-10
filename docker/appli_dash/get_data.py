@@ -724,7 +724,8 @@ def get_data_statistics_type_data_api(df, type_data, elements):
             if '_id' in df.columns:
                 df = df.drop('_id', axis=1)
             df = df.sort_values(['datetime_start', 'datetime_end'])
-            return df.to_dict('records')
+            if len(df) > 0:
+                return df.to_dict('records')
     return None
 
 
