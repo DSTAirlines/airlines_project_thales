@@ -311,11 +311,11 @@ def create_markers_tooltips(static_data, dynamic_data):
     markers = []
     icon_url = "assets/img/plane.svg"
 
-    print(f"MAP LIVE - STEP 2 : Création des markers et tooltips")
+    print(f"MAP LIVE - Création des markers et tooltips")
 
     if dynamic_data is not None and static_data is not None:
         callsigns = [list(d.keys())[0] for d in dynamic_data if list(d.keys())[0] is not None]
-        print(f"MAP LIVE - STEP 2 - Nombre de callsigns : {len(callsigns)}")
+        print(f"MAP LIVE - Nombre de callsigns : {len(callsigns)}")
 
         static_data_dict = {k: v for dic in static_data if dic is not None for k, v in dic.items()}
         dynamic_data_dict = {k: v for dic in dynamic_data if dic is not None for k, v in dic.items()}
