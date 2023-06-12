@@ -10,7 +10,7 @@ venv/*
 .env
 
 # Ignorer les logs
-*.log
+**/*.log
 
 # Ignorer les sous-dossiers data
 lufthansa_api/src/*/
